@@ -2003,13 +2003,17 @@ public:
 
     void UpdateAllSpellCritChances();
     void UpdateSpellCritChance(uint32 school);
-    void UpdateArmorPenetration(int32 amount);
     void UpdateExpertise(WeaponAttackType attType);
     void ApplyManaRegenBonus(int32 amount, bool apply);
     void ApplyHealthRegenBonus(int32 amount, bool apply);
     void UpdateManaRegen();
     void UpdateRuneRegen(RuneType rune);
     void UpdateThorns();
+    void UpdateAvoidance(int32 amount);
+    void UpdateLifesteal(int32 amount);
+    void UpdateMastery(int32 amount);
+    void UpdateMultistrike(int32 amount);
+    void RecalculateAllRatings();
 
     [[nodiscard]] ObjectGuid GetLootGUID() const { return m_lootGuid; }
     void SetLootGUID(ObjectGuid guid) { m_lootGuid = guid; }

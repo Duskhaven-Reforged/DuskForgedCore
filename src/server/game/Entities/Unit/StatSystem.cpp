@@ -216,7 +216,7 @@ bool Player::UpdateAllStats()
     UpdateManaRegen();
     UpdateExpertise(BASE_ATTACK);
     UpdateExpertise(OFF_ATTACK);
-    RecalculateRating(CR_ARMOR_PENETRATION);
+    RecalculateAllRatings();
     UpdateAllResistances();
     UpdateThorns();
 
@@ -878,28 +878,49 @@ void Player::UpdateSpellCritChance(uint32 school)
     SetFloatValue(PLAYER_SPELL_CRIT_PERCENTAGE1 + school, crit);
 }
 
-void Player::UpdateArmorPenetration(int32 amount)
+void Player::UpdateAvoidance(int32 amount)
 {
     // Store Rating Value
-    SetUInt32Value(PLAYER_FIELD_COMBAT_RATING_1 + static_cast<uint16>(CR_ARMOR_PENETRATION), amount);
+    SetUInt32Value(PLAYER_FIELD_COMBAT_RATING_1 + static_cast<uint16>(CR_AVOIDANCE), amount);
+}
+
+void Player::UpdateLifesteal(int32 amount)
+{
+    // Store Rating Value
+    SetUInt32Value(PLAYER_FIELD_COMBAT_RATING_1 + static_cast<uint16>(CR_LIFESTEAL), amount);
+}
+
+void Player::UpdateMastery(int32 amount)
+{
+    // Store Rating Value
+    SetUInt32Value(PLAYER_FIELD_COMBAT_RATING_1 + static_cast<uint16>(CR_MASTERY), amount);
+}
+
+void Player::UpdateMultistrike(int32 amount)
+{
+    // Store Rating Value
+    SetUInt32Value(PLAYER_FIELD_COMBAT_RATING_1 + static_cast<uint16>(CR_MULTISTRIKE), amount);
+}
+
+void Player::RecalculateAllRatings()
+{
+    for (int cr = 0; cr < MAX_COMBAT_RATING; ++cr)
+        ApplyRatingMod(CombatRating(cr), 0, true);
 }
 
 void Player::UpdateMeleeHitChances()
 {
     m_modMeleeHitChance = (float)GetTotalAuraModifier(SPELL_AURA_MOD_HIT_CHANCE);
-    m_modMeleeHitChance += GetRatingBonusValue(CR_HIT_MELEE);
 }
 
 void Player::UpdateRangedHitChances()
 {
     m_modRangedHitChance = (float)GetTotalAuraModifier(SPELL_AURA_MOD_HIT_CHANCE);
-    m_modRangedHitChance += GetRatingBonusValue(CR_HIT_RANGED);
 }
 
 void Player::UpdateSpellHitChances()
 {
     m_modSpellHitChance = (float)GetTotalAuraModifier(SPELL_AURA_MOD_SPELL_HIT_CHANCE);
-    m_modSpellHitChance += GetRatingBonusValue(CR_HIT_SPELL);
 }
 
 void Player::UpdateAllSpellCritChances()
@@ -913,7 +934,7 @@ void Player::UpdateExpertise(WeaponAttackType attack)
     if (attack == RANGED_ATTACK)
         return;
 
-    int32 expertise = int32(GetRatingBonusValue(CR_EXPERTISE));
+    int32 expertise = 56;
 
     Item* weapon = GetWeaponForAttack(attack, true);
 

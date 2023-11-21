@@ -398,6 +398,13 @@ enum AuraType
     SPELL_AURA_MOD_SCHOOL_MASK_DAMAGE_FROM_CASTER           = 335,
     SPELL_AURA_MOD_AUTOATTACK_DAMAGE_PCT                    = 336,
     SPELL_AURA_MOD_SCHOOL_MASK_DAMAGE_VS_CASTER             = 337,
+    SPELL_AURA_AREA_TRIGGER                                 = 338,
+    SPELL_AURA_MOD_ARMOR_PENETRATION                        = 339,
+    SPELL_AURA_KNOCKBACK_IMMUNITY                           = 340,
+    SPELL_AURA_ADD_MASTERY_PCT_TO_SPELL_EFFECT              = 341,
+    SPELL_AURA_MOD_RATING_FROM_ALL_SOURCES_BY_PCT           = 342,
+    SPELL_AURA_MOD_RECOVERY_RATE                            = 343,
+    SPELL_AURA_ADD_MASTERY_RATING_TO_SPELL_EFFECT           = 344,
     TOTAL_AURAS
 };
 

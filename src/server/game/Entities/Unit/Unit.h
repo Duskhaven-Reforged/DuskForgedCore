@@ -407,9 +407,9 @@ enum CombatRating
     CR_DODGE                    = 2,
     CR_PARRY                    = 3,
     CR_BLOCK                    = 4,
-    CR_HIT_MELEE                = 5,
-    CR_HIT_RANGED               = 6,
-    CR_HIT_SPELL                = 7,
+    CR_SPEED                    = 5,
+    CR_LIFESTEAL                = 6,
+    CR_AVOIDANCE                = 7,
     CR_CRIT_MELEE               = 8,
     CR_CRIT_RANGED              = 9,
     CR_CRIT_SPELL               = 10,
@@ -425,8 +425,8 @@ enum CombatRating
     CR_WEAPON_SKILL_MAINHAND    = 20,
     CR_WEAPON_SKILL_OFFHAND     = 21,
     CR_WEAPON_SKILL_RANGED      = 22,
-    CR_EXPERTISE                = 23,
-    CR_ARMOR_PENETRATION        = 24
+    CR_MASTERY                  = 23,
+    CR_MULTISTRIKE              = 24
 };
 
 #define MAX_COMBAT_RATING         25
@@ -1741,6 +1741,10 @@ public:
     void ToggleCombatAuras(bool startingCombat);
     void ToggleOnPowerPctAuras();
 
+    bool CanProcMultistrike(SpellInfo const* spellInfo) const;
+    bool IsSpellMultistrike() const;
+    void ProcMultistrike(SpellInfo const* procSpellInfo, Unit* target, uint32 procFlag, uint32 procExtra, WeaponAttackType attType, SpellInfo const* procAura, DamageInfo* damageInfo, HealInfo* healInfo);
+
     [[nodiscard]] bool HasAuraTypeWithFamilyFlags(AuraType auraType, uint32 familyName, uint32 familyFlags) const;
     [[nodiscard]] bool virtual HasSpell(uint32 /*spellID*/) const { return false; }
     [[nodiscard]] bool HasBreakableByDamageAuraType(AuraType type, uint32 excludeAura = 0) const;
@@ -2133,6 +2137,9 @@ public:
     [[nodiscard]] bool IsInDisallowedMountForm() const;
     [[nodiscard]] uint32 GetCriticalBlockAmount(Unit* blocker, uint32 damageBlocked) const;
     [[nodiscard]] uint32 AdjustBeforeBlockDamage(Unit* blocker, uint32 damage) const;
+
+    [[nodiscard]] UnitMods ClassSpecDependantUnitMod() const;
+    [[nodiscard]] Stats ClassSpecDependantMainStat() const;
 
     float m_modMeleeHitChance;
     float m_modRangedHitChance;

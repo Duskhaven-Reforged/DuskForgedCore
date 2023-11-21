@@ -106,10 +106,10 @@ enum SpellModOp
     SPELLMOD_CRIT_DAMAGE_BONUS_2        = 29, //one not used spell
     SPELLMOD_SPELL_COST_REFUND_ON_FAIL  = 30,
     SPELLMOD_STACK_AMOUNT               = 31,
-    SPELLMOD_THORNS_DAMAGE_DONE     
+    SPELLMOD_THORNS_DAMAGE_DONE         = 32
 };
 
-#define MAX_SPELLMOD 32
+#define MAX_SPELLMOD 33
 
 enum SpellValueMod
 {

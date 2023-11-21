@@ -198,6 +198,11 @@ enum ProcFlags
                                                 | PROC_FLAG_CRITICAL_DAMAGE_TAKEN | PROC_FLAG_CRITICAL_HEALING_TAKEN,
 
     REQ_SPELL_PHASE_PROC_FLAG_MASK             = SPELL_PROC_FLAG_MASK & DONE_HIT_PROC_FLAG_MASK,
+
+    MULTISTRIKE_DONE_HIT_PROC_FLAG_MASK        = PROC_FLAG_DONE_MELEE_AUTO_ATTACK | PROC_FLAG_DONE_RANGED_AUTO_ATTACK
+                                                | PROC_FLAG_DONE_SPELL_MELEE_DMG_CLASS | PROC_FLAG_DONE_SPELL_RANGED_DMG_CLASS
+                                                | PROC_FLAG_DONE_SPELL_MAGIC_DMG_CLASS_POS | PROC_FLAG_DONE_SPELL_MAGIC_DMG_CLASS_NEG
+                                                | PROC_FLAG_DONE_PERIODIC | PROC_FLAG_DONE_MAINHAND_ATTACK | PROC_FLAG_DONE_OFFHAND_ATTACK,
 };
 
 #define MELEE_BASED_TRIGGER_MASK (PROC_FLAG_DONE_MELEE_AUTO_ATTACK      | \
@@ -236,6 +241,7 @@ enum ProcFlagsExLegacy
     PROC_EX_ONLY_FIRST_TICK     = 0x0200000,                 // Proc only on first tick (in case of periodic spells)
 
     // Flags for internal use - do not use these in db!
+    PROC_EX_INTERNAL_MULTISTRIKE = 0x0400000,
     PROC_EX_INTERNAL_CANT_PROC  = 0x0800000,
     PROC_EX_INTERNAL_DOT        = 0x1000000,
     PROC_EX_INTERNAL_HOT        = 0x2000000,

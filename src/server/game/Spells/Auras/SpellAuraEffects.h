@@ -354,6 +354,7 @@ public:
     void HandleObsModPowerAuraTick(Unit* target, Unit* caster) const;
     void HandlePeriodicEnergizeAuraTick(Unit* target, Unit* caster) const;
     void HandlePeriodicPowerBurnAuraTick(Unit* target, Unit* caster) const;
+    void HandlePeriodicCooldownRecoveryTick(Unit* target, Unit* caster) const;
 
     // aura effect proc handlers
     void HandleProcTriggerSpellAuraProc(AuraApplication* aurApp, ProcEventInfo& eventInfo);

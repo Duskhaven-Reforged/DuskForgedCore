@@ -237,6 +237,7 @@ pEffect SpellEffects[TOTAL_SPELL_EFFECTS] =
     &Spell::EffectActivateSpec,                             //162 SPELL_EFFECT_TALENT_SPEC_SELECT       activate primary/secondary spec
     &Spell::EffectNULL,                                     //163 unused
     &Spell::EffectRemoveAura,                               //164 SPELL_EFFECT_REMOVE_AURA
+    &Spell::EffectLearnTransmogSet,                         //165 SPELL_EFFECT_LEARN_TRANSMOG_SET
 };
 
 wEffect WeaponAndSchoolDamageEffects[TOTAL_WEAPON_DAMAGE_EFFECTS] =
@@ -5020,6 +5021,20 @@ void Spell::EffectKnockBack(SpellEffIndex effIndex)
     if (!unitTarget)
         return;
 
+    bool knockbackImmune = false;
+
+    Unit::AuraApplicationMap& auraMap = unitTarget->GetAppliedAuras();
+    for (Unit::AuraApplicationMap::iterator iter = auraMap.begin(); iter != auraMap.end();)
+    {
+        AuraApplication* aurApp = iter->second;
+        Aura* aura = aurApp->GetBase();
+        if (aura->HasEffectType(SPELL_AURA_KNOCKBACK_IMMUNITY))
+            knockbackImmune = true;
+    }
+
+    if (knockbackImmune)
+        return;
+
     // Xinef: allow entry specific spells to skip those checks
     if (m_spellInfo->Effects[effIndex].TargetA.GetCheckType() != TARGET_CHECK_ENTRY && m_spellInfo->Effects[effIndex].TargetB.GetCheckType() != TARGET_CHECK_ENTRY)
     {
@@ -6262,6 +6277,34 @@ void Spell::EffectRemoveAura(SpellEffIndex effIndex)
         return;
     // there may be need of specifying casterguid of removed auras
     unitTarget->RemoveAurasDueToSpell(m_spellInfo->Effects[effIndex].TriggerSpell);
+}
+
+void Spell::EffectLearnTransmogSet(SpellEffIndex effIndex)
+{
+    if (effectHandleMode != SPELL_EFFECT_HANDLE_HIT_TARGET)
+        return;
+
+    if (!unitTarget)
+        return;
+
+    Player* player = unitTarget->ToPlayer();
+
+    if (!player)
+        return;
+
+    uint32 setId = m_spellInfo->Effects[effIndex].MiscValue;
+
+    if (!sItemSetStore.LookupEntry(setId))
+    {
+        LOG_ERROR("spells.effect", "EffectLearnTransmogSet: Set (Id: {}) not exist in spell {}.", setId, m_spellInfo->Id);
+        return;
+    }
+
+    ItemSetEntry const* setEntry = sItemSetStore.LookupEntry(setId);
+
+    for (uint32 i = 0; i < MAX_ITEM_SET_ITEMS; ++i)
+        if (setEntry->itemId[i])
+            Transmogrification::instance().AddToCollection(player, sObjectMgr->GetItemTemplate(setEntry->itemId[i]));
 }
 
 void Spell::EffectCastButtons(SpellEffIndex effIndex)

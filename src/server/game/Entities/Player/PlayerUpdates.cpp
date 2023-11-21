@@ -577,6 +577,32 @@ void Player::UpdateRating(CombatRating cr)
         if ((*i)->GetMiscValue() & (1 << cr))
             amount += int32(CalculatePct(GetStat(Stats((*i)->GetMiscValueB())),
                                          (*i)->GetAmount()));
+
+    // Apply bonus from SPELL_AURA_MOD_RATING_PCT
+    AuraEffectList const& modRatingPct = GetAuraEffectsByType(SPELL_AURA_MOD_RATING_PCT);
+    for (AuraEffectList::const_iterator i = modRatingPct.begin(); i != modRatingPct.end(); ++i)
+        if ((*i)->GetMiscValue() & (1 << cr))
+        {
+            uint8 level = GetLevel();
+            GtCombatRatingsEntry const* combatRating = sGtCombatRatingsStore.LookupEntry(cr * GT_MAX_LEVEL + level - 1);
+            float mult = combatRating->ratio;
+            amount += round((*i)->GetAmount() * mult);
+        }
+
+    // Apply bonus from SPELL_AURA_MOD_RATING_OF_RATING_PCT
+    AuraEffectList const& modRatingFromRating = GetAuraEffectsByType(SPELL_AURA_MOD_RATING_OF_RATING_PCT);
+    for (AuraEffectList::const_iterator i = modRatingFromRating.begin(); i != modRatingFromRating.end(); ++i)
+        if ((*i)->GetMiscValue() & (1 << cr))
+            for (int8 tempCr = 0; tempCr < MAX_COMBAT_RATING; ++tempCr)
+                if ((*i)->GetMiscValueB() & (1 << tempCr))
+                    amount = int32(CalculatePct(GetRatingBonusValue(CombatRating(tempCr)), (*i)->GetAmount()));
+
+    // now apply bonus from SPELL_AURA_MOD_RATING_FROM_ALL_SOURCES_BY_PCT, it is cummulative
+    AuraEffectList const& modRatingFromAllSourcesPct = GetAuraEffectsByType(SPELL_AURA_MOD_RATING_FROM_ALL_SOURCES_BY_PCT);
+    for (AuraEffectList::const_iterator i = modRatingFromAllSourcesPct.begin(); i != modRatingFromAllSourcesPct.end(); ++i)
+        if ((*i)->GetMiscValue() & (1 << cr))
+            amount = int32(CalculatePct(GetRatingBonusValue(cr), (*i)->GetAmount()));
+
     if (amount < 0)
         amount = 0;
     SetUInt32Value(static_cast<uint16>(PLAYER_FIELD_COMBAT_RATING_1) + static_cast<uint16>(cr), uint32(amount));
@@ -598,14 +624,16 @@ void Player::UpdateRating(CombatRating cr)
     case CR_BLOCK:
         UpdateBlockPercentage();
         break;
-    case CR_HIT_MELEE:
-        UpdateMeleeHitChances();
+    case CR_SPEED:
+        UpdateSpeed(MOVE_RUN, false);
         break;
-    case CR_HIT_RANGED:
-        UpdateRangedHitChances();
+    case CR_LIFESTEAL:
+        if (affectStats)
+            UpdateLifesteal(amount);
         break;
-    case CR_HIT_SPELL:
-        UpdateSpellHitChances();
+    case CR_AVOIDANCE:
+        if (affectStats)
+            UpdateAvoidance(amount);
         break;
     case CR_CRIT_MELEE:
         if (affectStats)
@@ -643,16 +671,13 @@ void Player::UpdateRating(CombatRating cr)
     case CR_WEAPON_SKILL_OFFHAND:
     case CR_WEAPON_SKILL_RANGED:
         break;
-    case CR_EXPERTISE:
+    case CR_MASTERY:
         if (affectStats)
-        {
-            UpdateExpertise(BASE_ATTACK);
-            UpdateExpertise(OFF_ATTACK);
-        }
+            UpdateMastery(amount);
         break;
-    case CR_ARMOR_PENETRATION:
+    case CR_MULTISTRIKE:
         if (affectStats)
-            UpdateArmorPenetration(amount);
+            UpdateMultistrike(amount);
         break;
     }
 }

@@ -1043,7 +1043,8 @@ enum SpellEffects
     SPELL_EFFECT_TALENT_SPEC_SELECT                 = 162,
     SPELL_EFFECT_163                                = 163,
     SPELL_EFFECT_REMOVE_AURA                        = 164,
-    TOTAL_SPELL_EFFECTS                             = 165
+    SPELL_EFFECT_LEARN_TRANSMOG_SET                 = 165,
+    TOTAL_SPELL_EFFECTS                             = 166
 };
 
 // EnumUtils: DESCRIBE THIS

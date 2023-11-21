@@ -2827,7 +2827,7 @@ Item* Player::EquipItem(uint16 pos, Item* pItem, bool update)
         else if (slot == EQUIPMENT_SLOT_OFFHAND)
             UpdateExpertise(OFF_ATTACK);
 
-        switch (slot)
+        /*switch (slot)
         {
             case EQUIPMENT_SLOT_MAINHAND:
             case EQUIPMENT_SLOT_OFFHAND:
@@ -2835,7 +2835,7 @@ Item* Player::EquipItem(uint16 pos, Item* pItem, bool update)
                 RecalculateRating(CR_ARMOR_PENETRATION);
             default:
                 break;
-        }
+        }*/
     }
     else
     {
@@ -3009,7 +3009,7 @@ void Player::RemoveItem(uint8 bag, uint8 slot, bool update, bool swap)
                 }
 
                 // update armor penetration - passive auras may need it
-                switch (slot)
+                /*switch (slot)
                 {
                     case EQUIPMENT_SLOT_MAINHAND:
                     case EQUIPMENT_SLOT_OFFHAND:
@@ -3017,7 +3017,7 @@ void Player::RemoveItem(uint8 bag, uint8 slot, bool update, bool swap)
                         RecalculateRating(CR_ARMOR_PENETRATION);
                     default:
                         break;
-                }
+                }*/
             }
 
             SetGuidValue(PLAYER_FIELD_INV_SLOT_HEAD + (slot * 2), ObjectGuid::Empty);
@@ -3141,7 +3141,7 @@ void Player::DestroyItem(uint8 bag, uint8 slot, bool update)
                 RemoveItemDependentAurasAndCasts(pItem);
 
                 // update expertise and armor penetration - passive auras may need it
-                switch (slot)
+                /*switch (slot)
                 {
                     case EQUIPMENT_SLOT_MAINHAND:
                     case EQUIPMENT_SLOT_OFFHAND:
@@ -3149,7 +3149,7 @@ void Player::DestroyItem(uint8 bag, uint8 slot, bool update)
                         RecalculateRating(CR_ARMOR_PENETRATION);
                     default:
                         break;
-                }
+                }*/
 
                 if (slot == EQUIPMENT_SLOT_MAINHAND)
                     UpdateExpertise(BASE_ATTACK);
@@ -4549,18 +4549,6 @@ void Player::ApplyEnchantment(Item* item, EnchantmentSlot slot, bool apply, bool
                             ApplyRatingMod(CR_BLOCK, enchant_amount, apply);
                             LOG_DEBUG("entities.player.items", "+ {} SHIELD_BLOCK", enchant_amount);
                             break;
-                        case ITEM_MOD_HIT_MELEE_RATING:
-                            ApplyRatingMod(CR_HIT_MELEE, enchant_amount, apply);
-                            LOG_DEBUG("entities.player.items", "+ {} MELEE_HIT", enchant_amount);
-                            break;
-                        case ITEM_MOD_HIT_RANGED_RATING:
-                            ApplyRatingMod(CR_HIT_RANGED, enchant_amount, apply);
-                            LOG_DEBUG("entities.player.items", "+ {} RANGED_HIT", enchant_amount);
-                            break;
-                        case ITEM_MOD_HIT_SPELL_RATING:
-                            ApplyRatingMod(CR_HIT_SPELL, enchant_amount, apply);
-                            LOG_DEBUG("entities.player.items", "+ {} SPELL_HIT", enchant_amount);
-                            break;
                         case ITEM_MOD_CRIT_MELEE_RATING:
                             ApplyRatingMod(CR_CRIT_MELEE, enchant_amount, apply);
                             LOG_DEBUG("entities.player.items", "+ {} MELEE_CRIT", enchant_amount);
@@ -4602,12 +4590,6 @@ void Player::ApplyEnchantment(Item* item, EnchantmentSlot slot, bool apply, bool
                         case ITEM_MOD_HASTE_SPELL_RATING:
                             ApplyRatingMod(CR_HASTE_SPELL, enchant_amount, apply);
                             break;
-                        case ITEM_MOD_HIT_RATING:
-                            ApplyRatingMod(CR_HIT_MELEE, enchant_amount, apply);
-                            ApplyRatingMod(CR_HIT_RANGED, enchant_amount, apply);
-                            ApplyRatingMod(CR_HIT_SPELL, enchant_amount, apply);
-                            LOG_DEBUG("entities.player.items", "+ {} HIT", enchant_amount);
-                            break;
                         case ITEM_MOD_CRIT_RATING:
                             ApplyRatingMod(CR_CRIT_MELEE, enchant_amount, apply);
                             ApplyRatingMod(CR_CRIT_RANGED, enchant_amount, apply);
@@ -4637,19 +4619,15 @@ void Player::ApplyEnchantment(Item* item, EnchantmentSlot slot, bool apply, bool
                             ApplyRatingMod(CR_HASTE_SPELL, enchant_amount, apply);
                             LOG_DEBUG("entities.player.items", "+ {} HASTE", enchant_amount);
                             break;
-                        case ITEM_MOD_EXPERTISE_RATING:
-                            ApplyRatingMod(CR_EXPERTISE, enchant_amount, apply);
-                            LOG_DEBUG("entities.player.items", "+ {} EXPERTISE", enchant_amount);
-                            break;
                         case ITEM_MOD_ATTACK_POWER:
                             HandleStatModifier(UNIT_MOD_ATTACK_POWER, TOTAL_VALUE, float(enchant_amount), apply);
                             HandleStatModifier(UNIT_MOD_ATTACK_POWER_RANGED, TOTAL_VALUE, float(enchant_amount), apply);
                             LOG_DEBUG("entities.player.items", "+ {} ATTACK_POWER", enchant_amount);
                             break;
-                        case ITEM_MOD_RANGED_ATTACK_POWER:
-                            HandleStatModifier(UNIT_MOD_ATTACK_POWER_RANGED, TOTAL_VALUE, float(enchant_amount), apply);
-                            LOG_DEBUG("entities.player.items", "+ {} RANGED_ATTACK_POWER", enchant_amount);
-                            break;
+                        //case ITEM_MOD_RANGED_ATTACK_POWER:
+                        //    HandleStatModifier(UNIT_MOD_ATTACK_POWER_RANGED, TOTAL_VALUE, float(enchant_amount), apply);
+                        //    LOG_DEBUG("entities.player.items", "+ {} RANGED_ATTACK_POWER", enchant_amount);
+                        //    break;
                             //                        case ITEM_MOD_FERAL_ATTACK_POWER:
                             //                            ApplyFeralAPBonus(enchant_amount, apply);
                             //                            LOG_DEBUG("entities.player.items", "+ {} FERAL_ATTACK_POWER", enchant_amount);
@@ -4657,10 +4635,6 @@ void Player::ApplyEnchantment(Item* item, EnchantmentSlot slot, bool apply, bool
                         case ITEM_MOD_MANA_REGENERATION:
                             ApplyManaRegenBonus(enchant_amount, apply);
                             LOG_DEBUG("entities.player.items", "+ {} MANA_REGENERATION", enchant_amount);
-                            break;
-                        case ITEM_MOD_ARMOR_PENETRATION_RATING:
-                            ApplyRatingMod(CR_ARMOR_PENETRATION, enchant_amount, apply);
-                            LOG_DEBUG("entities.player.items", "+ {} ARMOR PENETRATION", enchant_amount);
                             break;
                         case ITEM_MOD_SPELL_POWER:
                             ApplySpellPowerBonus(enchant_amount, apply);
@@ -4678,8 +4652,43 @@ void Player::ApplyEnchantment(Item* item, EnchantmentSlot slot, bool apply, bool
                             HandleBaseModValue(SHIELD_BLOCK_VALUE, FLAT_MOD, float(enchant_amount), apply);
                             LOG_DEBUG("entities.player.items", "+ {} BLOCK_VALUE", enchant_amount);
                             break;
-                        case ITEM_MOD_SPELL_HEALING_DONE:   // deprecated
-                        case ITEM_MOD_SPELL_DAMAGE_DONE:    // deprecated
+                        case ITEM_MOD_THORNS:
+                            HandleStatModifier(UNIT_MOD_THORNS, TOTAL_VALUE, float(enchant_amount), apply);
+                            LOG_DEBUG("entities.player.items", "+ {} THORNS", enchant_amount);
+                            break;
+                        case ITEM_MOD_SPEED:
+                            ApplyRatingMod(CR_SPEED, enchant_amount, apply);
+                            LOG_DEBUG("entities.player.items", "+ {} SPEED", enchant_amount);
+                            break;
+                        case ITEM_MOD_LIFESTEAL:
+                            ApplyRatingMod(CR_LIFESTEAL, enchant_amount, apply);
+                            LOG_DEBUG("entities.player.items", "+ {} LIFESTEAL", enchant_amount);
+                            break;
+                        case ITEM_MOD_AVOIDANCE:
+                            ApplyRatingMod(CR_AVOIDANCE, enchant_amount, apply);
+                            LOG_DEBUG("entities.player.items", "+ {} AVOIDANCE", enchant_amount);
+                            break;
+                        case ITEM_MOD_MASTERY:
+                            ApplyRatingMod(CR_MASTERY, enchant_amount, apply);
+                            LOG_DEBUG("entities.player.items", "+ {} MASTERY", enchant_amount);
+                            break;
+                        case ITEM_MOD_MULTISTRIKE:
+                            ApplyRatingMod(CR_MULTISTRIKE, enchant_amount, apply);
+                            LOG_DEBUG("entities.player.items", "+ {} MULTISTRIKE", enchant_amount);
+                            break;
+                        case ITEM_MOD_AGI_STR_INT:
+                            HandleStatModifier(ClassSpecDependantUnitMod(), BASE_VALUE, float(enchant_amount), apply);
+                            ApplyStatBuffMod(ClassSpecDependantMainStat(), float(enchant_amount), apply);
+                            LOG_DEBUG("entities.player.items", "+ {} AGILITY/STRENGTH/INTELLECT", enchant_amount);
+                            break;
+                        //case ITEM_MOD_HIT_MELEE_RATING:     // deprecated
+                        //case ITEM_MOD_HIT_RANGED_RATING:    // deprecated
+                        //case ITEM_MOD_HIT_SPELL_RATING:     // deprecated
+                        case ITEM_MOD_HIT_RATING:           // deprecated
+                        //case ITEM_MOD_EXPERTISE_RATING:     // deprecated
+                        //case ITEM_MOD_SPELL_HEALING_DONE:   // deprecated
+                        //case ITEM_MOD_SPELL_DAMAGE_DONE:    // deprecated
+                        //case ITEM_MOD_ARMOR_PENETRATION_RATING:
                         default:
                             break;
                     }

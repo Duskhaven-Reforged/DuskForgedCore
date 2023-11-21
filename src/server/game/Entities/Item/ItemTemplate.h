@@ -36,9 +36,9 @@ enum ItemModType
     ITEM_MOD_DODGE_RATING                     = 13,
     ITEM_MOD_PARRY_RATING                     = 14,
     ITEM_MOD_BLOCK_RATING                     = 15,
-    ITEM_MOD_HIT_MELEE_RATING                 = 16,
-    ITEM_MOD_HIT_RANGED_RATING                = 17,
-    ITEM_MOD_HIT_SPELL_RATING                 = 18,
+    ITEM_MOD_SPEED                            = 16,
+    ITEM_MOD_LIFESTEAL                        = 17,
+    ITEM_MOD_AVOIDANCE                        = 18,
     ITEM_MOD_CRIT_MELEE_RATING                = 19,
     ITEM_MOD_CRIT_RANGED_RATING               = 20,
     ITEM_MOD_CRIT_SPELL_RATING                = 21,
@@ -51,28 +51,26 @@ enum ItemModType
     ITEM_MOD_HASTE_MELEE_RATING               = 28,
     ITEM_MOD_HASTE_RANGED_RATING              = 29,
     ITEM_MOD_HASTE_SPELL_RATING               = 30,
-    ITEM_MOD_HIT_RATING                       = 31,
+    ITEM_MOD_HIT_RATING                       = 31, // Obsolete
     ITEM_MOD_CRIT_RATING                      = 32,
     ITEM_MOD_HIT_TAKEN_RATING                 = 33,
     ITEM_MOD_CRIT_TAKEN_RATING                = 34,
     ITEM_MOD_RESILIENCE_RATING                = 35,
     ITEM_MOD_HASTE_RATING                     = 36,
-    ITEM_MOD_EXPERTISE_RATING                 = 37,
+    ITEM_MOD_MASTERY                          = 37,
     ITEM_MOD_ATTACK_POWER                     = 38,
     ITEM_MOD_RANGED_ATTACK_POWER              = 39,
     //ITEM_MOD_FERAL_ATTACK_POWER             = 40, not in 3.3
-    ITEM_MOD_SPELL_HEALING_DONE               = 41, // deprecated
-    ITEM_MOD_SPELL_DAMAGE_DONE                = 42, // deprecated
+    ITEM_MOD_AGI_STR_INT                      = 41,
+    ITEM_MOD_THORNS                           = 42,
     ITEM_MOD_MANA_REGENERATION                = 43,
-    ITEM_MOD_ARMOR_PENETRATION_RATING         = 44,
+    ITEM_MOD_MULTISTRIKE                      = 44,
     ITEM_MOD_SPELL_POWER                      = 45,
     ITEM_MOD_HEALTH_REGEN                     = 46,
     ITEM_MOD_SPELL_PENETRATION                = 47,
     ITEM_MOD_BLOCK_VALUE                      = 48,
-    ITEM_MOD_THORNS                           = 49,
     ITEM_MOD_CHALLENGE_MAP_CHALLENGE_MODE_ID  = 50,
     ITEM_MOD_CHALLENGE_KEYSTONE_LEVEL         = 60
-
 };
 
 #define MAX_ITEM_MOD                            61

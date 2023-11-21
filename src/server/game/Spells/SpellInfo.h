@@ -409,6 +409,7 @@ public:
     bool CheckFamilyFlagsApply(flag96 flags) const;
     bool CheckFamilyFlagsApply(flag96 flags, uint8 effect) const;
     bool HasAura(AuraType aura) const;
+    bool HasAuraPositive(AuraType aura) const;
     bool HasAnyAura() const;
     bool HasAreaAuraEffect() const;
 
@@ -544,6 +545,8 @@ public:
     void _UnloadImplicitTargetConditionLists();
 
     bool CheckElixirStacking(Unit const* caster) const;
+
+    bool IsHealingSpell() const;
 
 private:
     std::array<SpellEffectInfo, MAX_SPELL_EFFECTS>& _GetEffects() { return Effects; }
