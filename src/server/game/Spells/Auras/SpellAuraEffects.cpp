@@ -1256,7 +1256,7 @@ void AuraEffect::PeriodicTick(AuraApplication* aurApp, Unit* caster) const
             HandlePeriodicPowerBurnAuraTick(target, caster);
             break;
         case SPELL_AURA_MOD_RECOVERY_RATE:
-            HandlePeriodicCooldownRecoveryTick(target, caster);
+            HandlePeriodicCooldownRecoveryTick(aurApp, caster);
             break;
         default:
             break;
@@ -7146,10 +7146,25 @@ void AuraEffect::HandlePeriodicPowerBurnAuraTick(Unit* target, Unit* caster) con
     Unit::ProcDamageAndSpell(caster, damageInfo.target, procAttacker, procVictim, procEx, damageInfo.damage, BASE_ATTACK, spellProto, nullptr, GetEffIndex(), nullptr, &dmgInfo);
 }
 
-void AuraEffect::HandlePeriodicCooldownRecoveryTick(Unit* target, Unit* caster) const
+void AuraEffect::HandlePeriodicCooldownRecoveryTick(AuraApplication* aurApp, Unit* caster) const
 {
-    if (!caster || !target->IsAlive())
+    Unit* target = aurApp->GetTarget();
+
+    if (!caster && (!target || target->GetTypeId() != TYPEID_PLAYER))
         return;
+
+    SpellInfo const* auraSpell = GetBase()->GetSpellInfo();
+    flag96 spellMask = auraSpell->Effects[GetEffIndex()].SpellClassMask;
+    int32 amount = -(auraSpell->Effects[GetEffIndex()].CalcBaseValue(GetBaseAmount()));
+    Player* player = target->ToPlayer();
+    SpellCooldowns const spellCDs = player->GetSpellCooldowns();
+
+    for (SpellCooldowns::const_iterator itr = spellCDs.begin(); itr != spellCDs.end(); ++itr)
+    {
+        SpellInfo const* cdSpell = sSpellMgr->GetSpellInfo(itr->first);
+        if (cdSpell && cdSpell->SpellFamilyName == auraSpell->SpellFamilyName && (cdSpell->SpellFamilyFlags & spellMask))
+            player->ModifySpellCooldown(cdSpell->Id, amount);
+    }
 }
 
 void AuraEffect::HandleProcTriggerSpellAuraProc(AuraApplication* aurApp, ProcEventInfo& eventInfo)
