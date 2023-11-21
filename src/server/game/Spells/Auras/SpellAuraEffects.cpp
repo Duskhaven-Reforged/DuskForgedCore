@@ -3801,6 +3801,7 @@ void AuraEffect::HandleModMechanicImmunity(AuraApplication const* aurApp, uint8 
         case 59752: // Every Man for Himself
         case 65547: // PvP trinket for Faction Champions (ToC 25)
         case 53490: // Bullheaded
+        case 1600025:
         case 46227: // Medalion of Immunity
             mechanic = IMMUNE_TO_MOVEMENT_IMPAIRMENT_AND_LOSS_CONTROL_MASK;
             target->RemoveAurasByType(SPELL_AURA_PREVENTS_FLEEING); // xinef: Patch 2.3.0 PvP Trinkets: Insignia of the Alliance, Insignia of the Horde, Medallion of the Alliance, and Medallion of the Horde now clear the debuff from Judgement of Justice.

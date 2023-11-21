@@ -2684,6 +2684,14 @@ void Spell::EffectDispel(SpellEffIndex effIndex)
             if (owner->GetAura(56249))
                 owner->CastCustomSpell(owner, 19658, &heal_amount, nullptr, nullptr, true);
     }
+
+    //Improved Tranquilizing Shot
+    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_HUNTER && m_spellInfo->Id == 19801)
+    {
+        if (Unit* owner = m_caster->GetOwner())
+            if (owner->GetAura(1600017))
+                owner->CastSpell(owner, 1600018, TRIGGERED_FULL_MASK);
+    }
 }
 
 void Spell::EffectDualWield(SpellEffIndex /*effIndex*/)
