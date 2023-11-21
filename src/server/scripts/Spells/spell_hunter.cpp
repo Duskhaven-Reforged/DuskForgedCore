@@ -74,6 +74,15 @@ enum HunterSpells
 
     SPELL_HUNTER_KILL_COMMAND_ATTACK                = 1600001,
     SPELL_HUNTER_KILL_COMMAND_PROC                  = 1600003,
+    SPELL_HUNTER_BARRAGE                            = 1600004,
+    SPELL_HUNTER_ASPECT_CHEETAH_SECONDARY           = 1600019,
+    SPELL_HUNTER_RAPID_RELOAD_PROC                  = 1600023,
+    SPELL_HUNTER_POSTHASTE                          = 1600024,
+    SPELL_HUNTER_POSTHASTE_PROC                     = 1600025,
+    SPELL_HUNTER_BEAST_MASTER                       = 1600026,
+    SPELL_HUNTER_BEAST_MASTER_PROC                  = 1600027,
+    SPELL_HUNTER_BLOODSEEKER                        = 1600034,
+    SPELL_HUNTER_BLOODSEEKER_PROC                   = 1600035,
 };
 
 class spell_hun_check_pet_los : public SpellScript
@@ -1385,16 +1394,152 @@ class spell_hun_kill_command : public SpellScript
     void HandleCast()
     {
         Player* caster = GetCaster()->ToPlayer();
+        Unit* target = GetExplTargetUnit();
         Creature* pet = caster->GetPet()->ToCreature();
         caster->CastSpell(caster, SPELL_HUNTER_KILL_COMMAND_ATTACK, TRIGGERED_FULL_MASK);
-        pet->AI()->OwnerAttacked(GetExplTargetUnit());
+        pet->SetInCombatWith(target);
+        pet->AI()->AttackStart(target);
         caster->GetAura(SPELL_HUNTER_KILL_COMMAND_PROC)->Remove();
+
+        if (Aura* aura = caster->GetAura(SPELL_HUNTER_BLOODSEEKER))
+            caster->CastSpell(target, SPELL_HUNTER_BLOODSEEKER_PROC, TRIGGERED_FULL_MASK);
     }
 
     void Register() override
     {
         OnCheckCast += SpellCheckCastFn(spell_hun_kill_command::CheckCast);
         OnCast += SpellCastFn(spell_hun_kill_command::HandleCast);
+    }
+};
+
+class spell_hun_surging_shots : public AuraScript
+{
+    PrepareAuraScript(spell_hun_surging_shots);
+
+    void HandleEffectProc(AuraEffect const* aurEff, ProcEventInfo& eventInfo)
+    {
+        Player* caster = GetCaster()->ToPlayer();
+
+        if (!caster || !caster->IsAlive())
+            return;
+
+        if (caster)
+            caster->RemoveSpellCooldown(SPELL_HUNTER_BARRAGE, true);
+    }
+
+    void Register() override
+    {
+        OnEffectProc += AuraEffectProcFn(spell_hun_surging_shots::HandleEffectProc, EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+class spell_hun_aspect_cheetah : public AuraScript
+{
+    PrepareAuraScript(spell_hun_aspect_cheetah);
+
+    void HandleRemove(AuraEffect const* aurEff, AuraEffectHandleModes mode)
+    {
+        if (!GetCaster() || !GetCaster()->IsAlive())
+            return;
+
+        GetCaster()->CastSpell(GetCaster(), SPELL_HUNTER_ASPECT_CHEETAH_SECONDARY, TRIGGERED_FULL_MASK);
+    }
+
+    void Register() override
+    {
+        OnEffectRemove += AuraEffectRemoveFn(spell_hun_aspect_cheetah::HandleRemove, EFFECT_0, SPELL_AURA_MOD_INCREASE_SPEED, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+class spell_hun_rapid_reload : public AuraScript
+{
+    PrepareAuraScript(spell_hun_rapid_reload);
+
+    void HandleRemove(AuraEffect const* aurEff, AuraEffectHandleModes mode)
+    {
+        if (Aura* aura = GetCaster()->GetAura(SPELL_HUNTER_RAPID_RELOAD_PROC))
+            aura->Remove();
+    }
+
+    void Register() override
+    {
+        OnEffectRemove += AuraEffectRemoveFn(spell_hun_rapid_reload::HandleRemove, EFFECT_0, SPELL_AURA_PERIODIC_TRIGGER_SPELL, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+class spell_hun_posthaste : public SpellScript
+{
+    PrepareSpellScript(spell_hun_posthaste);
+
+    void HandleCast()
+    {
+        if (Aura* aura = GetCaster()->GetAura(SPELL_HUNTER_POSTHASTE))
+        {
+            GetCaster()->CastSpell(GetCaster(), SPELL_HUNTER_POSTHASTE_PROC, TRIGGERED_FULL_MASK);
+        }
+    }
+
+    void Register() override
+    {
+        OnCast += SpellCastFn(spell_hun_posthaste::HandleCast);
+    }
+};
+
+class spell_hun_on_pet_crit : public AuraScript
+{
+    PrepareAuraScript(spell_hun_on_pet_crit);
+
+    void HandleEffectProc(AuraEffect const* aurEff, ProcEventInfo& eventInfo)
+    {
+        Player* caster = GetCaster()->ToPlayer();
+
+        if (!caster || !caster->IsAlive())
+            return;
+
+        if (Aura* aura = GetCaster()->GetAura(SPELL_HUNTER_BEAST_MASTER))
+            caster->CastSpell(caster, SPELL_HUNTER_BEAST_MASTER_PROC, TRIGGERED_FULL_MASK);
+    }
+
+    void Register() override
+    {
+        OnEffectProc += AuraEffectProcFn(spell_hun_on_pet_crit::HandleEffectProc, EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+class spell_hunter_binding_shot : public SpellScript
+{
+    PrepareSpellScript(spell_hunter_binding_shot);
+
+    void FilterTargets(std::list<WorldObject*>& targets)
+    {
+        Unit* creature = GetExplTargetUnit();
+
+        for (auto const& enemy : targets)
+        {
+            if (Unit* target = enemy->ToUnit())
+            {
+                if (target->isDead())
+                    continue;
+
+                Position targetpos = target->GetPosition();
+                Position pos = creature->GetPosition();
+                float distance = creature->GetDistance(targetpos);
+
+                if (distance <= 8)
+                {
+                    if (Creature* creatureTarget = target->ToCreature())
+                    {
+                        if (!creatureTarget->isWorldBoss() || !creatureTarget->IsDungeonBoss())
+                            target->GetMotionMaster()->MoveJump(pos, 8.0f, 8.0f);
+                    }
+                }
+            }
+        }
+    }
+
+    void Register() override
+    {
+        OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_hunter_binding_shot::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ENEMY);
     }
 };
 
@@ -1430,4 +1575,10 @@ void AddSC_hunter_spell_scripts()
     RegisterSpellScript(spell_hun_bestial_wrath);
     RegisterSpellScript(spell_hun_target_self_and_pet);
     RegisterSpellScript(spell_hun_kill_command);
+    RegisterSpellScript(spell_hun_surging_shots);
+    RegisterSpellScript(spell_hun_aspect_cheetah);
+    RegisterSpellScript(spell_hun_rapid_reload);
+    RegisterSpellScript(spell_hun_posthaste);
+    RegisterSpellScript(spell_hun_on_pet_crit);
+    RegisterSpellScript(spell_hunter_binding_shot);
 }
