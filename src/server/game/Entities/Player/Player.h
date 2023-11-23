@@ -173,7 +173,7 @@ enum TalentTree // talent tabs
 	TALENT_TREE_WARLOCK_AFFLICTION		 = 302,
 	TALENT_TREE_WARLOCK_DEMONOLOGY		 = 303,
 	TALENT_TREE_WARLOCK_DESTRUCTION		 = 301,
-    TALENT_TREE_DEMON_HUNTER_ANGUISH     = 414,
+    TALENT_TREE_DEMON_HUNTER_ANGUISH     = 414,     // Unused for now
 	TALENT_TREE_DEMON_HUNTER_HAVOC		 = 415,
 	TALENT_TREE_DEMON_HUNTER_VENGEANCE	 = 416,
 	TALENT_TREE_DRUID_BALANCE			 = 283,
@@ -183,11 +183,11 @@ enum TalentTree // talent tabs
     TALENT_TREE_MONK_FELLOWSHIP          = 420,
     TALENT_TREE_MONK_RADIANCE            = 421,
     TALENT_TREE_MONK_ZEALOTRY            = 422,
-	TALENT_TREE_BARD_BLADESONG			 = 417,
-	TALENT_TREE_BARD_INSPIRATION		 = 418,
-	TALENT_TREE_BARD_SONGWEAVER			 = 419,
+	TALENT_TREE_BARD_BLADESONG			 = 417,     // Unused for now
+	TALENT_TREE_BARD_INSPIRATION		 = 418,     // Melody
+	TALENT_TREE_BARD_SONGWEAVER			 = 419,     // Rhapsody
     TALENT_TREE_TINKER_PHYSICIAN		 = 413,
-	TALENT_TREE_TINKER_SCRAPPER			 = 412,
+	TALENT_TREE_TINKER_SCRAPPER			 = 412,     // Technician
 	TALENT_TREE_TINKER_VANGUARD			 = 411
 };
 
@@ -1987,6 +1987,7 @@ public:
     float OCTRegenHPPerSpirit();
     float OCTRegenMPPerSpirit();
     [[nodiscard]] float GetRatingMultiplier(CombatRating cr) const;
+    [[nodiscard]] float GetMasteryMultiplier() const;
     [[nodiscard]] float GetRatingBonusValue(CombatRating cr) const;
     uint32 GetBaseSpellPowerBonus() { return m_baseSpellPower; }
     [[nodiscard]] int32 GetSpellPenetrationItemMod() const { return m_spellPenetrationItemMod; }

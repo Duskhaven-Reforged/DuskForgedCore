@@ -5322,7 +5322,212 @@ float Player::GetRatingMultiplier(CombatRating cr) const
     if (!Rating || !classRating)
         return 1.0f;                                        // By default use minimum coefficient (not must be called)
 
+    if (cr == CR_MASTERY)
+        return GetMasteryMultiplier();
+
     return classRating->ratio / Rating->ratio;
+}
+
+float Player::GetMasteryMultiplier() const
+{
+    uint32 masteryRating = 0;
+    uint32 spec = 0;
+
+    switch (getClass())
+    {
+        case CLASS_WARRIOR:
+            if (spec == TALENT_TREE_WARRIOR_ARMS)
+            {
+                masteryRating = 20;
+                break;
+            }
+            else if (spec == TALENT_TREE_WARRIOR_PROTECTION)
+            {
+                masteryRating = 15;      // Uhh... no idea what number, setting to 15 for now
+                break;
+            }
+            masteryRating = 10;
+            break;
+        case CLASS_PALADIN:
+            if (spec == TALENT_TREE_PALADIN_HOLY)
+            {
+                masteryRating = 15;
+                break;
+            }
+            else if (spec == TALENT_TREE_PALADIN_PROTECTION)
+            {
+                masteryRating = 15;
+                break;
+            }
+            masteryRating = 15;
+            break;
+        case CLASS_HUNTER:
+            if (spec == TALENT_TREE_HUNTER_MARKSMANSHIP)
+            {
+                masteryRating = 15;
+                break;
+            }
+            else if (spec == TALENT_TREE_HUNTER_SURVIVAL)
+            {
+                masteryRating = 20;
+                break;
+            }
+            masteryRating = 25;
+            break;
+        case CLASS_ROGUE:           // Setting all of it to temp 15 per 1%
+            if (spec == TALENT_TREE_ROGUE_COMBAT)
+            {
+                masteryRating = 15;
+                break;
+            }
+            else if (spec == TALENT_TREE_ROGUE_SUBTLETY)
+            {
+                masteryRating = 15;
+                break;
+            }
+            masteryRating = 15;
+            break;
+        case CLASS_PRIEST:          // Setting all of it to temp 15 per 1%
+            if (spec == TALENT_TREE_PRIEST_DISCIPLINE)
+            {
+                masteryRating = 15;
+                break;
+            }
+            else if (spec == TALENT_TREE_PRIEST_HOLY)
+            {
+                masteryRating = 15;
+                break;
+            }
+            else if (spec == TALENT_TREE_PRIEST_INQUISITION)
+            {
+                masteryRating = 15;
+                break;
+            }
+            masteryRating = 15;
+            break;
+        case CLASS_DEATH_KNIGHT:    // Setting all of it to temp 15 per 1%
+            if (spec == TALENT_TREE_DEATH_KNIGHT_BLOOD)
+            {
+                masteryRating = 15;
+                break;
+            }
+            else if (spec == TALENT_TREE_DEATH_KNIGHT_UNHOLY)
+            {
+                masteryRating = 15;
+                break;
+            }
+            masteryRating = 15;
+            break;
+        case CLASS_SHAMAN:          // Setting all of it to temp 15 per 1%
+            if (spec == TALENT_TREE_SHAMAN_ELEMENTAL)
+            {
+                masteryRating = 15;
+                break;
+            }
+            else if (spec == TALENT_TREE_SHAMAN_RESTORATION)
+            {
+                masteryRating = 15;
+                break;
+            }
+            else if (spec == TALENT_TREE_SHAMAN_WATCHER)
+            {
+                masteryRating = 15;
+                break;
+            }
+            masteryRating = 15;
+            break;
+        case CLASS_MAGE:
+            if (spec == TALENT_TREE_MAGE_ARCANE)
+            {
+                masteryRating = 15;      // Temp 15
+                break;
+            }
+            else if (spec == TALENT_TREE_MAGE_FIRE)
+            {
+                masteryRating = 28;
+                break;
+            }
+            masteryRating = 15;         // Temp 15
+            break;
+        case CLASS_WARLOCK:
+            if (spec == TALENT_TREE_WARLOCK_AFFLICTION)
+            {
+                masteryRating = 15;
+                break;
+            }
+            else if (spec == TALENT_TREE_WARLOCK_DESTRUCTION)
+            {
+                masteryRating = 15;
+                break;
+            }
+            masteryRating = 15;         // And this unlike other two is temp 15
+            break;
+        case CLASS_DEMON_HUNTER:
+            if (spec == TALENT_TREE_DEMON_HUNTER_VENGEANCE)
+            {
+                masteryRating = 15;
+                break;
+            }
+            masteryRating = 20;
+            break;
+        case CLASS_DRUID:           // Setting all of it to temp 15 per 1%
+            if (spec == TALENT_TREE_DRUID_FERAL_COMBAT)
+            {
+                masteryRating = 15;
+                break;
+            }
+            else if (spec == TALENT_TREE_DRUID_GUARDIAN)
+            {
+                masteryRating = 15;
+                break;
+            }
+            else if (spec == TALENT_TREE_DRUID_RESTORATION)
+            {
+                masteryRating = 15;
+                break;
+            }
+            masteryRating = 15;
+            break;
+        case CLASS_MONK:
+            if (spec == TALENT_TREE_MONK_FELLOWSHIP)
+            {
+                masteryRating = 30;
+                break;
+            }
+            else if (spec == TALENT_TREE_MONK_RADIANCE)
+            {
+                masteryRating = 10;
+                break;
+            }
+            masteryRating = 25;
+            break;
+        case CLASS_BARD:            // Setting all of it to temp 15 per 1%
+            if (spec == TALENT_TREE_BARD_INSPIRATION) // Aleist3r: CBA to change it since spec names changed - should be Melody
+            {
+                masteryRating = 15;
+                break;
+            }
+            masteryRating = 15;
+            break;
+        case CLASS_TINKER:          // Setting all of it to temp 15 per 1%
+            if (spec == TALENT_TREE_TINKER_PHYSICIAN)
+            {
+                masteryRating = 15;
+                break;
+            }
+            else if (spec == TALENT_TREE_TINKER_VANGUARD)
+            {
+                masteryRating = 15;
+                break;
+            }
+            masteryRating = 15;
+            break;
+        default:
+            masteryRating = 15;
+            break;
+    } 
+
+    return float(masteryRating / (61 - GetLevel()));
 }
 
 float Player::GetRatingBonusValue(CombatRating cr) const
