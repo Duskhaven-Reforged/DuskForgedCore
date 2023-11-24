@@ -22146,7 +22146,7 @@ UnitMods Unit::ClassSpecDependantUnitMod() const
             mod = UNIT_MOD_STAT_STRENGTH;
             break;
         case CLASS_SHAMAN:
-            if (pSpec == TALENT_TREE_SHAMAN_ENHANCEMENT)
+            if (pSpec == TALENT_TREE_SHAMAN_ENHANCEMENT || pSpec == TALENT_TREE_SHAMAN_WATCHER)
             {
                 mod = UNIT_MOD_STAT_AGILITY;
                 break;
@@ -22171,13 +22171,18 @@ UnitMods Unit::ClassSpecDependantUnitMod() const
             mod = UNIT_MOD_STAT_AGILITY;
             break;
         case CLASS_MONK:
+            if (pSpec == TALENT_TREE_MONK_ZEALOTRY)
+            {
+                mod = UNIT_MOD_STAT_AGILITY;
+                break;
+            }
             mod = UNIT_MOD_STAT_INTELLECT;
             break;
         case CLASS_BARD:
             mod = UNIT_MOD_STAT_INTELLECT;
             break;
         case CLASS_TINKER:
-            mod = UNIT_MOD_STAT_AGILITY;
+            mod = UNIT_MOD_STAT_INTELLECT;
             break;
         default:
             mod = UNIT_MOD_STAT_STRENGTH;
@@ -22199,6 +22204,11 @@ Stats Unit::ClassSpecDependantMainStat() const
             stat = STAT_STRENGTH;
             break;
         case CLASS_PALADIN:
+            if (pSpec == TALENT_TREE_PALADIN_HOLY)
+            {
+                stat = STAT_INTELLECT;
+                break;
+            }
             stat = STAT_STRENGTH;
             break;
         case CLASS_ROGUE:
@@ -22214,6 +22224,11 @@ Stats Unit::ClassSpecDependantMainStat() const
             stat = STAT_STRENGTH;
             break;
         case CLASS_SHAMAN:
+            if (pSpec == TALENT_TREE_SHAMAN_ENHANCEMENT || pSpec == TALENT_TREE_SHAMAN_WATCHER)
+            {
+                stat = STAT_AGILITY;
+                break;
+            }
             stat = STAT_INTELLECT;
             break;
         case CLASS_MAGE:
@@ -22226,19 +22241,29 @@ Stats Unit::ClassSpecDependantMainStat() const
             stat = STAT_AGILITY;
             break;
         case CLASS_DRUID:
+            if (pSpec == TALENT_TREE_DRUID_BALANCE || pSpec == TALENT_TREE_DRUID_RESTORATION)
+            {
+                stat = STAT_INTELLECT;
+                break;
+            }
             stat = STAT_AGILITY;
             break;
         case CLASS_MONK:
+            if (pSpec == TALENT_TREE_MONK_ZEALOTRY)
+            {
+                stat = STAT_AGILITY;
+                break;
+            }
             stat = STAT_AGILITY;
             break;
         case CLASS_BARD:
             stat = STAT_INTELLECT;
             break;
         case CLASS_TINKER:
-            stat = STAT_AGILITY;
+            stat = STAT_INTELLECT;
             break;
         default:
-            stat = STAT_AGILITY;
+            stat = STAT_STRENGTH;
             break;
     }
 

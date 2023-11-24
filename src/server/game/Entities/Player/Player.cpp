@@ -5527,7 +5527,7 @@ float Player::GetMasteryMultiplier() const
             break;
     } 
 
-    return float(masteryRating / (61 - GetLevel()));
+    return float(1 / (masteryRating / (61 - GetLevel())));
 }
 
 float Player::GetRatingBonusValue(CombatRating cr) const
