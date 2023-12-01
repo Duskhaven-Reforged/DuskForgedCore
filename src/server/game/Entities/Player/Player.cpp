@@ -1925,12 +1925,12 @@ void Player::Regenerate(Powers power)
                 {
                     if (getClass() == CLASS_PRIEST)
                     {
-                        if (GetSpec() == TALENT_TREE_PRIEST_SHADOW)
+                        if (GetActiveSpec() == TALENT_TREE_PRIEST_SHADOW)
                         {
                             float InsanityDecreaseRate = sWorld->getRate(RATE_POWER_INSANITY_LOSS);
                             addvalue += -30 * InsanityDecreaseRate;
                         }
-                        else if (GetSpec() == TALENT_TREE_PRIEST_INQUISITION)
+                        else if (GetActiveSpec() == TALENT_TREE_PRIEST_INQUISITION)
                         {
                             float WrathDecreaseRate = sWorld->getRate(RATE_POWER_WRATH_LOSS);
                             addvalue += -30 * WrathDecreaseRate;
@@ -1938,7 +1938,7 @@ void Player::Regenerate(Powers power)
                     }
                     else if (getClass() == CLASS_TINKER)
                     {
-                        if (GetSpec() != TALENT_TREE_TINKER_PHYSICIAN)
+                        if (GetActiveSpec() != TALENT_TREE_TINKER_PHYSICIAN)
                         {
                             float BatteryGaugeDecreaseRate = sWorld->getRate(RATE_POWER_RUNICPOWER_LOSS);
                             addvalue += -30 * BatteryGaugeDecreaseRate;

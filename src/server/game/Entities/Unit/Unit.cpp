@@ -22219,8 +22219,8 @@ uint32 Unit::AdjustBeforeBlockDamage(Unit* blocker, uint32 damage) const
 UnitMods Unit::ClassSpecDependantUnitMod() const
 {
     uint8 pClass = ToPlayer()->getClass();
-    uint32 pSpec = 1;
-    UnitMods mod = UNIT_MOD_STAT_STRENGTH;
+    uint32 pSpec = ToPlayer()->GetActiveSpec();
+    UnitMods mod;
 
     switch (pClass)
     {
@@ -22297,7 +22297,7 @@ UnitMods Unit::ClassSpecDependantUnitMod() const
 Stats Unit::ClassSpecDependantMainStat() const
 {
     uint8 pClass = ToPlayer()->getClass();
-    uint32 pSpec = 2;
+    uint32 pSpec = ToPlayer()->GetActiveSpec();
     Stats stat;
 
     switch (pClass)
