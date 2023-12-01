@@ -69,7 +69,7 @@ enum MageSpells
     SPELL_MAGE_ARCANE_SURGE                        = 1310037,
     SPELL_MAGE_ARCANIST_MIND_AURA                  = 1310020,
     SPELL_MAGE_ARCANIST_MIND_BUFF                  = 1310021,
-    SPELL_MAGE_AVALANCHE_AURA                      = 1200030,
+    SPELL_MAGE_AVALANCHE_AURA                      = 1290030,
     SPELL_MAGE_AVALANCHE_COMET_PROC                = 1290031,
     SPELL_MAGE_BLAZING_BARRIER                     = 1280004,
     SPELL_MAGE_BLAZING_BARRIER_DAMAGE_AOE          = 1280008,
@@ -3849,7 +3849,7 @@ class spell_mage_touch_of_the_magi_talent_procs : public SpellScript
 
     void Register() override
     {
-        OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_mage_touch_of_the_magi_talent_procs::FilterTargets, EFFECT_ALL, TARGET_UNIT_CASTER_AREA_RAID);
+        OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_mage_touch_of_the_magi_talent_procs::FilterTargets, EFFECT_0, TARGET_UNIT_TARGET_ENEMY);
     }
 };
 
