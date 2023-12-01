@@ -76,10 +76,12 @@ enum MageSpells
     SPELL_MAGE_BLINK                               = 1953,
     SPELL_MAGE_CHAIN_REACTION_AURA                 = 1290016,
     SPELL_MAGE_CHAIN_REACTION_PROC                 = 1290017,
+    SPELL_MAGE_CASCADING_POWER_BUFF                = 1310073,
+    SPELL_MAGE_CLEARCASTING                        = 12536,
     SPELL_MAGE_COMET_STORM_COMET                   = 1290027,
     SPELL_MAGE_COMET_STORM_SPELL                   = 1290026,
     SPELL_MAGE_CONE_OF_COLD                        = 1290063,
-    SPELL_MAGE_CONFLAGRATE_AURA                    = 1300034,
+    SPELL_MAGE_CONFLAGRATION_AURA                  = 1300034,
     SPELL_MAGE_CRYSTALLIZE_AURA                    = 1290048,
     SPELL_MAGE_CRYSTALLIZE_SPELL                   = 1290047,
     SPELL_MAGE_DEEP_FREEZE_PROC1                   = 1290040,
@@ -98,6 +100,7 @@ enum MageSpells
     SPELL_MAGE_EVOCATION                           = 1310011,
     SPELL_MAGE_FINGERS_OF_FROST_PROC               = 1290010,
     SPELL_MAGE_FIREBALL                            = 1300011,
+    SPELL_MAGE_FIRE_BLAST                          = 1300003,
     SPELL_MAGE_FIRESTARTER_AURA                    = 1300021,
     SPELL_MAGE_FIRESTARTER_BUFF                    = 1300022,
     SPELL_MAGE_FLAMECANNON                         = 1300025,
@@ -132,6 +135,7 @@ enum MageSpells
     SPELL_MAGE_ICICLE_VISUAL5                      = 1290006,
     SPELL_MAGE_ICY_VEINS_AURA                      = 12472,
     SPELL_MAGE_ICY_VEINS_ICE_FORM                  = 1290051,
+    SPELL_MAGE_IMPACT_ZONE_AURA                    = 1300026,
     SPELL_MAGE_IMPROVED_SCORCH_DEBUFF              = 22959,
     SPELL_MAGE_MASTER_OF_MAGIC_ARCANE_AURA         = 1280046,
     SPELL_MAGE_MASTER_OF_MAGIC_COUNTER             = 1280047,
@@ -189,6 +193,7 @@ enum MageSpells
     SPELL_MAGE_SUNDERING_FLAME_DEBUFF              = 1300031,
     SPELL_MAGE_SUPERCONDUCTOR_AURA                 = 1310069,
     SPELL_MAGE_SUPERCONDUCTOR_BUFF                 = 1310070,
+    SPELL_MAGE_SUPERNOVA                           = 1310053,
     SPELL_MAGE_TEMPEST_BARRIER_AURA                = 1280013,
     SPELL_MAGE_TEMPEST_BARRIER_PROC                = 1280014,
     SPELL_MAGE_TEMPORAL_DISPLACEMENT               = 1280002,
@@ -729,8 +734,8 @@ class spell_mage_fire_frost_ward : public spell_mage_incanters_absorbtion_base_A
     void Register() override
     {
         DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_mage_fire_frost_ward::CalculateAmount, EFFECT_0, SPELL_AURA_SCHOOL_ABSORB);
-        OnEffectAbsorb += AuraEffectAbsorbFn(spell_mage_fire_frost_ward::Absorb, EFFECT_0);
-        AfterEffectAbsorb += AuraEffectAbsorbFn(spell_mage_fire_frost_ward::Trigger, EFFECT_0);
+        //OnEffectAbsorb += AuraEffectAbsorbFn(spell_mage_fire_frost_ward::Absorb, EFFECT_0);
+        //AfterEffectAbsorb += AuraEffectAbsorbFn(spell_mage_fire_frost_ward::Trigger, EFFECT_0);
     }
 };
 
@@ -935,7 +940,7 @@ class spell_mage_living_bomb : public AuraScript
         if (Unit* caster = GetCaster())
             caster->CastSpell(GetTarget(), uint32(aurEff->GetAmount()), true, nullptr, aurEff);
 
-        if (GetCaster()->HasAura(SPELL_MAGE_CONFLAGRATE_AURA))
+        if (GetCaster()->HasAura(SPELL_MAGE_CONFLAGRATION_AURA))
             GetCaster()->ToPlayer()->ModifySpellCooldown(SPELL_MAGE_FLAMECANNON, -4000);
     }
 
@@ -1721,6 +1726,23 @@ class spell_mage_blink : public SpellScript
     }
 };
 
+// 1310073 - Cascading Power
+class spell_mage_cascading_power_aura : public AuraScript
+{
+    PrepareAuraScript(spell_mage_cascading_power_aura);
+
+    void HandleOnApply()
+    {
+        if (GetTarget()->HasAura(SPELL_MAGE_CASCADING_POWER_BUFF))
+            SetMaxDuration(GetDuration());
+    }
+
+    void Register() override
+    {
+        OnAuraApply += AuraApplyFn(spell_mage_cascading_power_aura::HandleOnApply);
+    }
+};
+
 // 1290026 - Comet Storm
 class spell_mage_comet_storm : public SpellScript
 {
@@ -2304,7 +2326,7 @@ class spell_mage_frostfire_bolt : public SpellScript
     }
 };
 
-// 1290053 - Glacial Assault
+// 1290054 - Glacial Assault
 class spell_mage_glacial_assault_proc : public SpellScript
 {
     PrepareSpellScript(spell_mage_glacial_assault_proc);
@@ -2396,6 +2418,56 @@ class spell_mage_glacial_spike : public SpellScript
     {
         OnCast += SpellCastFn(spell_mage_glacial_spike::HandleCast);
         OnHit += SpellHitFn(spell_mage_glacial_spike::RecalculateDamage);
+    }
+};
+
+// 1290055 - Glacial Spike
+class spell_mage_glacial_spike_glacial_assault : public SpellScript
+{
+    PrepareSpellScript(spell_mage_glacial_spike_glacial_assault);
+
+    bool Validate(SpellInfo const* /*spellEntry*/) override
+    {
+        return ValidateSpellInfo(
+            {
+                SPELL_MAGE_FLASH_FREEZE_AURA,
+                SPELL_MAGE_GLACIAL_ASSAULT_GLACIAL_SPIKE,
+                SPELL_MAGE_PERMAFROST_PROC,
+                SPELL_MAGE_SPLITTING_ICE_AURA
+            });
+    }
+
+    void RecalculateDamage()
+    {
+        Unit* caster = GetCaster();
+        Unit* victim = GetHitUnit();
+        int32 damage = GetHitDamage();
+        float dmgBonus = GetCaster()->ToPlayer()->GetBaseSpellPowerBonus() * 1.25f;
+
+        if (caster->HasAura(SPELL_MAGE_SPLITTING_ICE_AURA))
+        {
+            int32 bonusPct = sSpellMgr->GetSpellInfo(SPELL_MAGE_SPLITTING_ICE_AURA)->Effects[EFFECT_0].CalcValue();
+            dmgBonus += CalculatePct(dmgBonus, bonusPct);
+        }
+        if (caster->HasAura(SPELL_MAGE_PERMAFROST_PROC))
+        {
+            uint8 stackSize = caster->GetAura(SPELL_MAGE_PERMAFROST_PROC)->GetStackAmount();
+            int32 bonusPct = sSpellMgr->GetSpellInfo(SPELL_MAGE_PERMAFROST_PROC)->Effects[EFFECT_0].CalcValue() * stackSize;
+            dmgBonus += CalculatePct(dmgBonus, bonusPct);
+        }
+        if (caster->HasAura(SPELL_MAGE_FLASH_FREEZE_AURA))
+        {
+            int32 bonusPct = sSpellMgr->GetSpellInfo(SPELL_MAGE_FLASH_FREEZE_AURA)->Effects[EFFECT_0].CalcValue();
+            dmgBonus += CalculatePct(dmgBonus, bonusPct);
+        }
+
+        damage += round(dmgBonus / 2);
+        SetHitDamage(damage);
+    }
+
+    void Register() override
+    {
+        OnHit += SpellHitFn(spell_mage_glacial_spike_glacial_assault::RecalculateDamage);
     }
 };
 
@@ -2641,10 +2713,10 @@ class spell_mage_meteor : public SpellScript
     }
 };
 
-// 55342 -  Mirror Image
-class spell_mage_mirror_image : public SpellScript
+// 55342 - Mirror Image
+class spell_mage_mirror_image_spell : public SpellScript
 {
-    PrepareSpellScript(spell_mage_mirror_image);
+    PrepareSpellScript(spell_mage_mirror_image_spell);
 
     bool Validate(SpellInfo const* /*spellEntry*/) override
     {
@@ -2662,7 +2734,7 @@ class spell_mage_mirror_image : public SpellScript
 
     void Register() override
     {
-        OnHit += SpellHitFn(spell_mage_mirror_image::HandleOnHit);
+        OnHit += SpellHitFn(spell_mage_mirror_image_spell::HandleOnHit);
     }
 };
 
@@ -2684,7 +2756,10 @@ class spell_mage_mirror_image_aura : public AuraScript  // Aleist3r: I still hav
         std::list<Creature*> mirrorImages;
         GetCaster()->GetAllMinionsByEntry(mirrorImages, NPC_MAGE_MIRROR_IMAGE);
 
-        (*mirrorImages.begin())->DespawnOrUnsummon();
+        if (!mirrorImages.empty())
+            (*mirrorImages.begin())->DespawnOrUnsummon();
+        else
+            GetCaster()->RemoveAura(SPELL_MAGE_MIRROR_IMAGE_BUFF_AURA);
     }
 
     void Register() override
@@ -3388,6 +3463,7 @@ class spell_mage_sear : public SpellScript
                 SPELL_MAGE_METEOR_AURA,
                 SPELL_MAGE_HOT_STREAK_AURA,
                 SPELL_MAGE_HOT_STREAK_PROC,
+                SPELL_MAGE_IMPACT_ZONE_AURA,
                 SPELL_MAGE_SEAR
             });
     }
@@ -3398,7 +3474,12 @@ class spell_mage_sear : public SpellScript
         Unit* caster = GetCaster();
 
         if (GetExplTargetUnit() == target && caster->HasAura(SPELL_MAGE_METEOR_AURA))
+        {
             caster->m_Events.AddEvent(new SpellMageCastEvent(caster, target, SPELL_MAGE_METEOR_AURA), caster->m_Events.CalculateTime(800));
+
+            if (caster->HasAura(SPELL_MAGE_IMPACT_ZONE_AURA))
+                caster->m_Events.AddEvent(new SpellMageCastEvent(caster, target, SPELL_MAGE_METEOR_AURA), caster->m_Events.CalculateTime(1600));
+        }
 
         if (GetExplTargetUnit() == target && caster->HasAura(SPELL_MAGE_HOT_STREAK_AURA))
         {
@@ -3522,6 +3603,31 @@ class spell_mage_superconductor_periodic_aura : public AuraScript
     }
 };
 
+// 1310053 - Supernova
+class spell_mage_supernova : public SpellScript
+{
+    PrepareSpellScript(spell_mage_supernova);
+
+    bool Validate(SpellInfo const* /*spellEntry*/) override
+    {
+        return ValidateSpellInfo(
+            {
+                SPELL_MAGE_SUPERNOVA
+            });
+    }
+
+    void HandleOnHit()
+    {
+        if (GetHitUnit() == GetExplTargetUnit())
+            SetHitDamage(GetHitDamage() * 2);
+    }
+
+    void Register() override
+    {
+        OnHit += SpellHitFn(spell_mage_supernova::HandleOnHit);
+    }
+};
+
 // 1280014 - Tempest Barrier
 class spell_mage_tempest_barrier_aura : public AuraScript
 {
@@ -3583,6 +3689,15 @@ class spell_mage_time_ward_aura : public AuraScript
             caster->CastSpell(target, SPELL_MAGE_TIME_WARD_PROC_FINISH, true);
             --counter;
         }
+
+        if (caster->HasAura(SPELL_MAGE_MASTERY_ARCANE_MASTERY))
+            caster->CastSpell(caster, SPELL_MAGE_CLEARCASTING);
+
+        if (caster->HasAura(SPELL_MAGE_MASTERY_FLASHBURN))
+            caster->ToPlayer()->ModifySpellCooldown(SPELL_MAGE_FIRE_BLAST, -6000);
+
+        if (caster->HasAura(SPELL_MAGE_MASTERY_ICICLES))
+            caster->CastSpell(caster, SPELL_MAGE_FINGERS_OF_FROST_PROC);
     }
 
     void Register() override
@@ -3775,6 +3890,7 @@ void AddSC_mage_spell_scripts()
     RegisterSpellScript(spell_mage_blazing_barrier);
     RegisterSpellScript(spell_mage_blazing_barrier_onremove_aura);
     RegisterSpellScript(spell_mage_blink);
+    RegisterSpellScript(spell_mage_cascading_power_aura);
     RegisterSpellScript(spell_mage_comet_storm);
     RegisterSpellScript(spell_mage_cone_of_cold);
     RegisterSpellScript(spell_mage_crystallize_aura);
@@ -3792,14 +3908,15 @@ void AddSC_mage_spell_scripts()
     RegisterSpellScript(spell_mage_frostfire_bolt);
     RegisterSpellScript(spell_mage_glacial_assault_proc);
     RegisterSpellScript(spell_mage_glacial_spike);
+    RegisterSpellScript(spell_mage_glacial_spike_glacial_assault);
     RegisterSpellScript(spell_mage_hot_streak_aura);
     RegisterSpellScript(spell_mage_ice_lance);
     RegisterSpellScript(spell_mage_icicle_aura);
     RegisterSpellScript(spell_mage_icy_veins);
     RegisterSpellScript(spell_mage_master_of_magic_trigger);
     RegisterSpellScript(spell_mage_meteor);
-    RegisterSpellScript(spell_mage_mirror_image);
     RegisterSpellScript(spell_mage_mirror_image_aura);
+    RegisterSpellScript(spell_mage_mirror_image_spell);
     RegisterSpellScript(spell_mage_missile_barrage_trigger);
     RegisterSpellScript(spell_mage_missile_barrage_aura);
     RegisterSpellScript(spell_mage_particle_disintegration_aura);
@@ -3823,6 +3940,7 @@ void AddSC_mage_spell_scripts()
     RegisterSpellScript(spell_mage_shimmer);
     RegisterSpellScript(spell_mage_sundering_flame_debuff_aura);
     RegisterSpellScript(spell_mage_superconductor_periodic_aura);
+    RegisterSpellScript(spell_mage_supernova);
     RegisterSpellScript(spell_mage_tempest_barrier_aura);
     RegisterSpellScript(spell_mage_time_ward_aura);
     RegisterSpellScript(spell_mage_timewarp);

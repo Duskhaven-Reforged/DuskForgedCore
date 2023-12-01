@@ -392,6 +392,7 @@ pAuraEffectHandler AuraEffectHandler[TOTAL_AURAS] =
     &AuraEffect::HandleAuraModSpellPowerPercent,                  //329 SPELL_AURA_MOD_SPELL_POWER_PCT
     &AuraEffect::HandleAuraModSpellPowerOfStatPercent,            //330 SPELL_AURA_MOD_SPELL_POWER_OF_STAT_PERCENT
     &AuraEffect::HandleAuraModSpellPowerOfCombatRatingPercent,    //331 SPELL_AURA_MOD_SPELL_POWER_OF_RATING_PERCENT
+    &AuraEffect::HandleNoImmediateEffect,                         //332 SPELL_AURA_MOD_TRIGGER_SPELL_ON_POWER_PCT
     &AuraEffect::HandleModRatingPercent,                          //333 SPELL_AURA_MOD_RATING_PCT
     &AuraEffect::HandleModRatingFromRating,                       //334 SPELL_AURA_MOD_RATING_OF_RATING_PCT
     &AuraEffect::HandleNoImmediateEffect,                         //335 SPELL_AURA_MOD_SCHOOL_MASK_DAMAGE_FROM_CASTER
@@ -404,7 +405,6 @@ pAuraEffectHandler AuraEffectHandler[TOTAL_AURAS] =
     &AuraEffect::HandleModRatingPercent,                          //342 SPELL_AURA_MOD_RATING_FROM_ALL_SOURCES_BY_PCT visual only, implemented in Player::UpdateRating()
     &AuraEffect::HandleNoImmediateEffect,                         //343 SPELL_AURA_MOD_RECOVERY_RATE implemented in AuraEffect::PeriodicTick
     &AuraEffect::HandleNoImmediateEffect,                         //344 SPELL_AURA_ADD_MASTERY_RATING_TO_SPELL_EFFECT implemented in AuraEffect::CalculateSpellMod()
-    &AuraEffect::HandleNoImmediateEffect,                         //345 SPELL_AURA_MOD_TRIGGER_SPELL_ON_POWER_PCT
 };
 
 AuraEffect::AuraEffect(Aura* base, uint8 effIndex, int32* baseAmount, Unit* caster):

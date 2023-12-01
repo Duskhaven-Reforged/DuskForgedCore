@@ -30,7 +30,7 @@ struct at_dh_sigil_of_flame : AreaTriggerAI
     }
 };
 
-void AddSC_dh_spell_scripts()
+void AddSC_demonhunter_spell_scripts()
 {
     RegisterAreaTriggerAI(at_dh_sigil_of_flame);
 }
