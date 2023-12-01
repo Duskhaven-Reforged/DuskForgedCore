@@ -1427,17 +1427,6 @@ void Unit::CalculateSpellDamageTaken(SpellNonMeleeDamage* damageInfo, int32 dama
         damageInfo->resist = dmgInfo.GetResist();
         damageInfo->damage = dmgInfo.GetDamage();
     }
-
-    // Aleist3r: Hijacked this to apply mage's Icy Propulsion talent proc
-    // probably a bit hacky and there may be better place to do this but hey, at least it works
-    if (crit)
-    {
-        Unit* caster = damageInfo->attacker;
-        if (spellInfo->SpellFamilyName & SPELLFAMILY_MAGE && (spellInfo->SpellFamilyFlags[0] & SPELLFAMILYFLAG_MAGE_SINGLETARGET
-            || spellInfo->SpellFamilyFlags[1] & SPELLFAMILYFLAG1_MAGE_SINGLETARGET || spellInfo->SpellFamilyFlags[2] & SPELLFAMILYFLAG2_MAGE_SINGLETARGET))
-            if (caster->HasAura(1290050) && caster->HasSpellCooldown(12472))   // 1290050 - Icy Propulsion Talent; 12472 - Icy Veins
-                caster->ToPlayer()->ModifySpellCooldown(12472, -1000);
-    }
 }
 
 void Unit::DealSpellDamage(SpellNonMeleeDamage* damageInfo, bool durabilityLoss, Spell const* spell /*= nullptr*/)
@@ -11180,6 +11169,16 @@ void Unit::GetAllMinionsByEntry(std::list<Creature*>& Minions, uint32 entry)
     }
 }
 
+void Unit::GetAllSummonsByEntry(std::list<TempSummon*>& Minions, uint32 entry)
+{
+    for (Unit::ControlSet::iterator itr = m_Controlled.begin(); itr != m_Controlled.end();)
+    {
+        Unit* unit = *itr;
+        if (unit->GetEntry() == entry && unit->IsSummon())
+            Minions.push_back(unit->ToTempSummon());
+    }
+}
+
 void Unit::RemoveAllMinionsByEntry(uint32 entry)
 {
     for (Unit::ControlSet::iterator itr = m_Controlled.begin(); itr != m_Controlled.end();)
@@ -11851,6 +11850,14 @@ float Unit::SpellPctDamageModsDone(Unit* victim, SpellInfo const* spellProto, Da
                     }
                     break;
                 }
+            case 12500:
+            case 12502:
+            case 12503:
+                {
+                    if (victim->HasAuraState(AURA_STATE_HEALTHLESS_35_PERCENT, spellProto, this))
+                        AddPct(DoneTotalMod, (*i)->GetAmount());
+                    break;
+                }
         }
     }
 
@@ -11861,10 +11868,10 @@ float Unit::SpellPctDamageModsDone(Unit* victim, SpellInfo const* spellProto, Da
             // Ice Lance
             if (spellProto->SpellIconID == 186)
             {
-                if (victim->HasAuraState(AURA_STATE_FROZEN, spellProto, this) || owner->HasAura(1290012))
+                if (victim->HasAuraState(AURA_STATE_FROZEN, spellProto, this) || owner->HasAura(1290010))
                 {
                     // Glyph of Ice Lance
-                    if (owner->HasAura(56377) && victim->GetLevel() > owner->GetLevel())
+                    if (owner->HasAura(1280020) && victim->GetLevel() > owner->GetLevel())
                         DoneTotalMod *= 4.0f;
                     else
                         DoneTotalMod *= 3.0f;
@@ -11872,7 +11879,7 @@ float Unit::SpellPctDamageModsDone(Unit* victim, SpellInfo const* spellProto, Da
             }
 
             // Torment the weak
-            if (spellProto->SpellFamilyFlags[0] & 0x20600021 || spellProto->SpellFamilyFlags[1] & 0x9000)
+            if (spellProto->SpellFamilyFlags[2] & 0x200000)     // Aleist3r: used free mask to consolidate all spells that should be affected
                 if (victim->HasAuraWithMechanic((1 << MECHANIC_SNARE) | (1 << MECHANIC_SLOW_ATTACK)))
                     if (AuraEffect* aurEff = GetAuraEffect(SPELL_AURA_DUMMY, SPELLFAMILY_GENERIC, 3263, EFFECT_0))
                         AddPct(DoneTotalMod, aurEff->GetAmount());
@@ -12117,7 +12124,7 @@ uint32 Unit::SpellDamageBonusDone(Unit* victim, SpellInfo const* spellProto, uin
     // Check for table values
     float coeff = spellProto->Effects[effIndex].BonusMultiplier;
     SpellBonusEntry const* bonus = sSpellMgr->GetSpellBonusData(spellProto->Id);
-    if (bonus)
+    if (bonus || spellProto->Id == 1310029)
     {
         if (damagetype == DOT)
         {
@@ -12140,6 +12147,13 @@ uint32 Unit::SpellDamageBonusDone(Unit* victim, SpellInfo const* spellProto, uin
                 APbonus += GetTotalAttackPowerValue(attType);
                 DoneTotal += int32(bonus->ap_bonus * stack * ApCoeffMod * APbonus);
             }
+
+            if (spellProto->Id == 1310029)  // Aleist3r: hardcoding... well, someone had a nice idea to roll random SP bonus, I think it's better to do it here than mess in spell script
+            {
+                float coeffMin = 0.89f;
+                float coeffMax = 1.06f;
+                coeff = frand(coeffMin, coeffMax);
+            }
         }
     }
 
@@ -12156,6 +12170,16 @@ uint32 Unit::SpellDamageBonusDone(Unit* victim, SpellInfo const* spellProto, uin
         }
 
         DoneTotal += int32(DoneAdvertisedBenefit * coeff * factorMod);
+    }
+
+    if (spellProto->Id == 1310048)      // Flame Convergence calc
+    {
+        if (victim->HasAura(1310031))
+        {
+            uint8 auraStacks = victim->GetAura(1310031)->GetStackAmount();
+            int32 dmgBonusPctMult = sSpellMgr->GetSpellInfo(1310047)->Effects[EFFECT_0].CalcValue();
+            DoneTotal += round(CalculatePct(DoneTotal, dmgBonusPctMult * auraStacks));
+        }
     }
 
     float tmpDamage = (float(pdamage) + DoneTotal) * DoneTotalMod;
@@ -12532,17 +12556,21 @@ float Unit::SpellTakenCritChance(Unit const* caster, SpellInfo const* spellProto
                         {
                             // Shatter
                             case 911:
-                                modChance += 21;
+                                modChance += 16;
                                 [[fallthrough]];
                             case 910:
                                 modChance += 17;
                                 [[fallthrough]];
                             case 849:
+                            {
                                 modChance += 17;
-                                if (!HasAuraState(AURA_STATE_FROZEN, spellProto, caster))
+                                if (!HasAuraState(AURA_STATE_FROZEN, spellProto, caster) || !caster->HasAura(1290010) || !caster->HasAura(1290046))
+                                    // Fingers of Frost and Chilled to the Bone are now solved like that
                                     break;
+                                crit_chance *= 1.5f;
                                 crit_chance += modChance;
                                 break;
+                            }
                             case 7917: // Glyph of Shadowburn
                                 if (HasAuraState(AURA_STATE_HEALTHLESS_35_PERCENT, spellProto, caster))
                                     crit_chance += (*i)->GetAmount();
@@ -12551,6 +12579,10 @@ float Unit::SpellTakenCritChance(Unit const* caster, SpellInfo const* spellProto
                             case 7998:
                                 if (HasAura(6788))
                                     crit_chance += (*i)->GetAmount();
+                                break;
+                            case 12501:
+                                if (HasAuraState(AURA_STATE_HEALTHLESS_35_PERCENT, spellProto, caster))
+                                    crit_chance = 100.0f;
                                 break;
                             default:
                                 break;

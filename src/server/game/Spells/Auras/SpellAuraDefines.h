@@ -392,6 +392,7 @@ enum AuraType
     SPELL_AURA_MOD_SPELL_POWER_PCT                          = 329,
     SPELL_AURA_MOD_SPELL_POWER_OF_STAT_PERCENT              = 330,
     SPELL_AURA_MOD_SPELL_POWER_OF_RATING_PERCENT            = 331,
+    SPELL_AURA_MOD_TRIGGER_SPELL_ON_POWER_PCT               = 332,
     SPELL_AURA_MOD_RATING_PCT                               = 333,
     SPELL_AURA_MOD_RATING_OF_RATING_PCT                     = 334,
     SPELL_AURA_MOD_SCHOOL_MASK_DAMAGE_FROM_CASTER           = 335,

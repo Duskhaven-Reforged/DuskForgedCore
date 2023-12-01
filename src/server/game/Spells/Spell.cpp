@@ -8806,6 +8806,10 @@ void Spell::PrepareTriggersExecutedOnHit()
     {
         if (!(*i)->IsAffectedOnSpell(m_spellInfo))
             continue;
+
+        if ((*i)->GetMiscValue() == 1310076 && m_caster->HasAura(1310076))
+            continue;
+
         SpellInfo const* auraSpellInfo = (*i)->GetSpellInfo();
         uint32 auraSpellIdx = (*i)->GetEffIndex();
         if (SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(auraSpellInfo->Effects[auraSpellIdx].TriggerSpell))

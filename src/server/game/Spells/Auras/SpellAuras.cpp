@@ -1490,6 +1490,30 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
                         }
                         break;
                     }
+                    case 1310044: // Arcanosphere
+                        // Arcane Potency
+                        if (AuraEffect const* aurEff = caster->GetAuraEffect(SPELL_AURA_DUMMY, SPELLFAMILY_MAGE, 2120, 0))
+                        {
+                            uint32 spellId = 0;
+
+                            if (caster->HasAura(1310052))
+                            {
+                                switch (aurEff->GetId())
+                                {
+                                    case 31571:
+                                        spellId = 57529;
+                                        break;
+                                    case 31572:
+                                        spellId = 57531;
+                                        break;
+                                    default:
+                                        LOG_ERROR("spells.aura", "Aura::HandleAuraSpecificMods: Unknown rank of Arcane Potency ({}) found", aurEff->GetId());
+                                }
+                                if (spellId)
+                                caster->CastSpell(caster, spellId, true);
+                            }
+                        }
+                        break;
                     default:
                         break;
                 }

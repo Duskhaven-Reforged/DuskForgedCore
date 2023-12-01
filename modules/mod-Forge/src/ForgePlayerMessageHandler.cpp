@@ -69,7 +69,7 @@ public:
             }
 
             // If Remote Address matches, remove the player from the world
-            //if (player->GetSession()->GetRemoteAddress() == _player->GetSession()->GetRemoteAddress() && ++count > 1)
+            //if (player->GetSession()->GetRemoteAddress() == _player->GetSession()->GetRemoteAddress() && ++count > 2)
             //{
             //    player->GetSession()->KickPlayer();
             //}
