@@ -236,7 +236,7 @@ pEffect SpellEffects[TOTAL_SPELL_EFFECTS] =
     &Spell::EffectSpecCount,                                //161 SPELL_EFFECT_TALENT_SPEC_COUNT        second talent spec (learn/revert)
     &Spell::EffectActivateSpec,                             //162 SPELL_EFFECT_TALENT_SPEC_SELECT       activate primary/secondary spec
     &Spell::EffectNULL,                                     //163 unused
-    &Spell::EffectNULL,
+    &Spell::EffectNULL,                                     //164 SPELL_EFFECT_REMOVE_AURA
     &Spell::EffectLearnTransmogSet,                         //165 SPELL_EFFECT_LEARN_TRANSMOG_SET
     &Spell::EffectCreateAreaTrigger,                        //166 SPELL_EFFECT_CREATE_AREATRIGGER
 };
