@@ -76,6 +76,7 @@ enum MageSpells
     SPELL_MAGE_BLINK                               = 1953,
     SPELL_MAGE_CHAIN_REACTION_AURA                 = 1290016,
     SPELL_MAGE_CHAIN_REACTION_PROC                 = 1290017,
+    SPELL_MAGE_CHILLED_TO_THE_BONE                 = 1290046,
     SPELL_MAGE_CASCADING_POWER_BUFF                = 1310073,
     SPELL_MAGE_CLEARCASTING                        = 12536,
     SPELL_MAGE_COMET_STORM_COMET                   = 1290027,
@@ -95,6 +96,7 @@ enum MageSpells
     SPELL_MAGE_DIVERTED_ENERGY_PROC                = 1280019,
     SPELL_MAGE_DOUBLE_TIME_AURA                    = 1310067,
     SPELL_MAGE_DRAGONS_BREATH                      = 1300020,
+    SPELL_MAGE_EBONBOLT                            = 1290021,
     SPELL_MAGE_ECHO_OF_ANTONIDAS_AURA              = 1310061,
     SPELL_MAGE_ECHO_OF_ANTONIDAS_TOUCH_OF_THE_MAGI = 1310062,
     SPELL_MAGE_EVOCATION                           = 1310011,
@@ -1262,18 +1264,18 @@ class spell_mage_fingers_of_frost_proc : public AuraScript
 class SpellMageCastEvent : public BasicEvent
 {
 public:
-    SpellMageCastEvent(Unit* caster, Unit* victim, uint32 spellid) : _caster(caster), _victim(victim), _spellid(spellid) {}
+    SpellMageCastEvent(Unit* caster, Unit* victim, uint32 spellId) : _caster(caster), _victim(victim), _spellId(spellId) {}
 
     bool Execute(uint64 /*time*/, uint32 /*diff*/) override
     {
-        _caster->CastSpell(_victim, _spellid);
+        _caster->CastSpell(_victim, _spellId);
         return true;
     }
 
 private:
     Unit* _caster;
     Unit* _victim;
-    uint32 _spellid;
+    uint32 _spellId;
 };
 
 class SpellMageCometStormEvent : public BasicEvent
@@ -1307,20 +1309,36 @@ private:
     Position _dest;
 };
 
-class SpellMageRemoveEffectEvent : public BasicEvent
+class SpellMageRemoveAuraChargeEvent : public BasicEvent
 {
 public:
-    SpellMageRemoveEffectEvent(Unit* target, uint32 spellid) : _target(target), _spellid(spellid) {}
+    SpellMageRemoveAuraChargeEvent(Unit* target, uint32 spellId) : _target(target), _spellId(spellId) {}
 
     bool Execute(uint64 /*time*/, uint32 /*diff*/) override
     {
-        _target->RemoveAuraFromStack(_spellid);
+        _target->GetAura(_spellId)->DropCharge();
         return true;
     }
 
 private:
     Unit* _target;
-    uint32 _spellid;
+    uint32 _spellId;
+};
+
+class SpellMageRemoveEffectEvent : public BasicEvent
+{
+public:
+    SpellMageRemoveEffectEvent(Unit* target, uint32 spellId) : _target(target), _spellId(spellId) {}
+
+    bool Execute(uint64 /*time*/, uint32 /*diff*/) override
+    {
+        _target->RemoveAuraFromStack(_spellId);
+        return true;
+    }
+
+private:
+    Unit* _target;
+    uint32 _spellId;
 };
 
 // 1310029 - Arcane Barrage
@@ -1762,6 +1780,9 @@ class spell_mage_comet_storm : public SpellScript
         Unit* caster = GetCaster();
         Unit* victim = GetHitUnit();
         caster->m_Events.AddEventAtOffset(new SpellMageCometStormEvent(caster, victim, SPELL_MAGE_COMET_STORM_COMET, victim->GetPosition()), randtime(100ms, 275ms));
+
+        if (caster->HasAura(SPELL_MAGE_CHILLED_TO_THE_BONE))
+            caster->m_Events.AddEvent(new SpellMageRemoveAuraChargeEvent(caster, SPELL_MAGE_CHILLED_TO_THE_BONE), caster->m_Events.CalculateTime(1000));
     }
 
     void Register() override
@@ -2012,6 +2033,34 @@ class spell_mage_dragons_breath : public SpellScript
     }
 };
 
+// 1290021 - Ebonbolt
+class spell_mage_ebonbolt : public SpellScript
+{
+    PrepareSpellScript(spell_mage_ebonbolt);
+
+    bool Validate(SpellInfo const* /*spellEntry*/) override
+    {
+        return ValidateSpellInfo(
+            {
+                SPELL_MAGE_CHILLED_TO_THE_BONE,
+                SPELL_MAGE_EBONBOLT
+            });
+    }
+
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+
+        if (caster->HasAura(SPELL_MAGE_CHILLED_TO_THE_BONE))
+            caster->GetAura(SPELL_MAGE_CHILLED_TO_THE_BONE)->DropCharge();
+    }
+
+    void Register() override
+    {
+        AfterHit += SpellHitFn(spell_mage_ebonbolt::HandleAfterHit);
+    }
+};
+
 // 1310011 - Evocation
 class spell_mage_evocation_aura : public AuraScript
 {
@@ -2193,6 +2242,7 @@ class spell_mage_frostbolt : public SpellScript
     {
         return ValidateSpellInfo(
             {
+                SPELL_MAGE_CHILLED_TO_THE_BONE,
                 SPELL_MAGE_FROSTBOLT,
                 SPELL_MAGE_GLACIAL_ASSAULT_AURA,
                 SPELL_MAGE_GLACIAL_ASSAULT_PROC,
@@ -2226,10 +2276,19 @@ class spell_mage_frostbolt : public SpellScript
         }
     }
 
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+
+        if (caster->HasAura(SPELL_MAGE_CHILLED_TO_THE_BONE))
+            caster->GetAura(SPELL_MAGE_CHILLED_TO_THE_BONE)->DropCharge();
+    }
+
     void Register() override
     {
         OnHit += SpellHitFn(spell_mage_frostbolt::HandleOnHit);
         AfterCast += SpellCastFn(spell_mage_frostbolt::HandleAfterCast);
+        AfterHit += SpellHitFn(spell_mage_frostbolt::HandleAfterHit);
     }
 };
 
@@ -2280,6 +2339,7 @@ class spell_mage_frostfire_bolt : public SpellScript
     {
         return ValidateSpellInfo(
             {
+                SPELL_MAGE_CHILLED_TO_THE_BONE,
                 SPELL_MAGE_ARCANE_FEEDBACK,
                 SPELL_MAGE_DOUBLE_TIME_AURA,
                 SPELL_MAGE_FROSTFIRE_BOLT,
@@ -2319,10 +2379,19 @@ class spell_mage_frostfire_bolt : public SpellScript
             caster->CastSpell(GetHitUnit(), SPELL_MAGE_FROSTFIRE_BOLT, true);
     }
 
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+
+        if (caster->HasAura(SPELL_MAGE_CHILLED_TO_THE_BONE))
+            caster->GetAura(SPELL_MAGE_CHILLED_TO_THE_BONE)->DropCharge();
+    }
+
     void Register() override
     {
         OnCast += SpellCastFn(spell_mage_frostfire_bolt::HandleBeforeCast);
         OnHit += SpellHitFn(spell_mage_frostfire_bolt::HandleOnHit);
+        AfterHit += SpellHitFn(spell_mage_frostfire_bolt::HandleAfterHit);
     }
 };
 
@@ -2364,6 +2433,7 @@ class spell_mage_glacial_spike : public SpellScript
     {
         return ValidateSpellInfo(
             {
+                SPELL_MAGE_CHILLED_TO_THE_BONE,
                 SPELL_MAGE_FLASH_FREEZE_AURA,
                 SPELL_MAGE_GLACIAL_SPIKE,
                 SPELL_MAGE_ICICLE_AURA,
@@ -2414,10 +2484,19 @@ class spell_mage_glacial_spike : public SpellScript
         SetHitDamage(damage);
     }
 
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+
+        if (caster->HasAura(SPELL_MAGE_CHILLED_TO_THE_BONE))
+            caster->GetAura(SPELL_MAGE_CHILLED_TO_THE_BONE)->DropCharge();
+    }
+
     void Register() override
     {
         OnCast += SpellCastFn(spell_mage_glacial_spike::HandleCast);
         OnHit += SpellHitFn(spell_mage_glacial_spike::RecalculateDamage);
+        AfterHit += SpellHitFn(spell_mage_glacial_spike::HandleAfterHit);
     }
 };
 
@@ -2516,6 +2595,7 @@ class spell_mage_ice_lance : public SpellScript
             {
                 SPELL_MAGE_CHAIN_REACTION_AURA,
                 SPELL_MAGE_CHAIN_REACTION_PROC,
+                SPELL_MAGE_CHILLED_TO_THE_BONE,
                 SPELL_MAGE_GLACIAL_SPIKE,
                 SPELL_MAGE_ICE_BLADES_AURA,
                 SPELL_MAGE_ICE_BLADES_ICE_LANCE,
@@ -2572,9 +2652,18 @@ class spell_mage_ice_lance : public SpellScript
         }
     }
 
+    void HandleAfterHit()
+    {
+        Unit* caster = GetCaster();
+
+        if (caster->HasAura(SPELL_MAGE_CHILLED_TO_THE_BONE))
+            caster->GetAura(SPELL_MAGE_CHILLED_TO_THE_BONE)->DropCharge();
+    }
+
     void Register() override
     {
         OnHit += SpellHitFn(spell_mage_ice_lance::HandleHit);
+        AfterHit += SpellHitFn(spell_mage_ice_lance::HandleAfterHit);
     }
 };
 
@@ -3899,6 +3988,7 @@ void AddSC_mage_spell_scripts()
     RegisterSpellScript(spell_mage_displacement_teleport);
     RegisterSpellScript(spell_mage_displacement_summon);
     RegisterSpellScript(spell_mage_dragons_breath);
+    RegisterSpellScript(spell_mage_ebonbolt);
     RegisterSpellScript(spell_mage_evocation_aura);
     RegisterSpellScript(spell_mage_fireball);
     RegisterSpellScript(spell_mage_frost_barrier_aura);
