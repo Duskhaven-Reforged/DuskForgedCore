@@ -2137,9 +2137,10 @@ void Spell::EffectOpenLock(SpellEffIndex effIndex)
     ObjectGuid guid;
 
     // Get lockId
+    GameObjectTemplate const* goInfo;
     if (gameObjTarget)
     {
-        GameObjectTemplate const* goInfo = gameObjTarget->GetGOInfo();
+        goInfo = gameObjTarget->GetGOInfo();
         // Arathi Basin banner opening. /// @todo: Verify correctness of this check
         if ((goInfo->type == GAMEOBJECT_TYPE_BUTTON && goInfo->button.noDamageImmune) ||
                 (goInfo->type == GAMEOBJECT_TYPE_GOOBER && goInfo->goober.losOK))
@@ -2224,6 +2225,14 @@ void Spell::EffectOpenLock(SpellEffIndex effIndex)
                 {
                     gameObjTarget->AddToSkillupList(player->GetGUID());
                     player->UpdateGatherSkill(skillId, pureSkillValue, reqSkillValue);
+
+                    if (uint8 xpDifficulty = goInfo->chest.xpDifficulty)
+                    {
+                        int32 xpLevel = goInfo->chest.xpMinLevel;
+
+                        Quest const* quest;
+                        player->GiveXP(quest->XPValue(player->getLevel(), xpLevel, xpDifficulty), nullptr);
+                    }
                 }
 
             }
