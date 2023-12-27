@@ -568,15 +568,7 @@ public:
 
         for (auto& tabIdKvp : spec->Talents)
             for (auto& tabTypeKvp : tabIdKvp.second)
-                if (tabTypeKvp.second->type == NodeType::CHOICE) {
-                    auto found = spec->ChoiceNodesChosen.find(tabTypeKvp.second->SpellId);
-                    if (found != spec->ChoiceNodesChosen.end())
-                        UpdateCharacterChoiceNodeInternal(trans, acct, charId, spec->Id, tabTypeKvp.second->TabId, tabTypeKvp.second->SpellId, found->second);
-                    else
-                        UpdateCharacterChoiceNodeInternal(trans, acct, charId, spec->Id, tabTypeKvp.second->TabId, tabTypeKvp.second->SpellId, 0);
-                }
-                else
-                    UpdateCharacterTalentInternal(acct, charId, trans, spec->Id, tabTypeKvp.second->SpellId, tabTypeKvp.second->TabId, tabTypeKvp.second->CurrentRank);
+                UpdateCharacterTalentInternal(acct, charId, trans, spec->Id, tabTypeKvp.second->SpellId, tabTypeKvp.second->TabId, tabTypeKvp.second->CurrentRank);
                 
         CharacterDatabase.CommitTransaction(trans);
     }
@@ -942,15 +934,21 @@ public:
         if (TryGetForgeTalentTabs(player, pointType, tabs))
             for (auto* tab : tabs)
                 for (auto spell : tab->Talents) {
-                    for (auto rank : spell.second->Ranks)
-                        if (auto spellInfo = sSpellMgr->GetSpellInfo(rank.second)) {
-                            if (spellInfo->HasEffect(SPELL_EFFECT_LEARN_SPELL))
-                                for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
-                                    player->removeSpell(spellInfo->Effects[i].TriggerSpell, player->GetActiveSpecMask(), false);
+                    if (spell.second->nodeType == NodeType::CHOICE) {
+                        for (auto choice : _choiceNodesRev)
+                            if (player->HasSpell(choice.first))
+                                player->removeSpell(choice.first, player->GetActiveSpecMask(), false);
+                    }
+                    else
+                        for (auto rank : spell.second->Ranks)
+                            if (auto spellInfo = sSpellMgr->GetSpellInfo(rank.second)) {
+                                if (spellInfo->HasEffect(SPELL_EFFECT_LEARN_SPELL))
+                                    for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
+                                        player->removeSpell(spellInfo->Effects[i].TriggerSpell, player->GetActiveSpecMask(), false);
 
-                            player->RemoveAura(rank.second);
-                            player->removeSpell(rank.second, player->GetActiveSpecMask(), false);
-                        }
+                                player->RemoveAura(rank.second);
+                                player->removeSpell(rank.second, player->GetActiveSpecMask(), false);
+                            }
                     auto talent = spec->Talents[tab->Id].find(spell.first);
                     if (talent != spec->Talents[tab->Id].end())
                         talent->second->CurrentRank = 0;
