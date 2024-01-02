@@ -6483,7 +6483,7 @@ void Spell::EffectGiveRestedExperience(SpellEffIndex effIndex)
     if (spellAmount < 1)
         return;
 
-    float rest_bonus_max = float(playerTarget->GetUInt32Value(PLAYER_NEXT_LEVEL_XP) * 1.5f / 2);
+    float rest_bonus_max = float(playerTarget->GetUInt32Value(PLAYER_NEXT_LEVEL_XP) * 1.5f / (2 / playerTarget->GetTotalAuraMultiplier(SPELL_AURA_MOD_RESTED_XP_MAX_AMOUNT)));
     float restBonus = CalculatePct(rest_bonus_max, spellAmount);
 
     playerTarget->SetRestBonus(playerTarget->GetRestBonus() + restBonus);

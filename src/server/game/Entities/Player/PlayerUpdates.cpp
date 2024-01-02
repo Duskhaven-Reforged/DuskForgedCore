@@ -247,7 +247,7 @@ void Player::Update(uint32 p_time)
                 float bubble = 0.125f * sWorld->getRate(RATE_REST_INGAME);
                 float extraPerSec =
                     ((float) GetUInt32Value(PLAYER_NEXT_LEVEL_XP) / 72000.0f) *
-                    bubble;
+                    bubble * GetTotalAuraMultiplier(SPELL_AURA_MOD_RESTED_XP_RECOVERY_RATE);
 
                 // speed collect rest bonus (section/in hour)
                 SetRestBonus(GetRestBonus() + timeDiff * extraPerSec);

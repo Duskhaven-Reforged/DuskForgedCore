@@ -412,6 +412,8 @@ enum AuraType
     SPELL_AURA_MOD_MONEY_GAIN                               = 349,
     SPELL_AURA_MOD_TAXI_FLIGHT_SPEED                        = 350,
     SPELL_AURA_MOD_FORGE_STAT                               = 351,
+    SPELL_AURA_MOD_RESTED_XP_MAX_AMOUNT                     = 352,
+    SPELL_AURA_MOD_RESTED_XP_RECOVERY_RATE                  = 353,
     TOTAL_AURAS
 };
 

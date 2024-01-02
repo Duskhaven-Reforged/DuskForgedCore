@@ -412,6 +412,8 @@ pAuraEffectHandler AuraEffectHandler[TOTAL_AURAS] =
     &AuraEffect::HandleNoImmediateEffect,                         //349 SPELL_AURA_MOD_MONEY_GAIN
     &AuraEffect::HandleNoImmediateEffect,                         //350 SPELL_AURA_MOD_TAXI_FLIGHT_SPEED
     &AuraEffect::HandleAuraModForgeStat,                          //351 SPELL_AURA_MOD_FORGE_STAT
+    &AuraEffect::HandleNoImmediateEffect,                         //352 SPELL_AURA_MOD_RESTED_XP_MAX_AMOUNT implemented in Player::SetRestBonus, Spell::EffectGiveRestedExperience
+    &AuraEffect::HandleNoImmediateEffect,                         //355 SPELL_AURA_MOD_RESTED_XP_RECOVERY_RATE implemented in Player::Update
 };
 
 AuraEffect::AuraEffect(Aura* base, uint8 effIndex, int32* baseAmount, Unit* caster):
