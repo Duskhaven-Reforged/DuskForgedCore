@@ -2186,6 +2186,7 @@ void ObjectMgr::LoadCreatures()
                 if (GetMapDifficultyData(i, Difficulty(k)))
                     spawnMasks[i] |= (1 << k);
 
+    _worldTiersCreatureSpawns.empty();
     _creatureDataStore.rehash(result->GetRowCount());
     uint32 count = 0;
     do
@@ -2346,6 +2347,7 @@ void ObjectMgr::LoadCreatures()
             AddCreatureToGrid(spawnId, &data);
 
         ++count;
+        _worldTiersCreatureSpawns[data.id1].push_back(spawnId);
     } while (result->NextRow());
 
     LOG_INFO("server.loading", ">> Loaded {} Creatures in {} ms", count, GetMSTimeDiffToNow(oldMSTime));

@@ -52,12 +52,12 @@ public:
 
         static ChatCommandTable lookupCommandTable =
         {
-            { "area",     HandleLookupAreaCommand,         SEC_TRIAL_GAMEMASTER, Console::Yes  },
-            { "creature", HandleLookupCreatureCommand,     SEC_TRIAL_GAMEMASTER, Console::Yes  },
-            { "event",    HandleLookupEventCommand,        SEC_TRIAL_GAMEMASTER, Console::Yes  },
-            { "faction",  HandleLookupFactionCommand,      SEC_TRIAL_GAMEMASTER, Console::Yes  },
-            { "item",     HandleLookupItemCommand,         SEC_TRIAL_GAMEMASTER, Console::Yes  },
-            { "item set", HandleLookupItemSetCommand,      SEC_TRIAL_GAMEMASTER, Console::Yes  },
+            { "area",     HandleLookupAreaCommand,         SEC_GAMEMASTER1, Console::Yes  },
+            { "creature", HandleLookupCreatureCommand,     SEC_GAMEMASTER1, Console::Yes  },
+            { "event",    HandleLookupEventCommand,        SEC_GAMEMASTER1, Console::Yes  },
+            { "faction",  HandleLookupFactionCommand,      SEC_GAMEMASTER1, Console::Yes  },
+            { "item",     HandleLookupItemCommand,         SEC_GAMEMASTER1, Console::Yes  },
+            { "item set", HandleLookupItemSetCommand,      SEC_GAMEMASTER1, Console::Yes  },
             { "map",      HandleLookupMapCommand,          SEC_TRIAL_GAMEMASTER, Console::Yes  },
             { "object",   HandleLookupObjectCommand,       SEC_TRIAL_GAMEMASTER, Console::Yes  },
             { "gobject",  HandleLookupObjectCommand,       SEC_TRIAL_GAMEMASTER, Console::Yes  },

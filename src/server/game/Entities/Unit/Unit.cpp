@@ -2956,25 +2956,25 @@ MeleeHitOutcome Unit::RollMeleeOutcomeAgainst(Unit const* victim, WeaponAttackTy
         }
     }
 
-    // Max 40% chance to score a glancing blow against mobs that are higher level (can do only players and pets and not with ranged weapon)
-    if (attType != RANGED_ATTACK &&
-            (GetTypeId() == TYPEID_PLAYER || IsPet()) &&
-            victim->GetTypeId() != TYPEID_PLAYER && !victim->IsPet() &&
-            GetLevel() < victim->getLevelForTarget(this))
-    {
-        // cap possible value (with bonuses > max skill)
-        int32 skill = attackerWeaponSkill;
-        int32 maxskill = attackerMaxSkillValueForLevel;
-        skill = (skill > maxskill) ? maxskill : skill;
+    //// Max 40% chance to score a glancing blow against mobs that are higher level (can do only players and pets and not with ranged weapon)
+    //if (attType != RANGED_ATTACK &&
+    //        (GetTypeId() == TYPEID_PLAYER || IsPet()) &&
+    //        victim->GetTypeId() != TYPEID_PLAYER && !victim->IsPet() &&
+    //        GetLevel() < victim->getLevelForTarget(this))
+    //{
+    //    // cap possible value (with bonuses > max skill)
+    //    int32 skill = attackerWeaponSkill;
+    //    int32 maxskill = attackerMaxSkillValueForLevel;
+    //    skill = (skill > maxskill) ? maxskill : skill;
 
-        tmp = (10 + (victimDefenseSkill - skill)) * 100;
-        tmp = tmp > 4000 ? 4000 : tmp;
-        if (roll < (sum += tmp))
-        {
-            LOG_DEBUG("entities.unit", "RollMeleeOutcomeAgainst: GLANCING <{}, {})", sum - 4000, sum);
-            return MELEE_HIT_GLANCING;
-        }
-    }
+    //    tmp = (10 + (victimDefenseSkill - skill)) * 100;
+    //    tmp = tmp > 4000 ? 4000 : tmp;
+    //    if (roll < (sum += tmp))
+    //    {
+    //        LOG_DEBUG("entities.unit", "RollMeleeOutcomeAgainst: GLANCING <{}, {})", sum - 4000, sum);
+    //        return MELEE_HIT_GLANCING;
+    //    }
+    //}
 
     // mobs can score crushing blows if they're 4 or more levels above victim
     if (getLevelForTarget(victim) >= victim->getLevelForTarget(this) + 4 &&

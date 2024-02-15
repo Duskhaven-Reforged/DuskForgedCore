@@ -1889,6 +1889,10 @@ private:
     CellObjectGuidsMap _emptyCellObjectGuidsMap;
     CellObjectGuids _emptyCellObjectGuids;
     CreatureDataContainer _creatureDataStore;
+
+    // hater: World Tier base creature to instances map
+    std::unordered_map < uint32 /*entry*/, std::vector<uint32 /*guid*/>> _worldTiersCreatureSpawns;
+
     CreatureTemplateContainer _creatureTemplateStore;
     CreatureCustomIDsContainer _creatureCustomIDsStore;
     std::vector<CreatureTemplate*> _creatureTemplateStoreFast; // pussywizard

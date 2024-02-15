@@ -47,16 +47,16 @@ public:
     {
         static ChatCommandTable listAurasCommandTable =
         {
-            { "",         HandleListAllAurasCommand,    SEC_TRIAL_GAMEMASTER, Console::No  },
-            { "id",       HandleListAurasByIdCommand,   SEC_TRIAL_GAMEMASTER, Console::No  },
-            { "name",     HandleListAurasByNameCommand, SEC_TRIAL_GAMEMASTER, Console::No  },
+            { "",         HandleListAllAurasCommand,    SEC_GAMEMASTER1, Console::No  },
+            { "id",       HandleListAurasByIdCommand,   SEC_GAMEMASTER1, Console::No  },
+            { "name",     HandleListAurasByNameCommand, SEC_GAMEMASTER1, Console::No  },
         };
 
         static ChatCommandTable listCommandTable =
         {
-            { "creature", HandleListCreatureCommand,    SEC_TRIAL_GAMEMASTER, Console::Yes },
-            { "item",     HandleListItemCommand,        SEC_TRIAL_GAMEMASTER, Console::Yes },
-            { "object",   HandleListObjectCommand,      SEC_TRIAL_GAMEMASTER, Console::Yes },
+            { "creature", HandleListCreatureCommand,    SEC_GAMEMASTER1, Console::Yes },
+            { "item",     HandleListItemCommand,        SEC_GAMEMASTER1, Console::Yes },
+            { "object",   HandleListObjectCommand,      SEC_GAMEMASTER1, Console::Yes },
             { "auras",    listAurasCommandTable },
         };
         static ChatCommandTable commandTable =

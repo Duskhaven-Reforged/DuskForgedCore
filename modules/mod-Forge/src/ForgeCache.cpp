@@ -904,21 +904,24 @@ public:
     {
         ForgeCharacterSpec* spec;
         if (TryGetCharacterActiveSpec(player, spec)) {
-            // SELECT button, action, type FROM forge_character_action WHERE guid = ? AND spec = ? and loadout = ? ORDER BY button;
-            CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHARACTER_ACTIONS_SPEC_LOADOUT);
-            stmt->SetData(0, player->GetGUID().GetCounter());
-            stmt->SetData(1, spec->CharacterSpecTabId);
-            stmt->SetData(2, _playerActiveTalentLoadouts[player->GetGUID().GetCounter()]->id);
+            auto foundActions = _playerActiveTalentLoadouts.find(player->GetGUID().GetCounter());
+            if (foundActions != _playerActiveTalentLoadouts.end()) {
+                // SELECT button, action, type FROM forge_character_action WHERE guid = ? AND spec = ? and loadout = ? ORDER BY button;
+                CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHARACTER_ACTIONS_SPEC_LOADOUT);
+                stmt->SetData(0, player->GetGUID().GetCounter());
+                stmt->SetData(1, spec->CharacterSpecTabId);
+                stmt->SetData(2, foundActions->second->id);
 
-            WorldSession* mySess = player->GetSession();
-            mySess->GetQueryProcessor().AddCallback(CharacterDatabase.AsyncQuery(stmt)
-                .WithPreparedCallback([mySess](PreparedQueryResult result)
-                    {
-                        // safe callback, we can't pass this pointer directly
-                        // in case player logs out before db response (player would be deleted in that case)
-                        if (Player* thisPlayer = mySess->GetPlayer())
-                            thisPlayer->LoadActions(result);
-                    }));
+                WorldSession* mySess = player->GetSession();
+                mySess->GetQueryProcessor().AddCallback(CharacterDatabase.AsyncQuery(stmt)
+                    .WithPreparedCallback([mySess](PreparedQueryResult result)
+                        {
+                            // safe callback, we can't pass this pointer directly
+                            // in case player logs out before db response (player would be deleted in that case)
+                            if (Player* thisPlayer = mySess->GetPlayer())
+                                thisPlayer->LoadActions(result);
+                        }));
+            }
         }
     }
 

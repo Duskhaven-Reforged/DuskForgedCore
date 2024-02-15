@@ -866,7 +866,7 @@ void Transmogrification::SaveToDB(Player* player, uint32 transmogtype, uint32 vi
     stmt->SetData(0, player->GetSession()->GetAccountId());
     stmt->SetData(1, transmogtype);
     stmt->SetData(2, visual);
-    CharacterDatabase.Execute(stmt);
+    /* CharacterDatabase.Execute(stmt); */
 }
 
 bool Transmogrification::HasVisual(Player* player, uint32 transmogtype, uint32 visual)
@@ -889,7 +889,7 @@ uint32 Transmogrification::Save(Player* player, uint32 transmogtype, ItemTemplat
         if (player->transmogrification_appearances[transmogtype].insert(visual->ItemId).second)
         {
             player->_tmogVisualToItem[transmogtype][visual->DisplayInfoID] = visual->ItemId;
-            SaveToDB(player, transmogtype, visual->ItemId);
+            /* SaveToDB(player, transmogtype, visual->ItemId); */
             return visual->ItemId;
         }
     }
