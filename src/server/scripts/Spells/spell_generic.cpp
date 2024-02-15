@@ -5198,6 +5198,26 @@ class spell_gen_choking_vines : public AuraScript
     }
 };
 
+class spell_gen_gnomeregan_buff : public SpellScript
+{
+    PrepareSpellScript(spell_gen_gnomeregan_buff);
+
+    void HandleHit()
+    {
+        Unit* unitTarget = GetHitUnit();
+
+        if (unitTarget->GetTypeId() == TYPEID_PLAYER)
+        {
+            unitTarget->CastSpell(unitTarget, 1590156, true);
+        }
+    }
+
+    void Register() override
+    {
+        OnHit += SpellHitFn(spell_gen_gnomeregan_buff::HandleHit);
+    }
+};
+
 void AddSC_generic_spell_scripts()
 {
     RegisterSpellScript(spell_silithyst);
@@ -5351,5 +5371,5 @@ void AddSC_generic_spell_scripts()
     RegisterSpellScript(spell_gen_jubling_cooldown);
     RegisterSpellScript(spell_gen_yehkinya_bramble);
     RegisterSpellScript(spell_gen_choking_vines);
+    RegisterSpellScript(spell_gen_gnomeregan_buff);
 }
-
