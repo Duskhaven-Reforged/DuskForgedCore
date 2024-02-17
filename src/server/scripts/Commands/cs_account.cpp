@@ -52,7 +52,7 @@ public:
     {
         static ChatCommandTable accountSetCommandTable =
         {
-            { "addon",      SEC_TRIAL_GAMEMASTER,     true,   &HandleAccountSetAddonCommand,          "" },
+            { "addon",      SEC_GAMEMASTER1,     true,   &HandleAccountSetAddonCommand,          "" },
             { "gmlevel",    SEC_CONSOLE,        true,   &HandleAccountSetGmLevelCommand,        "" },
             { "password",   SEC_CONSOLE,        true,   &HandleAccountSetPasswordCommand,       "" },
             { "2fa",        SEC_PLAYER,         true,   &HandleAccountSet2FACommand,            "" }

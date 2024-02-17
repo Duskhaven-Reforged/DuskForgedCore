@@ -26,15 +26,16 @@
 #include <ForgeCacheCommands.cpp>
 #include <ActivateClassSpecHandler.cpp>
 #include <GetCollectionsHandler.cpp>
-#include <ApplyTransmogHandler.cpp>
+/* #include <ApplyTransmogHandler.cpp>
 #include <GetTransmogHandler.cpp>
 #include <GetTransmogSetsHandler.cpp>
-#include <SaveTransmogSetHandler.cpp>
+#include <SaveTransmogSetHandler.cpp> */
 #include <StartMythicHandler.cpp>
 #include <GetAffixesHandler.cpp>
 #include <GetCharacterLoadoutsHandler.cpp>
 #include <DeleteLoadoutHandler.cpp>
 #include <SaveLoadoutHandler.cpp>
+
 #include <unordered_map>
 #include <random>
 
@@ -62,6 +63,11 @@ public:
         else {
             fc->AddDefaultLoadout(player);
         }
+    }
+
+    void OnEquip(Player* player, Item* item, uint8 bag, uint8 slot, bool update) override
+    {
+
     }
 
     void OnLogin(Player* player) override
@@ -193,163 +199,6 @@ public:
         OnAddItem(player, item->GetTemplate()->ItemId, count);
     }
 
-    void GenerateItem(Item* item, CustomItemTemplate itemProto, Player const* owner) override
-    {
-        std::random_device rd; // obtain a random number from hardware
-        std::mt19937 gen(rd()); // seed the generator
-
-        itemProto->MakeBlankSlate();
-        auto e = 2.7183;
-        auto invType = itemProto->GetInventoryType();
-
-        float mainStatDistributions[2] = {.50f, .33f};
-        ItemModType stats[MAINSTATS] = {ITEM_MOD_STRENGTH, ITEM_MOD_AGILITY, ITEM_MOD_INTELLECT };
-
-        auto slot = fc->_forgeItemSlotValues.find(InventoryType(invType));
-        if (slot != fc->_forgeItemSlotValues.end()) {
-            float slotmod = slot->second;
-            float ilvl = itemProto->GetItemLevel();
-            auto qual = itemProto->GetQuality();
-            auto formula = 0.f;
-
-            switch (qual) {
-            case ITEM_QUALITY_UNCOMMON:
-                formula = (ilvl + 190.f) / 80.f;
-                break;
-            case ITEM_QUALITY_RARE:
-                formula = (ilvl + 140.f) / 60.f;
-                break;
-            default: // epic+
-                formula = (ilvl + 94.f) / 40.f;
-                break;
-            }
-            auto itemSlotVal = pow(e, formula);
-            auto itemValue = itemSlotVal * slot->second;
-            auto curValue = itemValue;
-
-            auto statCount = 2;
-            if (itemValue) {
-                itemProto->SetBonding(BIND_WHEN_PICKED_UP);
-                std::uniform_int_distribution<> mainstatroll(0, 2);
-                std::uniform_int_distribution<> mainstatdistroll(0, 1);
-
-                auto mainStat = stats[mainstatroll(gen)];
-                while (mainStat == ITEM_MOD_STRENGTH && itemProto->IsArmor() && itemProto->GetSubClass() != ITEM_SUBCLASS_ARMOR_PLATE) {
-                    mainStat = stats[mainstatroll(gen)];
-                }
-                auto statDist = (mainStat == ITEM_MOD_STRENGTH || mainStat == ITEM_MOD_AGILITY) ? mainStatDistributions[mainstatdistroll(gen)] : .33f;
-                auto tankDist = statDist == .50f;
-
-                auto amountForStam = (itemValue / 2.f) * statDist;
-                itemProto->SetStatType(1, ITEM_MOD_STAMINA);
-                itemProto->SetStatValue(1, amountForStam);
-                curValue -= amountForStam;
-
-                auto amountForMainstat = (itemValue / 2.f) - amountForStam;
-                itemProto->SetStatsCount(statCount);
-                itemProto->SetStatType(0, mainStat);
-                itemProto->SetStatValue(0, amountForMainstat);
-                curValue -= amountForMainstat;
-
-                if (itemProto->IsWeapon()) {
-                    float dps = 0.f;
-                    switch (itemProto->GetInventoryType()) {
-                    case INVTYPE_WEAPON:
-                    case INVTYPE_WEAPONMAINHAND:
-                    case INVTYPE_WEAPONOFFHAND:
-                        dps = 0.711f * itemSlotVal + 5.2f;
-                        break;
-                    case INVTYPE_2HWEAPON:
-                        dps = 0.98f * itemSlotVal + 11.5f;
-                        break;
-                    case INVTYPE_RANGEDRIGHT:
-                        switch (itemProto->GetSubClass()) {
-                        case ITEM_SUBCLASS_WEAPON_WAND:
-                            dps = 1.28f * itemSlotVal + 5.5f;
-                        case ITEM_SUBCLASS_WEAPON_BOW:
-                        case ITEM_SUBCLASS_WEAPON_GUN:
-                        case ITEM_SUBCLASS_WEAPON_THROWN:
-                        case ITEM_SUBCLASS_WEAPON_CROSSBOW:
-                            dps = 0.98f * itemSlotVal + 21.5f;
-                        }
-                        break;
-                    default:
-                        break;
-                    }
-                    if (dps) {
-                        if (mainStat == ITEM_MOD_INTELLECT) {
-                            auto sp = itemSlotVal * 2.435;
-                            statCount++;
-                            itemProto->SetStatsCount(statCount);
-                            itemProto->SetStatType(statCount - 1, ITEM_MOD_SPELL_POWER);
-                            itemProto->SetStatValue(statCount - 1, sp);
-
-                            dps -= sp / 4;
-                        }
-                        std::uniform_int_distribution<> dpsdistr(18, 36);
-
-                        float range = (dps * float(itemProto->GetDelay() / 1000.f)) * 2;
-                        float split = range / 2.f;
-                        float var = float(dpsdistr(gen) / 100.f) * split;
-                        int low = split - var;
-                        int top = split + var;
-
-                        itemProto->SetDamageTypeA(SPELL_SCHOOL_NORMAL);
-                        itemProto->SetDamageMinA(low);
-                        itemProto->SetDamageMaxA(top);
-                    }
-                    else { return; }
-                } else /*armor*/ {
-                    switch (itemProto->GetSubClass()) {
-                    case ITEM_SUBCLASS_ARMOR_PLATE:
-                        itemProto->SetArmor(itemProto->GetItemLevel() * 8.f);
-                        break;
-                    case ITEM_SUBCLASS_ARMOR_MAIL:
-                        itemProto->SetArmor(itemProto->GetItemLevel() * 4.5);
-                        break;
-                    case ITEM_SUBCLASS_ARMOR_LEATHER:
-                        itemProto->SetArmor(itemProto->GetItemLevel() * 2.15);
-                        break;
-                    case ITEM_SUBCLASS_ARMOR_CLOTH:
-                        itemProto->SetArmor(itemProto->GetItemLevel() * 1.08);
-                        break;
-                    }
-                }
-                auto statsToRoll = fc->_forgeItemSecondaryStatPools[tankDist && (itemProto->GetSubClass() == ITEM_SUBCLASS_ARMOR_PLATE
-                    || itemProto->GetSubClass() == ITEM_SUBCLASS_ARMOR_LEATHER) ? mainStat + ITEM_MOD_STAMINA : mainStat];
-                std::uniform_int_distribution<> statdistr(1, statsToRoll.size());
-                std::uniform_int_distribution<> secondarydistr(32, 50);
-                float secondarySplit = float(secondarydistr(gen)/100.f);
-                auto secondaryRolls = qual - 2;
-
-                auto rolled = ITEM_MOD_STAMINA;
-                for (int i = 0; i < secondaryRolls;) {
-                    auto roll = statdistr(gen) - 1;
-                    auto generated = statsToRoll[roll];
-                    if (generated != rolled) {
-                        if (i > 0) {
-                            secondarySplit = 1.f;
-                        }
-                        auto valueForThis = curValue*secondarySplit;
-                        statCount++;
-                        auto amount = valueForThis/fc->_forgeItemStatValues[generated];
-                        itemProto->SetStatsCount(statCount);
-                        itemProto->SetStatType(statCount - 1, generated);
-                        itemProto->SetStatValue(statCount - 1, amount);
-
-                        curValue -= valueForThis;
-                        rolled = generated;
-                        i++;
-                    }
-                }
-                
-            }
-
-            itemProto->Save();
-            owner->SendItemQueryPacket(&itemProto);
-        }
-        return ;
-    }
 
     /*void OnGiveXP(Player* player, uint32& amount, Unit* victim) override
     {
@@ -427,17 +276,16 @@ void AddForgePlayerMessageHandler()
     sTopicRouter->AddHandler(new UpdateSpecHandler(cache));
     sTopicRouter->AddHandler(new PrestigeHandler(cache, cm));
     sTopicRouter->AddHandler(new ActivateClassSpecHandler(cache, cm));
-    sTopicRouter->AddHandler(new GetCollectionsHandler(cache, cm));
+/*  sTopicRouter->AddHandler(new GetCollectionsHandler(cache, cm));
     sTopicRouter->AddHandler(new ApplyTransmogHandler(cache, cm));
     sTopicRouter->AddHandler(new SaveTransmogSetHandler(cache, cm));
     sTopicRouter->AddHandler(new GetTransmogSetsHandler(cache, cm));
-    sTopicRouter->AddHandler(new GetTransmogHandler(cache, cm));
+    sTopicRouter->AddHandler(new GetTransmogHandler(cache, cm)); */
     sTopicRouter->AddHandler(new StartMythicHandler(cache, cm));
     sTopicRouter->AddHandler(new GetAffixesHandler(cache, cm));
     sTopicRouter->AddHandler(new GetCharacterLoadoutsHandler(cache, cm));
     sTopicRouter->AddHandler(new DeleteLoadoutHandler(cache, cm));
     sTopicRouter->AddHandler(new SaveLoadoutHandler(cache, cm));
-
     //new UseSkillBook();
     new ForgeCacheCommands();   
 }
