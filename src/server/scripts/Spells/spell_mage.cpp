@@ -31,11 +31,10 @@
 
 enum MageSpells
 {
-    SPELL_MAGE_BLAZING_SPEED = 31643,
+    SPELL_MAGE_BLAZING_SPEED                       = 31643,
     SPELL_MAGE_BURNOUT_TRIGGER                     = 44450,
     SPELL_MAGE_IMPROVED_BLIZZARD_CHILLED           = 12486,
     SPELL_MAGE_COMBUSTION                          = 11129,
-                                               
     SPELL_MAGE_COLD_SNAP                           = 11958,
     SPELL_MAGE_FOCUS_MAGIC_PROC                    = 54648,
     SPELL_MAGE_FROST_WARDING_R1                    = 11189,
@@ -54,18 +53,18 @@ enum MageSpells
     SPELL_MAGE_SUMMON_WATER_ELEMENTAL_PERMANENT    = 70908,
     SPELL_MAGE_SUMMON_WATER_ELEMENTAL_TEMPORARY    = 70907,
     SPELL_MAGE_GLYPH_OF_BLAST_WAVE                 = 62126,
-    SPELL_MAGE_CHILLED = 12484,
-    SPELL_MAGE_MANA_SURGE = 37445,
-    SPELL_MAGE_MAGIC_ABSORPTION_MANA = 29442,
-    SPELL_MAGE_ARCANE_POTENCY_RANK_1 = 57529,
-    SPELL_MAGE_ARCANE_POTENCY_RANK_2 = 57531,
-    SPELL_MAGE_COMBUSTION_PROC = 28682,
-    SPELL_MAGE_EMPOWERED_FIRE_PROC = 67545,
-    SPELL_MAGE_T10_2P_BONUS = 70752,
-    SPELL_MAGE_T10_2P_BONUS_EFFECT = 70753,
-    SPELL_MAGE_T8_4P_BONUS = 64869,
-    SPELL_MAGE_MISSILE_BARRAGE = 44401,
-    SPELL_MAGE_FINGERS_OF_FROST_AURASTATE_AURA = 44544,
+    SPELL_MAGE_CHILLED                             = 12484,
+    SPELL_MAGE_MANA_SURGE                          = 37445,
+    SPELL_MAGE_MAGIC_ABSORPTION_MANA               = 29442,
+    SPELL_MAGE_ARCANE_POTENCY_RANK_1               = 57529,
+    SPELL_MAGE_ARCANE_POTENCY_RANK_2               = 57531,
+    SPELL_MAGE_COMBUSTION_PROC                     = 28682,
+    SPELL_MAGE_EMPOWERED_FIRE_PROC                 = 67545,
+    SPELL_MAGE_T10_2P_BONUS                        = 70752,
+    SPELL_MAGE_T10_2P_BONUS_EFFECT                 = 70753,
+    SPELL_MAGE_T8_4P_BONUS                         = 64869,
+    SPELL_MAGE_MISSILE_BARRAGE                     = 44401,
+    SPELL_MAGE_FINGERS_OF_FROST_AURASTATE_AURA     = 44544,
     SPELL_MAGE_FINGERS_OF_FROST                    = 44543,
                                                    
     // Duskhaven                                   
@@ -1919,9 +1918,7 @@ class spell_mage_barriers_onproc_aura : public AuraScript
         DamageInfo* damageInfo = eventInfo.GetDamageInfo();
 
         if (!damageInfo || !damageInfo->GetDamage())
-        {
             return;
-        }
 
         if (damageInfo->GetDamageType() != DIRECT_DAMAGE || damageInfo->GetAttackType() != BASE_ATTACK || damageInfo->GetAttackType() != OFF_ATTACK)
             PreventDefaultAction();
@@ -2080,20 +2077,38 @@ class spell_mage_blink : public SpellScript
 };
 
 // 1310073 - Cascading Power
-class spell_mage_cascading_power_aura : public AuraScript
+class spell_mage_cascading_power_aura : public SpellScript
 {
-    PrepareAuraScript(spell_mage_cascading_power_aura);
+    PrepareSpellScript(spell_mage_cascading_power_aura);
 
-    void HandleOnApply()
+    void HandleBeforeHit(SpellMissInfo missInfo)
     {
-        if (GetTarget()->HasAura(SPELL_MAGE_CASCADING_POWER_BUFF))
-            SetMaxDuration(GetDuration());
+        caster = GetCaster();
+
+        if (caster->HasAura(SPELL_MAGE_CASCADING_POWER_BUFF))
+            duration = caster->GetAura(SPELL_MAGE_CASCADING_POWER_BUFF)->GetDuration();
+    }
+
+    void HandleAfterHit()
+    {
+        if (caster && caster->HasAura(SPELL_MAGE_CASCADING_POWER_BUFF))
+        {
+            Aura* aura = caster->GetAura(SPELL_MAGE_CASCADING_POWER_BUFF);
+
+            if (aura->GetStackAmount() > 1)
+                aura->SetDuration(duration);
+        }
     }
 
     void Register() override
     {
-        OnAuraApply += AuraApplyFn(spell_mage_cascading_power_aura::HandleOnApply);
+        BeforeHit += BeforeSpellHitFn(spell_mage_cascading_power_aura::HandleBeforeHit);
+        AfterHit += SpellHitFn(spell_mage_cascading_power_aura::HandleAfterHit);
     }
+
+private:
+    Unit* caster;
+    float duration = 0;
 };
 
 // 1290026 - Comet Storm
@@ -2146,9 +2161,7 @@ class spell_mage_cone_of_cold : public SpellScript
         Player* player = caster->ToPlayer();
 
         if (caster->HasAura(SPELL_MAGE_DIAMOND_DUST_AURA))
-        {
             player->RemoveCategoryCooldown(29); // Blizzard
-        }
     }
 
     void Register() override
@@ -2237,6 +2250,7 @@ class spell_mage_displacement_talent_aura : public AuraScript
     void HandleOnApply()
     {
         Player* player = GetCaster()->ToPlayer();
+
         if (!player->HasActiveSpell(SPELL_MAGE_DISPLACEMENT_TELEPORT))
             player->learnSpell(SPELL_MAGE_DISPLACEMENT_TELEPORT);
     }
@@ -2244,6 +2258,7 @@ class spell_mage_displacement_talent_aura : public AuraScript
     void HandleOnRemove()
     {
         Player* player = GetCaster()->ToPlayer();
+
         if (player->HasActiveSpell(SPELL_MAGE_DISPLACEMENT_TELEPORT))
             player->removeSpell(SPELL_MAGE_DISPLACEMENT_TELEPORT, SPEC_MASK_ALL, false);
     }
@@ -2317,10 +2332,8 @@ class spell_mage_displacement_summon : public AuraScript
             SpellInfo const* spellInfo = sSpellMgr->AssertSpellInfo(SPELL_MAGE_DISPLACEMENT_TELEPORT);
 
             if (GetTarget()->IsWithinDist(circle, spellInfo->GetMaxRange(true)))
-            {
                 if (!GetTarget()->HasAura(SPELL_MAGE_DISPLACEMENT_ALLOW_CAST_AURA))
                     GetTarget()->CastSpell(GetTarget(), SPELL_MAGE_DISPLACEMENT_ALLOW_CAST_AURA, true);
-            }
             else
                 GetTarget()->RemoveAura(SPELL_MAGE_DISPLACEMENT_ALLOW_CAST_AURA);
         }
@@ -3056,9 +3069,7 @@ class spell_mage_icy_veins : public SpellScript
         Unit* caster = GetCaster();
 
         if (caster->HasAura(SPELL_MAGE_ICE_FORM_AURA))
-        {
             caster->CastSpell(caster, SPELL_MAGE_ICY_VEINS_ICE_FORM, true);
-        }
     }
 
     void Register() override
@@ -3090,9 +3101,7 @@ class spell_mage_master_of_magic_trigger : public SpellScript
         Unit* caster = GetCaster();
 
         if (!caster->HasAura(SPELL_MAGE_MASTER_OF_MAGIC_ICD_AURA) && caster->HasAura(SPELL_MAGE_MASTER_OF_MAGIC_ARCANE_AURA) && caster->HasAura(SPELL_MAGE_MASTER_OF_MAGIC_FIRE_AURA) && caster->HasAura(SPELL_MAGE_MASTER_OF_MAGIC_FROST_AURA))
-        {
             caster->CastSpell(caster, SPELL_MAGE_MASTER_OF_MAGIC_PROC_AURA, true);
-        }
     }
 
     void Register() override
@@ -3253,9 +3262,7 @@ class spell_mage_missile_barrage_aura : public AuraScript
         Unit* caster = GetCaster();
 
         if (caster->HasAura(SPELL_MAGE_ARCANIST_MIND_BUFF))
-        {
             caster->RemoveAura(SPELL_MAGE_ARCANIST_MIND_BUFF);
-        }
 
         caster->RemoveAura(SPELL_MAGE_MISSILE_BARRAGE_BUFF);
     }
@@ -3267,9 +3274,9 @@ class spell_mage_missile_barrage_aura : public AuraScript
 };
 
 // 1310075 - Particle Disintegration
-class spell_mage_particle_disintegration_aura : public AuraScript
+class spell_mage_particle_disintegration_aura : public SpellScript
 {
-    PrepareAuraScript(spell_mage_particle_disintegration_aura);
+    PrepareSpellScript(spell_mage_particle_disintegration_aura);
 
     bool Validate(SpellInfo const* /*spellEntry*/) override
     {
@@ -3279,26 +3286,40 @@ class spell_mage_particle_disintegration_aura : public AuraScript
             });
     }
 
-    void HandleOnApply()
+    void HandleOnHit()
     {
-        Unit* target = GetTarget();
+        target = GetHitUnit();
 
         if (target->HasAura(SPELL_MAGE_PARTICLE_DISINTEGRATION_DEBUFF))
+            duration = target->GetAura(SPELL_MAGE_PARTICLE_DISINTEGRATION_DEBUFF)->GetDuration();
+    }
+
+    void HandleAfterHit()
+    {
+        if (target && target->HasAura(SPELL_MAGE_PARTICLE_DISINTEGRATION_DEBUFF))
         {
-            SetMaxDuration(GetDuration());
+            Aura* aura = target->GetAura(SPELL_MAGE_PARTICLE_DISINTEGRATION_DEBUFF);
+
+            if (aura->GetStackAmount() > 1)
+                aura->SetDuration(duration);
         }
     }
 
     void Register() override
     {
-        OnAuraApply += AuraApplyFn(spell_mage_particle_disintegration_aura::HandleOnApply);
+        OnHit += SpellHitFn(spell_mage_particle_disintegration_aura::HandleOnHit);
+        AfterHit += SpellHitFn(spell_mage_particle_disintegration_aura::HandleAfterHit);
     }
+
+private:
+    Unit* target;
+    float duration = 0;
 };
 
 // 1280033 - Permafrost
-class spell_mage_permafrost_aura : public AuraScript
+class spell_mage_permafrost_aura : public SpellScript
 {
-    PrepareAuraScript(spell_mage_permafrost_aura);
+    PrepareSpellScript(spell_mage_permafrost_aura);
 
     bool Validate(SpellInfo const* /*spellEntry*/) override
     {
@@ -3308,20 +3329,34 @@ class spell_mage_permafrost_aura : public AuraScript
             });
     }
 
-    void HandleApply(AuraEffect const*  /*aurEff*/, AuraEffectHandleModes /*mode*/)
+    void HandleBeforeHit(SpellMissInfo missInfo)
     {
-        Unit* caster = GetCaster();
+        caster = GetCaster();
 
         if (caster->HasAura(SPELL_MAGE_PERMAFROST_PROC))
+            duration = caster->GetAura(SPELL_MAGE_PERMAFROST_PROC)->GetDuration();
+    }
+
+    void HandleAfterHit()
+    {
+        if (caster && caster->HasAura(SPELL_MAGE_PERMAFROST_PROC))
         {
-            SetMaxDuration(GetDuration());
+            Aura* aura = caster->GetAura(SPELL_MAGE_PERMAFROST_PROC);
+
+            if (aura->GetStackAmount() > 1)
+                aura->SetDuration(duration);
         }
     }
 
     void Register() override
     {
-        OnEffectApply += AuraEffectApplyFn(spell_mage_permafrost_aura::HandleApply, EFFECT_0, SPELL_AURA_ADD_PCT_MODIFIER, AURA_EFFECT_HANDLE_REAL);
+        BeforeHit += BeforeSpellHitFn(spell_mage_permafrost_aura::HandleBeforeHit);
+        AfterHit += SpellHitFn(spell_mage_permafrost_aura::HandleAfterHit);
     }
+
+private:
+    Unit* caster;
+    float duration = 0;
 };
 
 // 1310065 - Power of the Mad Prince
@@ -3501,9 +3536,7 @@ class spell_mage_pyroblast : public SpellScript
         Unit* target = GetHitUnit();
 
         if (target->HasAura(SPELL_MAGE_IMPROVED_SCORCH_DEBUFF) && target->GetAura(SPELL_MAGE_IMPROVED_SCORCH_DEBUFF)->GetCaster()->GetGUID() == GetCaster()->GetGUID())
-        {
             target->GetAura(SPELL_MAGE_IMPROVED_SCORCH_DEBUFF)->RefreshDuration();
-        }
 
         if (cast)
             caster->CastSpell(target, SPELL_MAGE_SUNDERING_FLAME_DEBUFF, true);
@@ -3525,6 +3558,7 @@ class spell_mage_pyroblast : public SpellScript
 
     void Register() override
     {
+        OnCast += SpellCastFn(spell_mage_pyroblast::HandleOnCast);
         OnHit += SpellHitFn(spell_mage_pyroblast::HandleOnHit);
     }
 
@@ -3533,7 +3567,7 @@ private:
 };
 
 // 1290042 - Ray of Frost
-class spell_mage_ray_of_frost_aura : public AuraScript      // TODO: hitting enemies in ray path requires area trigger
+class spell_mage_ray_of_frost_aura : public AuraScript
 {
     PrepareAuraScript(spell_mage_ray_of_frost_aura);
 
@@ -3973,9 +4007,9 @@ class spell_mage_shimmer : public SpellScript
 };
 
 // 1300031 - Sundering Flame
-class spell_mage_sundering_flame_debuff_aura : public AuraScript
+class spell_mage_sundering_flame_debuff_aura : public SpellScript
 {
-    PrepareAuraScript(spell_mage_sundering_flame_debuff_aura);
+    PrepareSpellScript(spell_mage_sundering_flame_debuff_aura);
 
     bool Validate(SpellInfo const* /*spellEntry*/) override
     {
@@ -3985,20 +4019,34 @@ class spell_mage_sundering_flame_debuff_aura : public AuraScript
             });
     }
 
-    void HandleOnApply()
+    void HandleOnHit()
     {
-        Unit* target = GetTarget();
+        target = GetHitUnit();
 
         if (target->HasAura(SPELL_MAGE_SUNDERING_FLAME_DEBUFF))
+            duration = target->GetAura(SPELL_MAGE_SUNDERING_FLAME_DEBUFF)->GetDuration();
+    }
+
+    void HandleAfterHit()
+    {
+        if (target && target->HasAura(SPELL_MAGE_SUNDERING_FLAME_DEBUFF))
         {
-            SetMaxDuration(GetDuration());
+            Aura* aura = target->GetAura(SPELL_MAGE_SUNDERING_FLAME_DEBUFF);
+
+            if (aura->GetStackAmount() > 1)
+                aura->SetDuration(duration);
         }
     }
 
     void Register() override
     {
-        OnAuraApply += AuraApplyFn(spell_mage_sundering_flame_debuff_aura::HandleOnApply);
+        OnHit += SpellHitFn(spell_mage_sundering_flame_debuff_aura::HandleOnHit);
+        AfterHit += SpellHitFn(spell_mage_sundering_flame_debuff_aura::HandleAfterHit);
     }
+
+private:
+    Unit* target;
+    float duration = 0;
 };
 
 // 1310069 - Superconductor
@@ -4385,4 +4433,3 @@ void AddSC_mage_spell_scripts()
     RegisterSpellScript(spell_mage_touch_of_the_magi_aura);
     RegisterSpellScript(spell_mage_touch_of_the_magi_talent_procs);
 }
-
