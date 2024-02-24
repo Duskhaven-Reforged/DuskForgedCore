@@ -383,8 +383,8 @@ pAuraEffectHandler AuraEffectHandler[TOTAL_AURAS] =
     &AuraEffect::HandleNoImmediateEffect,                         //320 SPELL_AURA_PROC_ADD_DURATION  implemented in Unit::ProcDamageAndSpellFor
     &AuraEffect::HandleNoImmediateEffect,                         //321 SPELL_AURA_MOD_CRITICAL_BLOCK_PCT
     &AuraEffect::HandleAuraAddCharges,                            //322 SPELL_AURA_MOD_SPELL_CHARGES
-    &AuraEffect::HandleModTriggerSpellOnStacksSelf,               //323 SPELL_AURA_MOD_TRIGGER_SPELL_ON_STACKS_ON_SELF
-    &AuraEffect::HandleModTriggerSpellOnStacksTarget,             //324 SPELL_AURA_MOD_TRIGGER_SPELL_ON_STACKS_ON_TARGET 
+    &AuraEffect::HandleModTriggerSpellOnStacks,                   //323 SPELL_AURA_MOD_TRIGGER_SPELL_ON_STACKS
+    &AuraEffect::HandleNULL,                                      //324 REUSE
     &AuraEffect::HandleNoImmediateEffect,                         //325 SPELL_AURA_MOD_DAMAGE_TAKEN_PCT_BEFORE_BLOCK
     &AuraEffect::HandleNoImmediateEffect,                         //326 SPELL_AURA_ADD_SPELL_BLOCK
     &AuraEffect::HandleNoImmediateEffect,                         //327 SPELL_AURA_MOD_MOVEMENT_SPEED_COMBAT
@@ -4819,23 +4819,33 @@ void AuraEffect::HandleModBlockValueScaling(AuraApplication const* aurApp, uint8
     target->ToPlayer()->UpdateShieldBlockValue();
 }
 
-void AuraEffect::HandleModTriggerSpellOnStacksSelf(AuraApplication const* aurApp, uint8 mode, bool /*apply*/) const
+void AuraEffect::HandleModTriggerSpellOnStacks(AuraApplication const* aurApp, uint8 mode, bool apply) const
 {
-    auto caster = GetCaster();
-    auto eff = GetSpellInfo()->GetEffect(SpellEffIndex(GetEffIndex()));
+    if (!(mode & (AURA_EFFECT_HANDLE_CHANGE_AMOUNT_MASK | AURA_EFFECT_HANDLE_REAPPLY)))
+        return;
 
-    if (auto aura = caster->GetAura(eff.MiscValue))
-        aura->ProcessTriggerSpellOnStacks(aura, eff.MiscValueB, eff.TriggerSpell, eff.TargetA.GetTarget(), eff.Amplitude, caster, GetBase()->GetEffect(SpellEffIndex(GetEffIndex())));
-}
-
-void AuraEffect::HandleModTriggerSpellOnStacksTarget(AuraApplication const* aurApp, uint8 mode, bool /*apply*/) const
-{
-    auto caster = GetCaster();
     Unit* target = aurApp->GetTarget();
-     auto eff = GetSpellInfo()->GetEffect(SpellEffIndex(GetEffIndex()));
+    Unit* caster = GetCaster();
 
-     if (auto aura = target->GetAura(eff.MiscValue))
-        aura->ProcessTriggerSpellOnStacks(aura, eff.MiscValueB, eff.TriggerSpell, eff.TargetA.GetTarget(), eff.Amplitude, caster, GetBase()->GetEffect(SpellEffIndex(GetEffIndex())));
+    if (!caster || !target || !(target->GetTypeId() == TYPEID_UNIT || target->GetTypeId() == TYPEID_PLAYER))
+        return;
+
+    if (apply)
+    {
+        Aura* aura = target->GetAura(GetId());
+
+        // Aleist3r: in theory it should be impossible to get stack amount higher than Misc A but just in case...
+        if (aura->GetStackAmount() >= GetMiscValue())
+        {
+            caster->CastSpell(target, GetTriggerSpell(), true);
+
+            // Aleist3r: cannot think of any case that would require aura to not be removed after but keeping it from old implementation anyways
+            if (!GetMiscValueB())
+                target->RemoveAura(aura);
+        }
+    }
+    else
+        return;
 }
 
 void AuraEffect::HandleModSpellHealingPercentFromAttackPower(AuraApplication const* aurApp, uint8 mode, bool /*apply*/) const

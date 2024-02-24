@@ -192,8 +192,7 @@ public:
     bool CheckAreaTarget(Unit* target);
     bool CanStackWith(Aura const* checkAura, bool remove) const;
     bool IsAuraStronger(Aura const* newAura) const;
-    void ProcessTriggerSpellOnStacks(Aura* aurApp, int32 stackCount, int32 triggerSpell, Targets triggerSpellTarget, uint32 amplitude, Unit* caster, AuraEffect* const triggeringEffect);
-
+    
     // Proc system
     // this subsystem is not yet in use - the core of it is functional, but still some research has to be done
     // and some dependant problems fixed before it can replace old proc system (for example cooldown handling)

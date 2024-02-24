@@ -71,6 +71,7 @@ enum MageSpells
     SPELL_MAGE_ARCANE_ASCENDANCE_AURA              = 1280031,
     SPELL_MAGE_ARCANE_ASCENDANCE_PROC              = 1280032,
     SPELL_MAGE_ARCANE_BARRAGE                      = 1310029,
+    SPELL_MAGE_ARCANE_BARRAGE2                     = 1310077,
     SPELL_MAGE_ARCANE_BARRAGE_ACCELERATION         = 1310036,
     SPELL_MAGE_ARCANE_BARRAGE_SLOW                 = 1310035,
     SPELL_MAGE_ARCANE_EXPLOSION                    = 1280038,
@@ -1675,7 +1676,7 @@ private:
     uint32 _spellId;
 };
 
-// 1310029 - Arcane Barrage
+// 1310029, 1310077 - Arcane Barrage
 class spell_mage_arcane_barrage : public SpellScript
 {
     PrepareSpellScript(spell_mage_arcane_barrage);
@@ -1685,6 +1686,7 @@ class spell_mage_arcane_barrage : public SpellScript
         return ValidateSpellInfo(
             {
                 SPELL_MAGE_ARCANE_BARRAGE,
+                SPELL_MAGE_ARCANE_BARRAGE2,
                 SPELL_MAGE_ARCANE_BARRAGE_ACCELERATION,
                 SPELL_MAGE_ARCANE_BARRAGE_SLOW,
                 SPELL_MAGE_ARCANE_FEEDBACK,
@@ -1693,19 +1695,6 @@ class spell_mage_arcane_barrage : public SpellScript
                 SPELL_MAGE_RESONANCE_AURA_R1,
                 SPELL_MAGE_RESONANCE_AURA_R2
             });
-    }
-
-    SpellCastResult CheckCast()
-    {
-        Unit* caster = GetCaster();
-
-        if (caster->HasAura(SPELL_MAGE_RESONANCE_AURA_R2))
-            return SPELL_CAST_OK;
-
-        if (!caster->HasAura(SPELL_MAGE_ARCANE_FEEDBACK))
-            return SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW;
-
-        return SPELL_CAST_OK;
     }
 
     void FilterTargets(std::list<WorldObject*>& targets)
@@ -1750,7 +1739,6 @@ class spell_mage_arcane_barrage : public SpellScript
 
     void Register() override
     {
-        OnCheckCast += SpellCheckCastFn(spell_mage_arcane_barrage::CheckCast);;
         OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_mage_arcane_barrage::FilterTargets, EFFECT_0, TARGET_UNIT_TARGET_ENEMY);
         OnEffectHitTarget += SpellEffectFn(spell_mage_arcane_barrage::HandleOnEffectHitTarget, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
     }
