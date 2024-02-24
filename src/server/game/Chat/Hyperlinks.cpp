@@ -23,6 +23,8 @@
 #include "SharedDefines.h"
 #include "SpellInfo.h"
 #include "SpellMgr.h"
+#include <iostream>
+
 
 using namespace Acore::Hyperlinks;
 
@@ -373,7 +375,6 @@ static bool ValidateLinkInfo(HyperlinkInfo const& info)
     return false;
 }
 
-// Validates all hyperlinks and control sequences contained in str
 bool Acore::Hyperlinks::CheckAllLinks(std::string_view str)
 {
     // Step 1: Disallow all control sequences except ||, |H, |h, |c and |r
@@ -388,7 +389,11 @@ bool Acore::Hyperlinks::CheckAllLinks(std::string_view str)
             if (next == 'H' || next == 'h' || next == 'c' || next == 'r' || next == '|')
                 ++pos;
             else
+            {
+                // Log error message for invalid control sequence
+                std::cerr << "Invalid control sequence found: " << next << std::endl;
                 return false;
+            }
         }
     }
 
@@ -410,7 +415,11 @@ bool Acore::Hyperlinks::CheckAllLinks(std::string_view str)
 
             HyperlinkInfo info = ParseSingleHyperlink(str.substr(pos));
             if (!info || !ValidateLinkInfo(info))
+            {
+                // Log error message for invalid hyperlink
+                std::cerr << "Invalid hyperlink found: " << str.substr(pos) << std::endl;
                 return false;
+            }
 
             // tag is fine, find the next one
             str = info.tail;

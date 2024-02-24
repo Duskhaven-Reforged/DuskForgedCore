@@ -5053,7 +5053,11 @@ void Player::RepopAtGraveyard()
         if (GetMap()->IsDungeon()) {
             ResurrectPlayer(0.5f);
             SpawnCorpseBones();
-            script->DoNearTeleportPlayers(script->_challengeEntranceLoc); // TODO: lol
+            if (script->_challengeEntranceLoc.GetPositionX() == 0) {
+                if (WorldSafeLocsEntry const* entranceSafeLocEntry = sObjectMgr->GetWorldSafeLoc(script->instance->GetId(), script->GetEntranceLocation()))
+                    script->_challengeEntranceLoc.Relocate(entranceSafeLocEntry->Loc);
+            }
+            NearTeleportTo(script->_challengeEntranceLoc);
             return;
         }
 
@@ -12155,20 +12159,13 @@ void Player::SendTransferAborted(uint32 mapid, TransferAbortReason reason, uint8
 
 void Player::SendInstanceResetWarning(uint32 mapid, Difficulty difficulty, uint32 time, bool onEnterMap)
 {
-    // pussywizard:
-    InstancePlayerBind* bind = sInstanceSaveMgr->PlayerGetBoundInstance(GetGUID(), mapid, difficulty);
-    if (bind && bind->extended)
-    {
-        if (!onEnterMap) // extended id player shouldn't be warned about lock expiration
-            return;
-        time += (bind->save->GetExtendedResetTime() - bind->save->GetResetTime()); // add lockout period to the time left
-    }
-
     // type of warning, based on the time remaining until reset
     uint32 type;
-    if (time > 3600)
+    if (onEnterMap)
         type = RAID_INSTANCE_WELCOME;
-    else if (time > 900)
+    else if (time > 21600)
+        type = RAID_INSTANCE_WELCOME;
+    else if (time > 3600)
         type = RAID_INSTANCE_WARNING_HOURS;
     else if (time > 300)
         type = RAID_INSTANCE_WARNING_MIN;
@@ -12180,11 +12177,11 @@ void Player::SendInstanceResetWarning(uint32 mapid, Difficulty difficulty, uint3
     data << uint32(mapid);
     data << uint32(difficulty);                             // difficulty
     data << uint32(time);
-    if (type == RAID_INSTANCE_WELCOME)
-    {
-        data << uint8(bind && bind->perm);                  // is locked
-        data << uint8(bind && bind->extended);              // is extended, ignored if prev field is 0
-    }
+    if (InstancePlayerBind const* bind = GetBoundInstance(mapid, difficulty))
+        data << uint8(bind && bind->perm);
+    else
+        data << uint8(false);
+    data << uint8(false);
     GetSession()->SendPacket(&data);
 }
 
@@ -16248,7 +16245,7 @@ void Player::SendItemQueryPacket(CustomItemTemplate* curItem) const
 {
     if (curItem)
     {
-        curItem->_GetInfo()->InitializeQueryData();
+        curItem->InitializeQueryData();
         WorldPacket* response = curItem->_GetInfo()->GetQueryData();
         GetSession()->SendPacket(response);
     }

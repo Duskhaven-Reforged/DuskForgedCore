@@ -889,13 +889,17 @@ void Map::Update(const uint32 t_diff, const uint32 s_diff, bool  /*thread*/)
             }
         }
 
-        // handle updates for creatures in combat with player and are more than X yards away
+        // handle updates for creatures in combat with player and are more than 60 yards away
         if (player->IsInCombat())
         {
+            std::vector<Unit*> toVisit;
             for (auto const& pair : player->GetCombatManager().GetPvECombatRefs())
                 if (Creature* unit = pair.second->GetOther(player)->ToCreature())
                     if (unit->GetMapId() == player->GetMapId() && !unit->IsWithinDistInMap(player, GetVisibilityRange(), false))
-                        VisitNearbyCellsOf(unit, grid_object_update, world_object_update, grid_large_object_update, world_large_object_update);
+                        toVisit.push_back(unit);
+                    
+            for (Unit* unit : toVisit)
+                VisitNearbyCellsOf(unit, grid_object_update, world_object_update, grid_large_object_update, world_large_object_update);
         }
     }
 
@@ -2914,63 +2918,24 @@ template void Map::RemoveFromMap(DynamicObject*, bool);
 
 /* ******* Dungeon Instance Maps ******* */
 
-InstanceMap::InstanceMap(uint32 id, uint32 InstanceId, uint8 SpawnMode, Map* _parent)
+InstanceMap::InstanceMap(uint32 id, uint32 InstanceId, Difficulty SpawnMode, Map* _parent)
     : Map(id, InstanceId, SpawnMode, _parent),
-      m_resetAfterUnload(false), m_unloadWhenEmpty(false),
-      instance_data(nullptr), i_script_id(0)
+    m_resetAfterUnload(false), m_unloadWhenEmpty(false),
+    instance_data(nullptr), i_script_id(0)
 {
     //lets initialize visibility distance for dungeons
     InstanceMap::InitVisibilityDistance();
-
-    // the timer is started by default, and stopped when the first player joins
-    // this make sure it gets unloaded if for some reason no player joins
-    m_unloadTimer = std::max(sWorld->getIntConfig(CONFIG_INSTANCE_UNLOAD_DELAY), (uint32)MIN_UNLOAD_DELAY);
-
-    // pussywizard:
-    if (IsRaid())
-        if (time_t resetTime = sInstanceSaveMgr->GetResetTimeFor(id, Difficulty(SpawnMode)))
-            if (time_t extendedResetTime = sInstanceSaveMgr->GetExtendedResetTimeFor(id, Difficulty(SpawnMode)))
-                _instanceResetPeriod = extendedResetTime - resetTime;
 }
 
 InstanceMap::~InstanceMap()
 {
     delete instance_data;
-    instance_data = nullptr;
-    sInstanceSaveMgr->DeleteInstanceSaveIfNeeded(GetInstanceId(), true);
 }
 
 void InstanceMap::InitVisibilityDistance()
 {
     //init visibility distance for instances
     m_VisibleDistance = World::GetMaxVisibleDistanceInInstances();
-
-    // pussywizard: this CAN NOT exceed MAX_VISIBILITY_DISTANCE
-    switch (GetId())
-    {
-        case 429: // Dire Maul
-        case 550: // The Eye
-        case 578: // The Nexus: The Oculus
-            m_VisibleDistance = 175.0f;
-            break;
-        case 649: // Trial of the Crusader
-        case 650: // Trial of the Champion
-        case 595: // Culling of Startholme
-        case 658: // Pit of Saron
-            m_VisibleDistance = 150.0f;
-            break;
-        case 615: // Obsidian Sanctum
-        case 616: // Eye of Eternity
-        case 603: // Ulduar
-        case 668: // Halls of Reflection
-        case 631: // Icecrown Citadel
-        case 724: // Ruby Sanctum
-            m_VisibleDistance = 200.0f;
-            break;
-        case 531: // Ahn'Qiraj Temple
-            m_VisibleDistance = 300.0f;
-            break;
-    }
 }
 
 /*
@@ -3016,29 +2981,9 @@ Map::EnterState InstanceMap::CannotEnter(Player* player, bool loginCheck)
                 return CANNOT_ENTER_UNSPECIFIED_REASON;
             }
 
-    // cannot enter if instance is in use by another party/soloer that have a permanent save in the same instance id
-    PlayerList const& playerList = GetPlayers();
-    if (!playerList.IsEmpty())
-        for (PlayerList::const_iterator i = playerList.begin(); i != playerList.end(); ++i)
-            if (Player* iPlayer = i->GetSource())
-            {
-                if (iPlayer == player) // login case, player already added to map
-                    continue;
-                if (iPlayer->IsGameMaster()) // bypass GMs
-                    continue;
-                if (!player->GetGroup()) // player has not group and there is someone inside, deny entry
-                {
-                    player->SendTransferAborted(GetId(), TRANSFER_ABORT_MAX_PLAYERS);
-                    return CANNOT_ENTER_INSTANCE_BIND_MISMATCH;
-                }
-                // player inside instance has no group or his groups is different to entering player's one, deny entry
-                if (!iPlayer->GetGroup() || iPlayer->GetGroup() != player->GetGroup())
-                {
-                    player->SendTransferAborted(GetId(), TRANSFER_ABORT_MAX_PLAYERS);
-                    return CANNOT_ENTER_INSTANCE_BIND_MISMATCH;
-                }
-                break;
-            }
+    // cannot enter while an encounter is in progress (unless this is a relog, in which case it is permitted)
+    if (!player->isBeingLoaded() && IsRaid() && GetInstanceScript() && GetInstanceScript()->IsEncounterInProgress())
+        return CANNOT_ENTER_ZONE_IN_COMBAT;
 
     return Map::CannotEnter(player, loginCheck);
 }
@@ -3055,23 +3000,29 @@ bool InstanceMap::AddPlayerToMap(Player* player)
     {
         Group* group = player->GetGroup();
 
+        // increase current instances (hourly limit)
+        if (!group || !group->isLFGGroup())
+            player->AddInstanceEnterTime(GetInstanceId(), time(nullptr));
+
         // get an instance save for the map
         InstanceSave* mapSave = sInstanceSaveMgr->GetInstanceSave(GetInstanceId());
         if (!mapSave)
         {
-            LOG_ERROR("maps", "InstanceMap::Add: InstanceSave does not exist for map {} spawnmode {} with instance id {}", GetId(), GetSpawnMode(), GetInstanceId());
-            return false;
+            LOG_DEBUG("maps", "InstanceMap::Add: InstanceSave does not exist for map {} spawnmode {} with instance id {}", GetId(), GetSpawnMode(), GetInstanceId());
+            mapSave = sInstanceSaveMgr->AddInstanceSave(GetId(), GetInstanceId(), GetDifficulty(), 0, 0, true);
         }
 
+        ASSERT(mapSave);
+
         // check for existing instance binds
-        InstancePlayerBind* playerBind = sInstanceSaveMgr->PlayerGetBoundInstance(player->GetGUID(), GetId(), Difficulty(GetSpawnMode()));
+        InstancePlayerBind* playerBind = player->GetBoundInstance(GetId(), GetDifficulty());
         if (playerBind && playerBind->perm)
         {
             if (playerBind->save != mapSave)
             {
                 LOG_ERROR("maps", "InstanceMap::Add: player {} ({}) is permanently bound to instance {}, {}, {}, {} but he is being put into instance {}, {}, {}, {}",
-                    player->GetName(), player->GetGUID().ToString(), playerBind->save->GetMapId(), playerBind->save->GetInstanceId(), playerBind->save->GetDifficulty(),
-                    playerBind->save->CanReset(), mapSave->GetMapId(), mapSave->GetInstanceId(), mapSave->GetDifficulty(), mapSave->CanReset());
+                    player->GetName(), player->GetGUID().ToString(), playerBind->save->GetMapId(), playerBind->save->GetInstanceId(), playerBind->save->GetDifficultyID(),
+                    playerBind->save->CanReset(), mapSave->GetMapId(), mapSave->GetInstanceId(), mapSave->GetDifficultyID(), mapSave->CanReset());
                 return false;
             }
         }
@@ -3082,32 +3033,61 @@ bool InstanceMap::AddPlayerToMap(Player* player)
         }
         else
         {
-            playerBind = sInstanceSaveMgr->PlayerBindToInstance(player->GetGUID(), mapSave, false, player);
-            // pussywizard: bind lider also if not yet bound
-            if (Group* g = player->GetGroup())
-                if (g->GetLeaderGUID() != player->GetGUID())
-                    if (!sInstanceSaveMgr->PlayerGetBoundInstance(g->GetLeaderGUID(), mapSave->GetMapId(), mapSave->GetDifficulty()))
+            if (group)
+            {
+                // solo saves should have been reset when the map was loaded
+                InstanceGroupBind* groupBind = group->GetBoundInstance(this);
+                if (playerBind && playerBind->save != mapSave)
+                {
+                    LOG_ERROR("maps", "InstanceMap::Add: player {}({}) is being put into instance {} {}, {}, {}, {}, {}, {} but he is in group {} and is bound to instance {}, {}, {}, {}, {}, {}!", player->GetName().c_str(), player->GetGUID().ToString().c_str(), GetMapName(), mapSave->GetMapId(), mapSave->GetInstanceId(), mapSave->GetDifficultyID(), mapSave->GetPlayerCount(), mapSave->GetGroupCount(), mapSave->CanReset(), group->GetLeaderGUID().ToString().c_str(), playerBind->save->GetMapId(), playerBind->save->GetInstanceId(), playerBind->save->GetDifficultyID(), playerBind->save->GetPlayerCount(), playerBind->save->GetGroupCount(), playerBind->save->CanReset());
+                    if (groupBind)
+                        LOG_ERROR("maps", "InstanceMap::Add: the group is bound to the instance {} {}, {}, {}, {}, {}, {}", GetMapName(), groupBind->save->GetMapId(), groupBind->save->GetInstanceId(), groupBind->save->GetDifficultyID(), groupBind->save->GetPlayerCount(), groupBind->save->GetGroupCount(), groupBind->save->CanReset());
+                    //ABORT();
+                    return false;
+                }
+                // bind to the group or keep using the group save
+                if (!groupBind)
+                    group->BindToInstance(mapSave, false);
+                else
+                {
+                    // cannot jump to a different instance without resetting it
+                    if (groupBind->save != mapSave)
                     {
-                        sInstanceSaveMgr->PlayerCreateBoundInstancesMaps(g->GetLeaderGUID());
-                        sInstanceSaveMgr->PlayerBindToInstance(g->GetLeaderGUID(), mapSave, false, ObjectAccessor::FindConnectedPlayer(g->GetLeaderGUID()));
+                        LOG_ERROR("maps", "InstanceMap::Add: player {}({}) is being put into instance {}, {}, {} but he is in group {} which is bound to instance {}, {}, {}!", player->GetName().c_str(), player->GetGUID().ToString().c_str(), mapSave->GetMapId(), mapSave->GetInstanceId(), mapSave->GetDifficultyID(), group->GetLeaderGUID().ToString().c_str(), groupBind->save->GetMapId(), groupBind->save->GetInstanceId(), groupBind->save->GetDifficultyID());
+                        LOG_ERROR("maps", "MapSave players: {}, group count: {}", mapSave->GetPlayerCount(), mapSave->GetGroupCount());
+                        if (groupBind->save)
+                            LOG_ERROR("maps", "GroupBind save players: {}, group count: {}", groupBind->save->GetPlayerCount(), groupBind->save->GetGroupCount());
+                        else
+                            LOG_ERROR("maps", "GroupBind save NULL");
+                        return false;
                     }
-        }
-
-        // increase current instances (hourly limit)
-        // xinef: specific instances are still limited
-        if (!group || !group->isLFGGroup() || !group->IsLfgRandomInstance())
-            player->AddInstanceEnterTime(GetInstanceId(), GameTime::GetGameTime().count());
-
-        if (!playerBind->perm && !mapSave->CanReset() && group && !group->isLFGGroup() && !group->IsLfgRandomInstance())
-        {
-            WorldPacket data(SMSG_INSTANCE_LOCK_WARNING_QUERY, 9);
-            data << uint32(60000);
-            data << uint32(instance_data ? instance_data->GetCompletedEncounterMask() : 0);
-            data << uint8(0);
-            player->GetSession()->SendPacket(&data);
-            player->SetPendingBind(mapSave->GetInstanceId(), 60000);
+                    // if the group/leader is permanently bound to the instance
+                    // players also become permanently bound when they enter
+                    if (groupBind->perm)
+                    {
+                        WorldPacket data(SMSG_INSTANCE_LOCK_WARNING_QUERY, 9);
+                        data << uint32(60000);
+                        data << uint32(instance_data ? instance_data->GetCompletedEncounterMask() : 0);
+                        data << uint8(0);
+                        player->GetSession()->SendPacket(&data);
+                        player->SetPendingBind(mapSave->GetInstanceId(), 60000);
+                    }
+                }
+            }
+            else {
+                // set up a solo bind or continue using it
+                    if (!playerBind)
+                        player->BindToInstance(mapSave, false);
+                    else
+                        // cannot jump to a different instance without resetting it
+                        ASSERT(playerBind->save == mapSave);
+            }
         }
     }
+
+    // for normal instances cancel the reset schedule when the
+    // first player enters (no players yet)
+    SetResetSchedule(false);
 
     // initialize unload state
     m_unloadTimer = 0;
@@ -3136,6 +3116,10 @@ void InstanceMap::Update(const uint32 t_diff, const uint32 s_diff, bool /*thread
 
 void InstanceMap::RemovePlayerFromMap(Player* player, bool remove)
 {
+    //if last player set unload timer
+    if (!m_unloadTimer && m_mapRefMgr.getSize() == 1)
+        m_unloadTimer = m_unloadWhenEmpty ? MIN_UNLOAD_DELAY : std::max(sWorld->getIntConfig(CONFIG_INSTANCE_UNLOAD_DELAY), (uint32)MIN_UNLOAD_DELAY);
+
     if (instance_data)
         instance_data->OnPlayerExit(player);
 
@@ -3146,33 +3130,21 @@ void InstanceMap::RemovePlayerFromMap(Player* player, bool remove)
         instance_data->OnPlayerExit(player);
     Map::RemovePlayerFromMap(player, remove);
 
-    // If remove == true - player already deleted.
-    if (!remove)
-        player->SetPendingBind(0, 0);
+    // for normal instances schedule the reset after all players have left
+    SetResetSchedule(true);
+    sInstanceSaveMgr->UnloadInstanceSave(GetInstanceId());
 }
 
-void InstanceMap::AfterPlayerUnlinkFromMap()
+void InstanceMap::CreateInstanceData(bool load)
 {
-    if (!m_unloadTimer && !HavePlayers())
-        m_unloadTimer = m_unloadWhenEmpty ? MIN_UNLOAD_DELAY : std::max(sWorld->getIntConfig(CONFIG_INSTANCE_UNLOAD_DELAY), (uint32)MIN_UNLOAD_DELAY);
-    Map::AfterPlayerUnlinkFromMap();
-}
-
-void InstanceMap::CreateInstanceScript(bool load, std::string data, uint32 completedEncounterMask)
-{
-    if (instance_data)
-    {
+    if (instance_data != nullptr)
         return;
-    }
 
     bool isOtherAI = false;
-
-    sScriptMgr->OnBeforeCreateInstanceScript(this, instance_data, load, data, completedEncounterMask);
 
     if (instance_data)
         isOtherAI = true;
 
-    // if Eluna AI was fetched succesfully we should not call CreateInstanceData nor set the unused scriptID
     if (!isOtherAI)
     {
         InstanceTemplate const* mInstance = sObjectMgr->GetInstanceTemplate(GetId());
@@ -3196,9 +3168,24 @@ void InstanceMap::CreateInstanceScript(bool load, std::string data, uint32 compl
 
     if (load)
     {
-        instance_data->SetCompletedEncountersMask(completedEncounterMask, false);
-        if (data != "")
-            instance_data->Load(data.c_str());
+        /// @todo make a global storage for this
+        CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_INSTANCE);
+        stmt->SetData(0, uint16(GetId()));
+        stmt->SetData(1, i_InstanceId);
+        PreparedQueryResult result = CharacterDatabase.Query(stmt);
+
+        if (result)
+        {
+            Field* fields = result->Fetch();
+            std::string data = fields[0].Get<std::string>();
+            instance_data->SetCompletedEncountersMask(fields[1].Get<uint32>(), false);
+            instance_data->SetEntranceLocation(fields[2].Get<uint32>());
+            if (!data.empty())
+            {
+                LOG_DEBUG("maps", "Loading instance data for `{}` with id {}", sObjectMgr->GetScriptName(i_script_id).c_str(), i_InstanceId);
+                instance_data->Load(data.c_str());
+            }
+        }
     }
 }
 
@@ -3270,23 +3257,28 @@ void InstanceMap::PermBindAllPlayers()
     for (MapRefMgr::iterator itr = m_mapRefMgr.begin(); itr != m_mapRefMgr.end(); ++itr)
     {
         player = itr->GetSource();
+        if (player->IsGameMaster())
+            continue;
+
         group = player->GetGroup();
 
         // players inside an instance cannot be bound to other instances
         // some players may already be permanently bound, in this case nothing happens
-        InstancePlayerBind* bind = sInstanceSaveMgr->PlayerGetBoundInstance(player->GetGUID(), save->GetMapId(), save->GetDifficulty());
-
+        InstancePlayerBind* bind = player->GetBoundInstance(save->GetMapId(), save->GetDifficultyID());
         if (!bind || !bind->perm)
         {
+            player->BindToInstance(save, true);
             WorldPacket data(SMSG_INSTANCE_SAVE_CREATED, 4);
             data << uint32(0);
             player->GetSession()->SendPacket(&data);
-            sInstanceSaveMgr->PlayerBindToInstance(player->GetGUID(), save, true, player);
-        }
+            player->GetSession()->SendCalendarRaidLockout(save, true);
 
-        // Xinef: Difficulty change prevention
-        if (group)
-            group->SetDifficultyChangePrevention(DIFFICULTY_PREVENTION_CHANGE_BOSS_KILLED);
+
+            // if group leader is in instance, group also gets bound
+            if (Group* group = player->GetGroup())
+                if (group->GetLeaderGUID() == player->GetGUID())
+                    group->BindToInstance(save, true);
+        }
     }
 }
 
@@ -3309,10 +3301,33 @@ void InstanceMap::SendResetWarnings(uint32 timeLeft) const
         itr->GetSource()->SendInstanceResetWarning(GetId(), itr->GetSource()->GetDifficulty(IsRaid()), timeLeft, false);
 }
 
+void InstanceMap::SetResetSchedule(bool on)
+{
+    // only for normal instances
+    // the reset time is only scheduled when there are no payers inside
+    // it is assumed that the reset time will rarely (if ever) change while the reset is scheduled
+    if (IsDungeon() && !HavePlayers() && !IsRaidOrHeroicDungeon())
+    {
+        if (InstanceSave* save = sInstanceSaveMgr->GetInstanceSave(GetInstanceId()))
+            sInstanceSaveMgr->ScheduleReset(on, save->GetResetTime(), InstanceSaveMgr::InstResetEvent(0, GetId(), GetDifficulty(), GetInstanceId()));
+        else
+            LOG_ERROR("maps", "InstanceMap::SetResetSchedule: cannot turn schedule {}, there is no save information for instance (map [id: {}, name: {}], instance id: {}, difficulty: {})",
+                on ? "on" : "off", GetId(), GetMapName(), GetInstanceId(), GetDifficulty());
+    }
+}
+
 MapDifficulty const* Map::GetMapDifficulty() const
 {
     return GetMapDifficultyData(GetId(), GetDifficulty());
 }
+
+bool InstanceMap::HasPermBoundPlayers() const
+{
+    CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_PERM_BIND_BY_INSTANCE);
+    stmt->SetData(0, GetInstanceId());
+    return !!CharacterDatabase.Query(stmt);
+}
+
 
 uint32 InstanceMap::GetMaxPlayers() const
 {

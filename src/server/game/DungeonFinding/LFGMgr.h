@@ -490,8 +490,6 @@ namespace lfg
         // LFGScripts
         /// Get leader of the group (using internal data)
         ObjectGuid GetLeader(ObjectGuid guid);
-        /// Initializes locked dungeons for given player (called at login or level change)
-        void InitializeLockedDungeons(Player* player, Group const* group = nullptr);
         /// Sets player team
         void SetTeam(ObjectGuid guid, TeamId teamId);
         /// Sets player group
@@ -548,7 +546,6 @@ namespace lfg
         void LfrSearchAdd(Player* p, uint32 dungeonId);
         void LfrSearchRemove(Player* p);
         void SendRaidBrowserCachedList(Player* player, uint32 dungeonId);
-        void UpdateRaidBrowser(uint32 diff);
         void LfrSetComment(Player* p, std::string comment);
         void SendRaidBrowserJoinedPacket(Player* p, LfgDungeonSet& dungeons, std::string comment);
         void RBPacketAppendGroup(const RBInternalInfo& info, ByteBuffer& buffer);

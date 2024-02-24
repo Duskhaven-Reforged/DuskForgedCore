@@ -33,10 +33,7 @@ namespace lfg
 
     void LFGPlayerScript::OnLevelChanged(Player* player, uint8 /*oldLevel*/)
     {
-        if (!sLFGMgr->isOptionEnabled(LFG_OPTION_ENABLE_DUNGEON_FINDER | LFG_OPTION_ENABLE_RAID_BROWSER | LFG_OPTION_ENABLE_SEASONAL_BOSSES))
-            return;
 
-        sLFGMgr->InitializeLockedDungeons(player, player->GetGroup());
     }
 
     void LFGPlayerScript::OnLogout(Player* player)
@@ -61,33 +58,7 @@ namespace lfg
 
     void LFGPlayerScript::OnLogin(Player* player)
     {
-        if (!sLFGMgr->isOptionEnabled(LFG_OPTION_ENABLE_DUNGEON_FINDER | LFG_OPTION_ENABLE_RAID_BROWSER | LFG_OPTION_ENABLE_SEASONAL_BOSSES))
-            return;
-
-        // Temporal: Trying to determine when group data and LFG data gets desynched
-        ObjectGuid guid = player->GetGUID();
-        ObjectGuid gguid = sLFGMgr->GetGroup(guid);
-
-        Group const* group = player->GetGroup();
-        if (group)
-        {
-            ObjectGuid gguid2 = group->GetGUID();
-            if (gguid != gguid2)
-            {
-                sLFGMgr->SetupGroupMember(guid, group->GetGUID());
-            }
-        }
-
-        sLFGMgr->InitializeLockedDungeons(player, group);
-        sLFGMgr->SetTeam(player->GetGUID(), player->GetTeamId());
-        /// @todo - Restore LfgPlayerData and send proper status to player if it was in a group
-    }
-
-    void LFGPlayerScript::OnBindToInstance(Player* player, Difficulty difficulty, uint32 mapId, bool /*permanent*/)
-    {
-        MapEntry const* mapEntry = sMapStore.LookupEntry(mapId);
-        if (mapEntry->IsDungeon() && difficulty > DUNGEON_DIFFICULTY_NORMAL)
-            sLFGMgr->InitializeLockedDungeons(player, player->GetGroup());
+        
     }
 
     void LFGPlayerScript::OnMapChanged(Player* player)

@@ -56,13 +56,24 @@ public:
             { "trigger",       HandleGoTriggerCommand,           SEC_GAMEMASTER1,  Console::No },
             { "zonexy",        HandleGoZoneXYCommand,            SEC_GAMEMASTER1,  Console::No },
             { "xyz",           HandleGoXYZCommand,               SEC_GAMEMASTER1,  Console::No },
-            { "ticket",        HandleGoTicketCommand,            SEC_GAMEMASTER1, Console::No },
+            { "ticket",        HandleGoTicketCommand,            SEC_GAMEMASTER1,  Console::No },
             { "quest",         HandleGoQuestCommand,             SEC_GAMEMASTER1,  Console::No },
         };
-
+        static ChatCommandTable barberdruidCommandTable =
+        {
+            { "bear",			BarberInfo_bear,            	 SEC_PLAYER,  Console::No },
+            { "cat",			BarberInfo_cat,            		 SEC_PLAYER,  Console::No },
+            { "buho",			BarberInfo_buho,            	 SEC_PLAYER,  Console::No },
+            { "travel",			BarberInfo_travel,            	 SEC_PLAYER,  Console::No },
+            { "fly",			BarberInfo_fly,            	 	 SEC_PLAYER,  Console::No },
+            { "sea",			BarberInfo_sea,            	 	 SEC_PLAYER,  Console::No },
+            { "tree",			BarberInfo_tree,            	 SEC_PLAYER,  Console::No },
+            { "reload",         BarberInfo_Reload,             	 SEC_PLAYER,  Console::No },
+        };
         static ChatCommandTable commandTable =
         {
-            { "go", goCommandTable }
+            { "go", goCommandTable },
+            { "barberdruid", barberdruidCommandTable }
         };
         return commandTable;
     }
@@ -395,6 +406,623 @@ public:
             player->SaveRecallPosition();
 
         ticket->TeleportTo(player);
+        return true;
+    }
+
+    static bool BarberInfo_tree(ChatHandler* handler, const char* args)
+    {
+        if (!*args)
+            return false;
+        uint32 nIdBuy = atoi((char*)args);
+
+        uint32 costo = 1;
+        uint32 itsok = 1;
+        uint32 nLearnSpellID = 0;
+
+        uint32 nReqItemID = 0;
+        uint32 nReqItemCant = 0;
+
+        QueryResult result = WorldDatabase.Query("SELECT type,name,display,npc,racemask,SpellId,ReqSpellID,path,ReqItemID,ReqItemCant FROM custom_druid_barbershop WHERE type = 'tree'");
+
+        Player* player = handler->GetSession()->GetPlayer();
+
+        if (!nIdBuy)
+            return false;
+
+        if (result)
+        {
+            do
+            {
+                Field* fields = result->Fetch();
+                uint32 display = fields[2].Get<uint32>();
+                uint32 SpellId = fields[5].Get<uint32>();
+                uint32 ReqSpellID = fields[6].Get<uint32>();
+                uint32 ReqItemID = fields[8].Get<uint32>();
+                uint32 ReqItemCant = fields[9].Get<uint32>();
+                player->removeSpell(SpellId, SPEC_MASK_ALL, false);
+                if (ReqSpellID == nIdBuy)
+                {
+                    nReqItemID = ReqItemID;
+                    nReqItemCant = ReqItemCant;
+
+                    if (player->HasSpell(ReqSpellID))
+                    {
+                        nLearnSpellID = SpellId;
+                    }
+                }
+            } while (result->NextRow());
+        }
+
+        if (nLearnSpellID == 0)
+        {
+            itsok = 0;
+        }
+        if (itsok == 0)
+        {
+            if (nIdBuy == 1)
+            {
+                handler->PSendSysMessage("Reverted changes");
+            }
+            else
+            {
+                if (nReqItemID > 0)
+                {
+                    if (player->HasItemCount(nReqItemID, nReqItemCant))
+                    {
+                        player->DestroyItemCount(nReqItemID, nReqItemCant, true, false);
+                        handler->PSendSysMessage("Unlocked appearance");
+                        player->learnSpell(nIdBuy, false);
+                    }
+                    else
+                    {
+                        handler->PSendSysMessage("You don't have enough money to buy this");
+                    }
+                }
+            }
+        }
+        else
+        {
+            handler->PSendSysMessage("Change made");
+            player->learnSpell(nLearnSpellID, false);
+        }
+
+        return true;
+    }
+
+    static bool BarberInfo_sea(ChatHandler* handler, const char* args)
+    {
+        if (!*args)
+            return false;
+        uint32 nIdBuy = atoi((char*)args);
+
+        uint32 costo = 1;
+        uint32 itsok = 1;
+        uint32 nLearnSpellID = 0;
+
+        uint32 nReqItemID = 0;
+        uint32 nReqItemCant = 0;
+
+        QueryResult result = WorldDatabase.Query("SELECT type,name,display,npc,racemask,SpellId,ReqSpellID,path,ReqItemID,ReqItemCant FROM custom_druid_barbershop WHERE type = 'sea'");
+
+        Player* player = handler->GetSession()->GetPlayer();
+
+        if (!nIdBuy)
+            return false;
+
+        if (result)
+        {
+            do
+            {
+                Field* fields = result->Fetch();
+                uint32 display = fields[2].Get<uint32>();
+                uint32 SpellId = fields[5].Get<uint32>();
+                uint32 ReqSpellID = fields[6].Get<uint32>();
+                uint32 ReqItemID = fields[8].Get<uint32>();
+                uint32 ReqItemCant = fields[9].Get<uint32>();
+                player->removeSpell(SpellId, SPEC_MASK_ALL, false);
+                if (ReqSpellID == nIdBuy)
+                {
+                    nReqItemID = ReqItemID;
+                    nReqItemCant = ReqItemCant;
+
+                    if (player->HasSpell(ReqSpellID))
+                    {
+                        nLearnSpellID = SpellId;
+                    }
+                }
+            } while (result->NextRow());
+        }
+
+        if (nLearnSpellID == 0)
+        {
+            itsok = 0;
+        }
+        if (itsok == 0)
+        {
+            if (nIdBuy == 1)
+            {
+                handler->PSendSysMessage("Reverted changes");
+            }
+            else
+            {
+                if (nReqItemID > 0)
+                {
+                    if (player->HasItemCount(nReqItemID, nReqItemCant))
+                    {
+                        player->DestroyItemCount(nReqItemID, nReqItemCant, true, false);
+                        handler->PSendSysMessage("Unlocked appearance");
+                        player->learnSpell(nIdBuy, false);
+                    }
+                    else
+                    {
+                        handler->PSendSysMessage("You don't have enough money to buy this");
+                    }
+                }
+            }
+        }
+        else
+        {
+            handler->PSendSysMessage("Change made");
+            player->learnSpell(nLearnSpellID, false);
+        }
+
+        return true;
+    }
+
+    static bool BarberInfo_fly(ChatHandler* handler, const char* args)
+    {
+        if (!*args)
+            return false;
+        uint32 nIdBuy = atoi((char*)args);
+
+        uint32 costo = 1;
+        uint32 itsok = 1;
+        uint32 nLearnSpellID = 0;
+
+        uint32 nReqItemID = 0;
+        uint32 nReqItemCant = 0;
+
+        QueryResult result = WorldDatabase.Query("SELECT type,name,display,npc,racemask,SpellId,ReqSpellID,path,ReqItemID,ReqItemCant FROM custom_druid_barbershop WHERE type = 'fly'");
+
+        Player* player = handler->GetSession()->GetPlayer();
+
+        if (!nIdBuy)
+            return false;
+
+        if (result)
+        {
+            do
+            {
+                Field* fields = result->Fetch();
+                uint32 display = fields[2].Get<uint32>();
+                uint32 SpellId = fields[5].Get<uint32>();
+                uint32 ReqSpellID = fields[6].Get<uint32>();
+                uint32 ReqItemID = fields[8].Get<uint32>();
+                uint32 ReqItemCant = fields[9].Get<uint32>();
+                player->removeSpell(SpellId, SPEC_MASK_ALL, false);
+                if (ReqSpellID == nIdBuy)
+                {
+                    nReqItemID = ReqItemID;
+                    nReqItemCant = ReqItemCant;
+
+                    if (player->HasSpell(ReqSpellID))
+                    {
+                        nLearnSpellID = SpellId;
+                    }
+                }
+            } while (result->NextRow());
+        }
+
+        if (nLearnSpellID == 0)
+        {
+            itsok = 0;
+        }
+        if (itsok == 0)
+        {
+            if (nIdBuy == 1)
+            {
+                handler->PSendSysMessage("Reverted changes");
+            }
+            else
+            {
+                if (nReqItemID > 0)
+                {
+                    if (player->HasItemCount(nReqItemID, nReqItemCant))
+                    {
+                        player->DestroyItemCount(nReqItemID, nReqItemCant, true, false);
+                        handler->PSendSysMessage("Unlocked appearance");
+                        player->learnSpell(nIdBuy, false);
+                    }
+                    else
+                    {
+                        handler->PSendSysMessage("You don't have enough money to buy this");
+                    }
+                }
+            }
+        }
+        else
+        {
+            handler->PSendSysMessage("Change made");
+            player->learnSpell(nLearnSpellID, false);
+        }
+
+        return true;
+    }
+
+    static bool BarberInfo_travel(ChatHandler* handler, const char* args)
+    {
+        if (!*args)
+            return false;
+        uint32 nIdBuy = atoi((char*)args);
+
+        uint32 costo = 1;
+        uint32 itsok = 1;
+        uint32 nLearnSpellID = 0;
+
+        uint32 nReqItemID = 0;
+        uint32 nReqItemCant = 0;
+
+        QueryResult result = WorldDatabase.Query("SELECT type,name,display,npc,racemask,SpellId,ReqSpellID,path,ReqItemID,ReqItemCant FROM custom_druid_barbershop WHERE type = 'travel'");
+
+        Player* player = handler->GetSession()->GetPlayer();
+
+        if (!nIdBuy)
+            return false;
+
+        if (result)
+        {
+            do
+            {
+                Field* fields = result->Fetch();
+                uint32 display = fields[2].Get<uint32>();
+                uint32 SpellId = fields[5].Get<uint32>();
+                uint32 ReqSpellID = fields[6].Get<uint32>();
+                uint32 ReqItemID = fields[8].Get<uint32>();
+                uint32 ReqItemCant = fields[9].Get<uint32>();
+                player->removeSpell(SpellId, SPEC_MASK_ALL, false);
+                if (ReqSpellID == nIdBuy)
+                {
+                    nReqItemID = ReqItemID;
+                    nReqItemCant = ReqItemCant;
+
+                    if (player->HasSpell(ReqSpellID))
+                    {
+                        nLearnSpellID = SpellId;
+                    }
+                }
+            } while (result->NextRow());
+        }
+
+        if (nLearnSpellID == 0)
+        {
+            itsok = 0;
+        }
+        if (itsok == 0)
+        {
+            if (nIdBuy == 1)
+            {
+                handler->PSendSysMessage("Reverted changes");
+            }
+            else
+            {
+                if (nReqItemID > 0)
+                {
+                    if (player->HasItemCount(nReqItemID, nReqItemCant))
+                    {
+                        player->DestroyItemCount(nReqItemID, nReqItemCant, true, false);
+                        handler->PSendSysMessage("Unlocked appearance");
+                        player->learnSpell(nIdBuy, false);
+                    }
+                    else
+                    {
+                        handler->PSendSysMessage("You don't have enough money to buy this");
+                    }
+                }
+            }
+        }
+        else
+        {
+            handler->PSendSysMessage("Change made");
+            player->learnSpell(nLearnSpellID, false);
+        }
+
+        return true;
+    }
+
+    static bool BarberInfo_buho(ChatHandler* handler, const char* args)
+    {
+        if (!*args)
+            return false;
+        uint32 nIdBuy = atoi((char*)args);
+
+        uint32 costo = 1;
+        uint32 itsok = 1;
+        uint32 nLearnSpellID = 0;
+
+        uint32 nReqItemID = 0;
+        uint32 nReqItemCant = 0;
+
+        QueryResult result = WorldDatabase.Query("SELECT type,name,display,npc,racemask,SpellId,ReqSpellID,path,ReqItemID,ReqItemCant FROM custom_druid_barbershop WHERE type = 'buho'");
+
+        Player* player = handler->GetSession()->GetPlayer();
+
+        if (!nIdBuy)
+            return false;
+
+        if (result)
+        {
+            do
+            {
+                Field* fields = result->Fetch();
+                uint32 display = fields[2].Get<uint32>();
+                uint32 SpellId = fields[5].Get<uint32>();
+                uint32 ReqSpellID = fields[6].Get<uint32>();
+                uint32 ReqItemID = fields[8].Get<uint32>();
+                uint32 ReqItemCant = fields[9].Get<uint32>();
+                player->removeSpell(SpellId, SPEC_MASK_ALL, false);
+                if (ReqSpellID == nIdBuy)
+                {
+                    nReqItemID = ReqItemID;
+                    nReqItemCant = ReqItemCant;
+
+                    if (player->HasSpell(ReqSpellID))
+                    {
+                        nLearnSpellID = SpellId;
+                    }
+                }
+            } while (result->NextRow());
+        }
+
+        if (nLearnSpellID == 0)
+        {
+            itsok = 0;
+        }
+        if (itsok == 0)
+        {
+            if (nIdBuy == 1)
+            {
+                handler->PSendSysMessage("Reverted changes");
+            }
+            else
+            {
+                if (nReqItemID > 0)
+                {
+                    if (player->HasItemCount(nReqItemID, nReqItemCant))
+                    {
+                        player->DestroyItemCount(nReqItemID, nReqItemCant, true, false);
+                        handler->PSendSysMessage("Unlocked appearance");
+                        player->learnSpell(nIdBuy, false);
+                    }
+                    else
+                    {
+                        handler->PSendSysMessage("You don't have enough money to buy this");
+                    }
+                }
+            }
+        }
+        else
+        {
+            handler->PSendSysMessage("Change made");
+            player->learnSpell(nLearnSpellID, false);
+        }
+
+        return true;
+    }
+
+    static bool BarberInfo_bear(ChatHandler* handler, const char* args)
+    {
+        if (!*args)
+            return false;
+        uint32 nIdBuy = atoi((char*)args);
+
+        uint32 costo = 1;
+        uint32 itsok = 1;
+        uint32 nLearnSpellID = 0;
+
+        uint32 nReqItemID = 0;
+        uint32 nReqItemCant = 0;
+
+        QueryResult result = WorldDatabase.Query("SELECT type,name,display,npc,racemask,SpellId,ReqSpellID,path,ReqItemID,ReqItemCant FROM custom_druid_barbershop WHERE type = 'bear'");
+
+        Player* player = handler->GetSession()->GetPlayer();
+
+        if (!nIdBuy)
+            return false;
+
+        if (result)
+        {
+            do
+            {
+                Field* fields = result->Fetch();
+                uint32 display = fields[2].Get<uint32>();
+                uint32 SpellId = fields[5].Get<uint32>();
+                uint32 ReqSpellID = fields[6].Get<uint32>();
+                uint32 ReqItemID = fields[8].Get<uint32>();
+                uint32 ReqItemCant = fields[9].Get<uint32>();
+                player->removeSpell(SpellId, SPEC_MASK_ALL, false);
+                if (ReqSpellID == nIdBuy)
+                {
+                    nReqItemID = ReqItemID;
+                    nReqItemCant = ReqItemCant;
+
+                    if (player->HasSpell(ReqSpellID))
+                    {
+                        nLearnSpellID = SpellId;
+                    }
+                }
+            } while (result->NextRow());
+        }
+
+        if (nLearnSpellID == 0)
+        {
+            itsok = 0;
+        }
+        if (itsok == 0)
+        {
+            if (nIdBuy == 1)
+            {
+                handler->PSendSysMessage("Reverted changes");
+            }
+            else
+            {
+                if (nReqItemID > 0)
+                {
+                    if (player->HasItemCount(nReqItemID, nReqItemCant))
+                    {
+                        player->DestroyItemCount(nReqItemID, nReqItemCant, true, false);
+                        handler->PSendSysMessage("Unlocked appearance");
+                        player->learnSpell(nIdBuy, false);
+                    }
+                    else
+                    {
+                        handler->PSendSysMessage("You don't have enough money to buy this");
+                    }
+                }
+            }
+        }
+        else
+        {
+            handler->PSendSysMessage("Change made");
+            player->learnSpell(nLearnSpellID, false);
+        }
+
+        return true;
+    }
+
+    static bool BarberInfo_cat(ChatHandler* handler, const char* args)
+    {
+        if (!*args)
+            return false;
+        uint32 nIdBuy = atoi((char*)args);
+
+        uint32 costo = 1;
+        uint32 itsok = 1;
+        uint32 nLearnSpellID = 0;
+
+        uint32 nReqItemID = 0;
+        uint32 nReqItemCant = 0;
+
+        QueryResult result = WorldDatabase.Query("SELECT type,name,display,npc,racemask,SpellId,ReqSpellID,path,ReqItemID,ReqItemCant FROM custom_druid_barbershop WHERE type = 'cat'");
+
+        Player* player = handler->GetSession()->GetPlayer();
+
+        if (!nIdBuy)
+            return false;
+
+        if (result)
+        {
+            do
+            {
+                Field* fields = result->Fetch();
+                uint32 display = fields[2].Get<uint32>();
+                uint32 SpellId = fields[5].Get<uint32>();
+                uint32 ReqSpellID = fields[6].Get<uint32>();
+                uint32 ReqItemID = fields[8].Get<uint32>();
+                uint32 ReqItemCant = fields[9].Get<uint32>();
+                player->removeSpell(SpellId, SPEC_MASK_ALL, false);
+                if (ReqSpellID == nIdBuy)
+                {
+                    nReqItemID = ReqItemID;
+                    nReqItemCant = ReqItemCant;
+
+                    if (player->HasSpell(ReqSpellID))
+                    {
+                        nLearnSpellID = SpellId;
+                    }
+                }
+            } while (result->NextRow());
+        }
+
+        if (nLearnSpellID == 0)
+        {
+            itsok = 0;
+        }
+        if (itsok == 0)
+        {
+            if (nIdBuy == 1)
+            {
+                handler->PSendSysMessage("Reverted changes");
+            }
+            else
+            {
+                if (nReqItemID > 0)
+                {
+                    if (player->HasItemCount(nReqItemID, nReqItemCant))
+                    {
+                        player->DestroyItemCount(nReqItemID, nReqItemCant, true, false);
+                        handler->PSendSysMessage("Unlocked appearance");
+                        player->learnSpell(nIdBuy, false);
+                    }
+                    else
+                    {
+                        handler->PSendSysMessage("You don't have enough money to buy this");
+                    }
+                }
+            }
+        }
+        else
+        {
+            handler->PSendSysMessage("Change made");
+            player->learnSpell(nLearnSpellID, false);
+        }
+
+        return true;
+    }
+
+    static bool BarberInfo_Reload(ChatHandler* handler, const char* args)
+    {
+        if (!*args)
+            return false;
+
+        uint32 TravelnReqSpellID = 0;
+ 
+        QueryResult result = WorldDatabase.Query("SELECT type,name,display,npc,racemask,SpellId,ReqSpellID,path,ReqItemID,ReqItemCant FROM custom_druid_barbershop WHERE guid > 0");
+        
+        Player *player = handler->GetSession()->GetPlayer();
+        handler->PSendSysMessage("INITBarberDruid");
+        if (result)
+        {
+            do
+            {
+                Field *fields = result->Fetch();
+
+                std::string type = fields[0].Get<std::string>();
+                std::string name = fields[1].Get<std::string>();
+                std::string display = fields[2].Get<std::string>();
+                std::string npc = fields[3].Get<std::string>();
+                std::string racemask = fields[4].Get<std::string>();
+                std::string SpellId = fields[5].Get<std::string>();
+                std::string ReqSpellID = fields[6].Get<std::string>();
+                std::string path = fields[7].Get<std::string>();
+                std::string ReqItemID = fields[8].Get<std::string>();
+                std::string ReqItemCant = fields[9].Get<std::string>();
+                std::string ifknow = "false";
+
+                uint32 ReqSpellIDA = fields[6].Get<uint32>();
+                uint32 ReqItemCantA = fields[9].Get<uint32>();
+
+                if (ReqSpellIDA == 0)
+                {
+                    ifknow = "true";
+                }
+                else
+                {
+                    if (player->HasSpell(ReqSpellIDA))
+                    {
+                        ifknow = "true";
+                    }
+                    else
+                    {
+                        if (ReqItemCantA == 0)
+                        {
+                            ifknow = "BLOCK";
+                        }
+                    }
+                }
+                handler->PSendSysMessage("CHARBarberDruid%s:%s:%s:nil:%s:%s:%s:%s", type.c_str(), name.c_str(), display.c_str(), ReqItemID.c_str(), ReqItemCant.c_str(), ReqSpellID.c_str(), ifknow.c_str());
+            } while (result->NextRow());
+        }
+        handler->PSendSysMessage("FINIBarberDruid");
         return true;
     }
 

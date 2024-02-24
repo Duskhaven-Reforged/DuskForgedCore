@@ -37,7 +37,6 @@ namespace lfg
         void OnLevelChanged(Player* player, uint8 oldLevel) override;
         void OnLogout(Player* player) override;
         void OnLogin(Player* player) override;
-        void OnBindToInstance(Player* player, Difficulty difficulty, uint32 mapId, bool permanent) override;
         void OnMapChanged(Player* player) override;
     };
 

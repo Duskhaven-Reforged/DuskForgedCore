@@ -35,67 +35,104 @@ class Group;
 class InstanceSaveMgr;
 class InstanceSave;
 
-struct InstancePlayerBind
-{
-    InstanceSave* save{nullptr};
-    bool perm : 1;
-    bool extended : 1;
-    InstancePlayerBind() :  perm(false), extended(false) {}
-};
-
-typedef std::unordered_map<uint32 /*mapId*/, InstancePlayerBind > BoundInstancesMap;
-
-struct BoundInstancesMapWrapper
-{
-    BoundInstancesMap m[MAX_DIFFICULTY];
-};
-
-typedef std::unordered_map<ObjectGuid /*guid*/, BoundInstancesMapWrapper* > PlayerBindStorage;
-
 class InstanceSave
 {
     friend class InstanceSaveMgr;
 public:
-    InstanceSave(uint16 MapId, uint32 InstanceId, Difficulty difficulty, time_t resetTime, time_t extendedResetTime);
+    InstanceSave(uint16 MapId, uint32 InstanceId, Difficulty difficulty, uint32 entranceId, time_t resetTime, bool canReset);
     ~InstanceSave();
-    [[nodiscard]] uint32 GetInstanceId() const { return m_instanceid; }
-    [[nodiscard]] uint32 GetMapId() const { return m_mapid; }
-    [[nodiscard]] Difficulty GetDifficulty() const { return m_difficulty; }
+
+    uint32 GetPlayerCount() const { return uint32(m_playerList.size()); }
+    uint32 GetGroupCount() const { return uint32(m_groupList.size()); }
+
+    /* A map corresponding to the InstanceId/MapId does not always exist.
+    InstanceSave objects may be created on player logon but the maps are
+    created and loaded only when a player actually enters the instance. */
+    uint32 GetInstanceId() const { return m_instanceid; }
+    uint32 GetMapId() const { return m_mapid; }
 
     /* Saved when the instance is generated for the first time */
-    void InsertToDB();
-    // pussywizard: deleting is done internally when there are no binds left
+    void SaveToDB();
+    /* When the instance is being reset (permanently deleted) */
+    void DeleteFromDB();
+
+    /* for normal instances this corresponds to max(creature respawn time) + X hours
+       for raid/heroic instances this caches the global respawn time for the map */
+    time_t GetResetTime() const { return m_resetTime; }
+    void SetResetTime(time_t resetTime) { m_resetTime = resetTime; }
+    time_t GetResetTimeForDB();
+
+    InstanceTemplate const* GetTemplate();
+    MapEntry const* GetMapEntry();
+
+    void AddPlayer(Player* player)
+    {
+        std::lock_guard<std::mutex> lock(_lock);
+        m_playerList.push_back(player);
+    }
+
+    bool RemovePlayer(Player* player)
+    {
+        _lock.lock();
+        m_playerList.remove(player);
+        bool isStillValid = UnloadIfEmpty();
+        _lock.unlock();
+
+        //delete here if needed, after releasing the lock
+        if (m_toDelete)
+            delete this;
+
+        return isStillValid;
+    }
+    /* all groups bound to the instance */
+    void AddGroup(Group* group) { m_groupList.push_back(group); }
+    bool RemoveGroup(Group* group)
+    {
+        m_groupList.remove(group);
+        bool isStillValid = UnloadIfEmpty();
+        if (m_toDelete)
+            delete this;
+        return isStillValid;
+    }
+
+    /* instances cannot be reset (except at the global reset time)
+           if there are players permanently bound to it
+           this is cached for the case when those players are offline */
+    bool CanReset() const { return m_canReset; }
+    void SetCanReset(bool canReset) { m_canReset = canReset; }
+
+    /* currently it is possible to omit this information from this structure
+       but that would depend on a lot of things that can easily change in future */
+    Difficulty GetDifficultyID() const { return m_difficulty; }
+
+    /* used to flag the InstanceSave as to be deleted, so the caller can delete it */
+    void SetToDelete(bool toDelete)
+    {
+        m_toDelete = toDelete;
+    }
 
     [[nodiscard]] std::string GetInstanceData() const { return m_instanceData; }
     void SetInstanceData(std::string str) { m_instanceData = str; }
     [[nodiscard]] uint32 GetCompletedEncounterMask() const { return m_completedEncounterMask; }
     void SetCompletedEncounterMask(uint32 mask) { m_completedEncounterMask = mask; }
 
-    // pussywizard: for normal instances this corresponds to 0, for raid/heroic instances this caches the global reset time for the map
-    [[nodiscard]] time_t GetResetTime() const { return m_resetTime; }
-    [[nodiscard]] time_t GetExtendedResetTime() const { return m_extendedResetTime; }
-    time_t GetResetTimeForDB();
-    void SetResetTime(time_t resetTime) { m_resetTime = resetTime; }
-    void SetExtendedResetTime(time_t extendedResetTime) { m_extendedResetTime = extendedResetTime; }
-
-    [[nodiscard]] bool CanReset() const { return m_canReset; }
-    void SetCanReset(bool canReset) { m_canReset = canReset; }
-
-    InstanceTemplate const* GetTemplate();
-    MapEntry const* GetMapEntry();
-
-    void AddPlayer(ObjectGuid guid);
-    bool RemovePlayer(ObjectGuid guid, InstanceSaveMgr* ism);
-
+    typedef std::list<Player*> PlayerListType;
+    typedef std::list<Group*> GroupListType;
 private:
-    GuidList m_playerList;
+    bool UnloadIfEmpty();
+    /* the only reason the instSave-object links are kept is because
+       the object-instSave links need to be broken at reset time */
+       /// @todo: Check if maybe it's enough to just store the number of players/groups
+    PlayerListType m_playerList;
+    GroupListType m_groupList;
     time_t m_resetTime;
-    time_t m_extendedResetTime;
     uint32 m_instanceid;
     uint32 m_mapid;
     Difficulty m_difficulty;
     uint32 m_entranceId;
     bool m_canReset;
+    bool m_toDelete;
+
     std::string m_instanceData;
     uint32 m_completedEncounterMask;
 
@@ -114,89 +151,72 @@ private:
 
 public:
     static InstanceSaveMgr* instance();
-
     typedef std::unordered_map<uint32 /*InstanceId*/, InstanceSave*> InstanceSaveHashMap;
 
     struct InstResetEvent
     {
-        uint8 type{0}; // 0 - unused, 1-4 warnings about pending reset, 5 - reset
-        Difficulty difficulty: 8;
-        uint16 mapid{0};
+        uint8 type;
+        Difficulty difficulty : 8;
+        uint32 mapid;
+        uint32 instanceId;
 
-        InstResetEvent() :  difficulty(DUNGEON_DIFFICULTY_NORMAL) {}
-        InstResetEvent(uint8 t, uint32 _mapid, Difficulty d)
-            : type(t), difficulty(d), mapid(_mapid) {}
+        InstResetEvent() : type(0), difficulty(Difficulty::RAID_DIFFICULTY_25MAN_NORMAL), mapid(0), instanceId(0) { }
+        InstResetEvent(uint8 t, uint32 _mapid, Difficulty d, uint32 _instanceid)
+            : type(t), difficulty(d), mapid(_mapid), instanceId(_instanceid) { }
+        bool operator==(InstResetEvent const& e) const { return e.instanceId == instanceId; }
     };
     typedef std::multimap<time_t /*resetTime*/, InstResetEvent> ResetTimeQueue;
 
     void LoadInstances();
-    void LoadResetTimes();
-    void LoadInstanceSaves();
-    void LoadCharacterBinds();
 
-    [[nodiscard]] time_t GetResetTimeFor(uint32 mapid, Difficulty d) const
+    void LoadResetTimes();
+    time_t GetResetTimeFor(uint32 mapid, Difficulty d) const
     {
-        ResetTimeByMapDifficultyMap::const_iterator itr  = m_resetTimeByMapDifficulty.find(MAKE_PAIR32(mapid, d));
+        ResetTimeByMapDifficultyMap::const_iterator itr = m_resetTimeByMapDifficulty.find(MAKE_PAIR64(mapid, d));
         return itr != m_resetTimeByMapDifficulty.end() ? itr->second : 0;
     }
+    time_t GetSubsequentResetTime(uint32 mapid, Difficulty difficulty, time_t resetTime) const;
 
-    [[nodiscard]] time_t GetExtendedResetTimeFor(uint32 mapid, Difficulty d) const
+    // Use this on startup when initializing reset times
+    void InitializeResetTimeFor(uint32 mapid, Difficulty d, time_t t)
     {
-        ResetTimeByMapDifficultyMap::const_iterator itr  = m_resetExtendedTimeByMapDifficulty.find(MAKE_PAIR32(mapid, d));
-        return itr != m_resetExtendedTimeByMapDifficulty.end() ? itr->second : 0;
+        m_resetTimeByMapDifficulty[MAKE_PAIR64(mapid, d)] = t;
     }
 
-    void SetResetTimeFor(uint32 mapid, Difficulty d, time_t t)
-    {
-        m_resetTimeByMapDifficulty[MAKE_PAIR32(mapid, d)] = t;
-    }
-
-    void SetExtendedResetTimeFor(uint32 mapid, Difficulty d, time_t t)
-    {
-        m_resetExtendedTimeByMapDifficulty[MAKE_PAIR32(mapid, d)] = t;
-    }
+    // Use this only when updating existing reset times
+    void SetResetTimeFor(uint32 mapid, Difficulty d, time_t t);
 
     [[nodiscard]] ResetTimeByMapDifficultyMap const& GetResetTimeMap() const
     {
         return m_resetTimeByMapDifficulty;
     }
-
-    void ScheduleReset(time_t time, InstResetEvent event);
+    void ScheduleReset(bool add, time_t time, InstResetEvent event);
+    void ForceGlobalReset(uint32 mapId, Difficulty difficulty);
 
     void Update();
 
-    InstanceSave* AddInstanceSave(uint32 mapId, uint32 instanceId, Difficulty difficulty, bool startup = false);
-    bool DeleteInstanceSaveIfNeeded(uint32 InstanceId, bool skipMapCheck);
-    bool DeleteInstanceSaveIfNeeded(InstanceSave* save, bool skipMapCheck, bool deleteSave = true);
+    InstanceSave* AddInstanceSave(uint32 mapId, uint32 instanceId, Difficulty difficulty, time_t resetTime, uint32 entranceId,
+        bool canReset, bool load = false);
+    void RemoveInstanceSave(uint32 InstanceId);
+    void UnloadInstanceSave(uint32 InstanceId);
+    static void DeleteInstanceFromDB(uint32 instanceid);
 
     InstanceSave* GetInstanceSave(uint32 InstanceId);
 
-    InstancePlayerBind* PlayerBindToInstance(ObjectGuid guid, InstanceSave* save, bool permanent, Player* player = nullptr);
-    void PlayerUnbindInstance(ObjectGuid guid, uint32 mapid, Difficulty difficulty, bool deleteFromDB, Player* player = nullptr);
-    void PlayerUnbindInstanceNotExtended(ObjectGuid guid, uint32 mapid, Difficulty difficulty, Player* player = nullptr);
-    InstancePlayerBind* PlayerGetBoundInstance(ObjectGuid guid, uint32 mapid, Difficulty difficulty);
-    bool PlayerIsPermBoundToInstance(ObjectGuid guid, uint32 mapid, Difficulty difficulty);
-    BoundInstancesMap const& PlayerGetBoundInstances(ObjectGuid guid, Difficulty difficulty);
-    void PlayerCreateBoundInstancesMaps(ObjectGuid guid);
-    InstanceSave* PlayerGetInstanceSave(ObjectGuid guid, uint32 mapid, Difficulty difficulty);
-    uint32 PlayerGetDestinationInstanceId(Player* player, uint32 mapid, Difficulty difficulty);
-    void CopyBinds(ObjectGuid from, ObjectGuid to, Player* toPlr = nullptr);
-    void UnbindAllFor(InstanceSave* save);
-
-    void SanitizeInstanceSavedData();
-    void DeleteInstanceSavedData(uint32 instanceId);
+    /* statistics */
+    uint32 GetNumInstanceSaves() const { return uint32(m_instanceSaveById.size()); }
+    uint32 GetNumBoundPlayersTotal() const;
+    uint32 GetNumBoundGroupsTotal() const;
 protected:
     static uint16 ResetTimeDelay[];
-    static PlayerBindStorage playerBindStorage;
-    static BoundInstancesMap emptyBoundInstancesMap;
 
 private:
     void _ResetOrWarnAll(uint32 mapid, Difficulty difficulty, bool warn, time_t resetTime);
+    void _ResetInstance(uint32 mapid, uint32 instanceId);
     void _ResetSave(InstanceSaveHashMap::iterator& itr);
     bool lock_instLists{false};
     InstanceSaveHashMap m_instanceSaveById;
     ResetTimeByMapDifficultyMap m_resetTimeByMapDifficulty;
-    ResetTimeByMapDifficultyMap m_resetExtendedTimeByMapDifficulty;
     ResetTimeQueue m_resetTimeQueue;
 };
 

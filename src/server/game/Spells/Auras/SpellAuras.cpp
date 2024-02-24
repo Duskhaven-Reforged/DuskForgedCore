@@ -2030,20 +2030,22 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
 
     if (apply)
     {
-        Unit::AuraEffectList aurEffects;
+        /*Unit::AuraEffectList aurEffects = {};
 
-        if (caster == target)
+        if (caster == target) {
             aurEffects = caster->GetAuraEffectsByType(SPELL_AURA_MOD_TRIGGER_SPELL_ON_STACKS_ON_SELF);
-        else
-            aurEffects = caster->GetAuraEffectsByType(SPELL_AURA_MOD_TRIGGER_SPELL_ON_STACKS_ON_TARGET);
-
-        for (auto aurEff : aurEffects)
-        {
-            auto eff = aurEff->GetSpellInfo()->GetEffect(SpellEffIndex(aurEff->GetEffIndex()));
-
-            if (aurApp->GetBase()->GetId() == eff.MiscValue)
-                ProcessTriggerSpellOnStacks(aurApp->GetBase(), eff.MiscValueB, eff.TriggerSpell, eff.TargetA.GetTarget(), eff.Amplitude, caster, aurEff->GetBase()->GetEffect(aurEff->GetEffIndex()));
         }
+        else {
+            aurEffects = caster->GetAuraEffectsByType(SPELL_AURA_MOD_TRIGGER_SPELL_ON_STACKS_ON_TARGET);
+        }
+        if (!aurEffects.empty())
+            for (auto aurEff : aurEffects)
+            {
+                auto eff = aurEff->GetSpellInfo()->GetEffect(SpellEffIndex(aurEff->GetEffIndex()));
+
+                if (aurApp->GetBase()->GetId() == eff.MiscValue)
+                    ProcessTriggerSpellOnStacks(aurApp->GetBase(), eff.MiscValueB, eff.TriggerSpell, eff.TargetA.GetTarget(), eff.Amplitude, caster, aurEff->GetBase()->GetEffect(aurEff->GetEffIndex()));
+            }*/
     }
 }
 

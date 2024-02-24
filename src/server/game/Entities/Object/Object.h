@@ -418,6 +418,8 @@ public:
     Position GetFirstCollisionPosition(float dist, float angle);
     Position GetRandomNearPosition(float radius);
 
+    uint32 GetInstanceId() const { return m_InstanceId; }
+
     void GetContactPoint(WorldObject const* obj, float& x, float& y, float& z, float distance2d = CONTACT_DISTANCE) const;
     void GetChargeContactPoint(WorldObject const* obj, float& x, float& y, float& z, float distance2d = CONTACT_DISTANCE) const;
 
@@ -429,8 +431,6 @@ public:
 
     void GetRandomPoint(const Position& srcPos, float distance, float& rand_x, float& rand_y, float& rand_z) const;
     [[nodiscard]] Position GetRandomPoint(const Position& srcPos, float distance) const;
-
-    [[nodiscard]] uint32 GetInstanceId() const { return m_InstanceId; }
 
     virtual void SetPhaseMask(uint32 newPhaseMask, bool update);
     [[nodiscard]] uint32 GetPhaseMask() const { return m_phaseMask; }

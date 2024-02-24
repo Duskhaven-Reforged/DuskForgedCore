@@ -720,10 +720,6 @@ void WorldSession::HandleRaidReadyCheckOpcode(WorldPacket& recvData)
 
     if (recvData.empty())                                   // request
     {
-        /** error handling **/
-        if (!group->IsLeader(GetPlayer()->GetGUID()) && !group->IsAssistant(GetPlayer()->GetGUID()))
-            return;
-        /********************/
 
         // Check if Ready Check in BG is enabled
         if (sWorld->getBoolConfig(CONFIG_BATTLEGROUND_DISABLE_READY_CHECK_IN_BG))

@@ -60,11 +60,22 @@ struct CombatReference
 
     void EndCombat();
 
+    // suppressed combat refs do not generate a combat state for one side of the relation
+    // (used by: vanish, feign death and launched out of combat but not yet landed spell missiles)
+    void SuppressFor(Unit* who);
+    bool IsSuppressedFor(Unit const* who) const { return (who == first) ? _suppressFirst : _suppressSecond; }
+
     CombatReference(CombatReference const&) = delete;
     CombatReference& operator=(CombatReference const&) = delete;
 
 protected:
+    void Refresh();
+    void Suppress(Unit* who) { (who == first ? _suppressFirst : _suppressSecond) = true; }
+
     CombatReference(Unit* a, Unit* b, bool pvp = false) : first(a), second(b), _isPvP(pvp) { }
+
+    bool _suppressFirst = false;
+    bool _suppressSecond = false;
 
     friend class CombatManager;
 };
@@ -74,21 +85,13 @@ struct PvPCombatReference : public CombatReference
 {
     static const uint32 PVP_COMBAT_TIMEOUT = 5 * IN_MILLISECONDS;
 
-    // suppressed combat refs do not generate a combat state for one side of the relation
-    // (used by: vanish, feign death)
-    void SuppressFor(Unit* who);
-    bool IsSuppressedFor(Unit const* who) const { return (who == first) ? _suppressFirst : _suppressSecond; }
-
 private:
     PvPCombatReference(Unit* first, Unit* second) : CombatReference(first, second, true) { }
 
     bool Update(uint32 tdiff);
-    void Refresh();
-    void Suppress(Unit* who) { (who == first ? _suppressFirst : _suppressSecond) = true; }
+    void RefreshTimer();
 
     uint32 _combatTimer = PVP_COMBAT_TIMEOUT;
-    bool _suppressFirst = false;
-    bool _suppressSecond = false;
 
     friend class CombatManager;
 };
@@ -100,6 +103,7 @@ class CombatManager
         static bool CanBeginCombat(Unit const* a, Unit const* b);
 
         CombatManager(Unit* owner) : _owner(owner) { }
+        ~CombatManager();
         void Update(uint32 tdiff); // called from Unit::Update
 
         Unit* GetOwner() const { return _owner; }
@@ -120,6 +124,7 @@ class CombatManager
         // flags any pvp refs for suppression on owner's side - these refs will not generate combat until refreshed
         void SuppressPvPCombat();
         void EndAllPvECombat();
+        void RevalidateCombat();
         void EndAllPvPCombat();
         void EndAllCombat() { EndAllPvECombat(); EndAllPvPCombat(); }
 
@@ -134,7 +139,6 @@ class CombatManager
         Unit* const _owner;
         std::unordered_map<ObjectGuid, CombatReference*> _pveRefs;
         std::unordered_map<ObjectGuid, PvPCombatReference*> _pvpRefs;
-
 
     friend struct CombatReference;
     friend struct PvPCombatReference;

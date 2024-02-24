@@ -639,7 +639,8 @@ void AuraEffect::CalculatePeriodic(Unit* caster, bool create, bool load)
                 m_amplitude = 1 * IN_MILLISECONDS;
             [[fallthrough]]; /// @todo: Not sure whether the fallthrough was a mistake (forgetting a break) or intended. This should be double-checked.
         case SPELL_AURA_MOD_RECOVERY_RATE:
-            m_amplitude = 0.1f * IN_MILLISECONDS;
+            if (!m_amplitude)
+                m_amplitude = 0.1f * IN_MILLISECONDS;
             [[fallthrough]];
         case SPELL_AURA_PERIODIC_DAMAGE:
         case SPELL_AURA_PERIODIC_HEAL:

@@ -30,6 +30,7 @@ public:
     static GroupMgr* instance();
 
     typedef std::map<uint32, Group*> GroupContainer;
+    typedef std::vector<Group*> GroupDbContainer;
 
     Group* GetGroupByGUID(ObjectGuid::LowType guid) const;
 
@@ -37,15 +38,26 @@ public:
     void RegisterGroupId(ObjectGuid::LowType groupId);
     ObjectGuid::LowType GenerateGroupId();
 
+    uint32 GenerateNewGroupDbStoreId();
+    void   RegisterGroupDbStoreId(uint32 storageId, Group* group);
+    void   FreeGroupDbStoreId(Group* group);
+    void   SetNextGroupDbStoreId(uint32 storageId) { NextGroupDbStoreId = storageId; };
+    Group* GetGroupByDbStoreId(uint32 storageId) const;
+    void   SetGroupDbStoreSize(uint32 newSize) { GroupDbStore.resize(newSize); }
+
     void LoadGroups();
     void AddGroup(Group* group);
     void RemoveGroup(Group* group);
+
+    void   Update(uint32 diff);
 
 protected:
     typedef std::vector<bool> GroupIds;
     GroupIds            _groupIds;
     ObjectGuid::LowType _nextGroupId;
+    uint32              NextGroupDbStoreId;
     GroupContainer      GroupStore;
+    GroupDbContainer    GroupDbStore;
 };
 
 #define sGroupMgr GroupMgr::instance()

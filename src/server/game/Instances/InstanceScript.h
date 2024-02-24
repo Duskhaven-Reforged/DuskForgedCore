@@ -150,7 +150,11 @@ class InstanceScript : public ZoneScript
 {
 public:
     InstanceScript(Map* map) : instance(map), completedEncounters(0), _entranceId(0), _temporaryEntranceId(0),
-        _challengeModeStarted(false), _challengeModeLevel(0), _challengeModeStartTime(0), _challengeModeDeathCount(0) {}
+        _challengeModeStarted(false), _challengeModeLevel(0), _challengeModeStartTime(0), _challengeModeDeathCount(0) {
+
+        if (WorldSafeLocsEntry const* entranceSafeLocEntry = sObjectMgr->GetWorldSafeLoc(instance->GetId(), GetEntranceLocation()))
+            _challengeEntranceLoc.Relocate(entranceSafeLocEntry->Loc);
+    }
 
     ~InstanceScript() override {}
 

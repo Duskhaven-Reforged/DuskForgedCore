@@ -62,16 +62,6 @@ void AreaTriggerDataStore::LoadAreaTriggerTemplates()
                 continue;
             }
 
-            if (actionType == AREATRIGGER_ACTION_TELEPORT)
-            {
-                if (!sObjectMgr->GetWorldSafeLoc(action.Param))
-                {
-                    LOG_ERROR("sql.sql", "Table `areatrigger_template_actions` has invalid entry ({},{}) with TargetType=Teleport and Param ({}) not a valid world safe loc entry",
-                        areaTriggerId.Id, uint32(areaTriggerId.IsServerSide), action.Param);
-                    continue;
-                }
-            }
-
             action.TargetType = AreaTriggerActionUserTypes(targetType);
             action.ActionType = AreaTriggerActionTypes(actionType);
 

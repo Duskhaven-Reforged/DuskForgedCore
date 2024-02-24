@@ -101,52 +101,21 @@ void WorldSession::HandleCalendarGetCalendar(WorldPacket& /*recvData*/)
     uint32 boundCounter = 0;
     for (uint8 i = 0; i < MAX_DIFFICULTY; ++i)
     {
-        BoundInstancesMap const& m_boundInstances = sInstanceSaveMgr->PlayerGetBoundInstances(_player->GetGUID(), Difficulty(i));
-        for (BoundInstancesMap::const_iterator itr = m_boundInstances.begin(); itr != m_boundInstances.end(); ++itr)
-        {
-            if (itr->second.perm)
+        auto boundInstances = _player->GetBoundInstances(Difficulty(i));
+        if (boundInstances != _player->m_boundInstances.end()) {
+            for (auto const& boundInstance : boundInstances->second)
             {
-                InstanceSave const* save = itr->second.save;
-                time_t resetTime = itr->second.extended ? save->GetExtendedResetTime() : save->GetResetTime();
-                dataBuffer << uint32(save->GetMapId());
-                dataBuffer << uint32(save->GetDifficulty());
-                dataBuffer << uint32(resetTime >= currTime ? resetTime - currTime : 0);
-                dataBuffer << ObjectGuid::Create<HighGuid::Instance>(save->GetInstanceId());     // instance save id as unique instance copy id
-                ++boundCounter;
+                if (boundInstance.second.perm)
+                {
+                    InstanceSave const* save = boundInstance.second.save;
+                    dataBuffer << uint32(save->GetMapId());
+                    dataBuffer << uint32(save->GetDifficultyID());
+                    dataBuffer << uint32(save->GetResetTime() - currTime);
+                    dataBuffer << ObjectGuid::Create<HighGuid::Instance>(save->GetInstanceId());     // instance save id as unique instance copy id
+                    ++boundCounter;
+                }
             }
         }
-    }
-
-    data << uint32(boundCounter);
-    data.append(dataBuffer);
-
-    // pussywizard
-    uint32 relationTime = sWorld->getIntConfig(CONFIG_INSTANCE_RESET_TIME_RELATIVE_TIMESTAMP) + sWorld->getIntConfig(CONFIG_INSTANCE_RESET_TIME_HOUR) * HOUR; // set point in time (default 29.12.2005) + X hours
-    data << uint32(relationTime);
-
-    // Reuse variables
-    boundCounter = 0;
-    std::set<uint32> sentMaps;
-    dataBuffer.clear();
-
-    ResetTimeByMapDifficultyMap const& resets = sInstanceSaveMgr->GetResetTimeMap();
-    for (ResetTimeByMapDifficultyMap::const_iterator itr = resets.begin(); itr != resets.end(); ++itr)
-    {
-        uint32 mapId = PAIR32_LOPART(itr->first);
-        if (sentMaps.find(mapId) != sentMaps.end())
-            continue;
-
-        MapEntry const* mapEntry = sMapStore.LookupEntry(mapId);
-        if (!mapEntry || !mapEntry->IsRaid())
-            continue;
-
-        sentMaps.insert(mapId);
-
-        dataBuffer << int32(mapId);
-        time_t period = sInstanceSaveMgr->GetExtendedResetTimeFor(mapId, (Difficulty)PAIR32_HIPART(itr->first)) - itr->second;
-        dataBuffer << int32(period); // pussywizard: reset time period
-        dataBuffer << int32(0); // pussywizard: reset time offset, needed for other than 7-day periods if not aligned with relationTime
-        ++boundCounter;
     }
 
     data << uint32(boundCounter);
@@ -797,20 +766,20 @@ void WorldSession::HandleSetSavedInstanceExtend(WorldPacket& recvData)
     if (!entry || !entry->IsRaid())
         return;
 
-    InstancePlayerBind* instanceBind = sInstanceSaveMgr->PlayerGetBoundInstance(GetPlayer()->GetGUID(), mapId, Difficulty(difficulty));
-    if (!instanceBind || !instanceBind->perm || (bool)toggleExtendOn == instanceBind->extended)
-        return;
+    if (Player* player = GetPlayer())
+    {
+        InstancePlayerBind* instanceBind = player->GetBoundInstance(mapId, Difficulty(difficulty), toggleExtendOn); // include expired instances if we are toggling extend on
+        if (!instanceBind || !instanceBind->save || !instanceBind->perm)
+            return;
 
-    instanceBind->extended = (bool)toggleExtendOn;
+        BindExtensionState newState;
+        if (!toggleExtendOn || instanceBind->extendState == EXTEND_STATE_EXPIRED)
+            newState = EXTEND_STATE_NORMAL;
+        else
+            newState = EXTEND_STATE_EXTENDED;
 
-    // update in db
-    CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_CHAR_INSTANCE_EXTENDED);
-    stmt->SetData(0, toggleExtendOn ? 1 : 0);
-    stmt->SetData(1, GetPlayer()->GetGUID().GetCounter());
-    stmt->SetData(2, instanceBind->save->GetInstanceId());
-    CharacterDatabase.Execute(stmt);
-
-    SendCalendarRaidLockoutUpdated(instanceBind->save, (bool)toggleExtendOn);
+        player->BindToInstance(instanceBind->save, true, newState, false);
+    }
 }
 
 // ----------------------------------- SEND ------------------------------------
@@ -828,7 +797,7 @@ void WorldSession::SendCalendarRaidLockout(InstanceSave const* save, bool add)
     }
 
     data << uint32(save->GetMapId());
-    data << uint32(save->GetDifficulty());
+    data << uint32(save->GetDifficultyID());
     data << uint32(save->GetResetTime() >= currTime ? save->GetResetTime() - currTime : 0);
     data << ObjectGuid::Create<HighGuid::Instance>(save->GetInstanceId());
     SendPacket(&data);
@@ -837,12 +806,13 @@ void WorldSession::SendCalendarRaidLockout(InstanceSave const* save, bool add)
 void WorldSession::SendCalendarRaidLockoutUpdated(InstanceSave const* save, bool isExtended)
 {
     time_t currTime = GameTime::GetGameTime().count();
-    time_t resetTime = isExtended ? save->GetExtendedResetTime() : save->GetResetTime();
-    time_t resetTimeOp = isExtended ? save->GetResetTime() : save->GetExtendedResetTime();
+    time_t resetTime = save->GetResetTime();
+    time_t resetTimeOp = save->GetResetTime();
+
     WorldPacket data(SMSG_CALENDAR_RAID_LOCKOUT_UPDATED, 4 + 4 + 4 + 4 + 8);
     data.AppendPackedTime(currTime);
     data << uint32(save->GetMapId());
-    data << uint32(save->GetDifficulty());
+    data << uint32(save->GetDifficultyID());
     data << uint32(resetTimeOp >= currTime ? resetTimeOp - currTime : resetTimeOp); // pussywizard: old time in secs to reset
     data << uint32(resetTime >= currTime ? resetTime - currTime : 0); // pussywizard: new time in secs to reset
     SendPacket(&data);

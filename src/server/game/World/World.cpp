@@ -1663,9 +1663,6 @@ void World::SetInitialWorldSettings()
     LOG_INFO("server.loading", "Loading Instance Template...");
     sObjectMgr->LoadInstanceTemplate();
 
-    LOG_INFO("server.loading", "Loading Instance Saved Gameobject State Data...");
-    sObjectMgr->LoadInstanceSavedGameobjectStateData();
-
     LOG_INFO("server.loading", "Loading Character Cache...");
     sCharacterCache->LoadCharacterCacheStorage();
 
@@ -1912,6 +1909,9 @@ void World::SetInitialWorldSettings()
 
     LOG_INFO("server.loading", "Loading Pet Name Parts...");
     sObjectMgr->LoadPetNames();
+
+    LOG_INFO("server.loading", "Loading world safe locations...");
+    sObjectMgr->LoadWorldSafeLocs();
 
     LOG_INFO("server.loading", "Loading Jump Charge Params...");
     sObjectMgr->LoadJumpChargeParams();

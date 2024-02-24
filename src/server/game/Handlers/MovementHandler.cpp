@@ -69,20 +69,15 @@ void WorldSession::HandleMoveWorldportAck()
     MapEntry const* mEntry = sMapStore.LookupEntry(loc.GetMapId());
     InstanceTemplate const* mInstance = sObjectMgr->GetInstanceTemplate(loc.GetMapId());
 
+    // reset instance validity, except if going to an instance inside an instance
+    if (GetPlayer()->m_InstanceValid == false && !mInstance)
+        GetPlayer()->m_InstanceValid = true;
+
     Map* oldMap = GetPlayer()->GetMap();
     if (GetPlayer()->IsInWorld())
     {
         LOG_ERROR("network.opcode", "Player (Name {}) is still in world when teleported from map {} to new map {}", GetPlayer()->GetName(), oldMap->GetId(), loc.GetMapId());
         oldMap->RemovePlayerFromMap(GetPlayer(), false);
-    }
-
-    // reset instance validity, except if going to an instance inside an instance
-    if (!GetPlayer()->m_InstanceValid && !mInstance)
-    {
-        GetPlayer()->m_InstanceValid = true;
-        // pussywizard: m_InstanceValid can be false only by leaving a group in an instance => so remove temp binds that could not be removed because player was still on the map!
-        if (!sInstanceSaveMgr->PlayerIsPermBoundToInstance(GetPlayer()->GetGUID(), oldMap->GetId(), oldMap->GetDifficulty()))
-            sInstanceSaveMgr->PlayerUnbindInstance(GetPlayer()->GetGUID(), oldMap->GetId(), oldMap->GetDifficulty(), true);
     }
 
     // relocate the player to the teleport destination
@@ -233,6 +228,12 @@ void WorldSession::HandleMoveWorldportAck()
                     uint32 timeleft = uint32(timeReset - GameTime::GetGameTime().count());
                     GetPlayer()->SendInstanceResetWarning(mEntry->MapID, diff, timeleft, true);
                 }
+
+        // check if instance is valid
+        if (!GetPlayer()->CheckInstanceValidity(false))
+            GetPlayer()->m_InstanceValid = false;
+
+        // instance mounting is handled in InstanceTemplate
         allowMount = mInstance->AllowMount;
     }
 

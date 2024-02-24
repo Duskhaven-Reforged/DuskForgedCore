@@ -923,6 +923,7 @@ enum PlayerLoginQueryIndex
     PLAYER_LOGIN_QUERY_LOAD_PET_SLOTS               = 37,
     PLAYER_LOGIN_QUERY_LOAD_SPELL_CHARGES           = 38,
     PLAYER_LOGIN_QUERY_LOAD_TRANSMOG,
+    PLAYER_LOGIN_QUERY_LOAD_BOUND_INSTANCES,
     MAX_PLAYER_LOGIN_QUERY
 };
 
@@ -936,6 +937,29 @@ enum PlayerDelayedOperations
     DELAYED_BG_GROUP_RESTORE    = 0x20,                     ///< Flag to restore group state after teleport from BG
     DELAYED_VEHICLE_TELEPORT    = 0x40,
     DELAYED_END
+};
+
+enum BindExtensionState
+{
+    EXTEND_STATE_EXPIRED = 0,
+    EXTEND_STATE_NORMAL = 1,
+    EXTEND_STATE_EXTENDED = 2,
+    EXTEND_STATE_KEEP = 255   // special state: keep current save type
+};
+struct InstancePlayerBind
+{
+    InstanceSave* save;
+    /* permanent PlayerInstanceBinds are created in Raid/Heroic instances for players
+    that aren't already permanently bound when they are inside when a boss is killed
+    or when they enter an instance that the group leader is permanently bound to. */
+    bool perm;
+    /* extend state listing:
+    EXPIRED  - doesn't affect anything unless manually re-extended by player
+    NORMAL   - standard state
+    EXTENDED - won't be promoted to EXPIRED at next reset period, will instead be promoted to NORMAL */
+    BindExtensionState extendState;
+
+    InstancePlayerBind() : save(nullptr), perm(false), extendState(EXTEND_STATE_NORMAL) { }
 };
 
 enum PlayerCharmedAISpells
@@ -1951,8 +1975,12 @@ public:
     [[nodiscard]] Difficulty GetDungeonDifficulty() const { return m_dungeonDifficulty; }
     [[nodiscard]] Difficulty GetRaidDifficulty() const { return m_raidDifficulty; }
     [[nodiscard]] Difficulty GetStoredRaidDifficulty() const { return m_raidMapDifficulty; } // only for use in difficulty packet after exiting to raid map
-    void SetDungeonDifficulty(Difficulty dungeon_difficulty) { m_dungeonDifficulty = dungeon_difficulty; }
-    void SetRaidDifficulty(Difficulty raid_difficulty) { m_raidDifficulty = raid_difficulty; }
+    void SetDungeonDifficulty(Difficulty dungeon_difficulty) {
+        m_dungeonDifficulty = dungeon_difficulty;
+    }
+    void SetRaidDifficulty(Difficulty raid_difficulty) {
+        m_raidDifficulty = raid_difficulty;
+    }
     void StoreRaidMapDifficulty() { m_raidMapDifficulty = GetMap()->GetDifficulty(); }
 
     bool UpdateSkill(uint32 skill_id, uint32 step);
@@ -2049,7 +2077,7 @@ public:
 
     void SendDungeonDifficulty(bool IsInGroup);
     void SendRaidDifficulty(bool IsInGroup, int32 forcedDifficulty = -1);
-    static void ResetInstances(ObjectGuid guid, uint8 method, bool isRaid);
+    void ResetInstances(uint8 method, bool isRaid, bool isLegacy = false);
     void SendResetInstanceSuccess(uint32 MapId);
     void SendResetInstanceFailed(uint32 reason, uint32 MapId);
     void SendResetFailedNotify(uint32 mapid);
@@ -2467,23 +2495,36 @@ public:
     /***                 INSTANCE SYSTEM                   ***/
     /*********************************************************/
 
+    typedef std::unordered_map<Difficulty, std::unordered_map<uint32 /*mapId*/, InstancePlayerBind>> BoundInstancesMap;
+
     void UpdateHomebindTime(uint32 time);
 
     uint32 m_HomebindTimer;
     bool m_InstanceValid;
+    // permanent binds and solo binds by difficulty
+    BoundInstancesMap m_boundInstances;
+    InstancePlayerBind* GetBoundInstance(uint32 mapid, Difficulty difficulty, bool withExpired = false);
+    InstancePlayerBind const* GetBoundInstance(uint32 mapid, Difficulty difficulty) const;
+    BoundInstancesMap::iterator GetBoundInstances(Difficulty difficulty) { return m_boundInstances.find(difficulty); }
+    InstanceSave* GetInstanceSave(uint32 mapid);
+    void UnbindInstance(uint32 mapid, Difficulty difficulty, bool unload = false);
+    void UnbindInstance(BoundInstancesMap::mapped_type::iterator& itr, BoundInstancesMap::iterator& difficultyItr, bool unload = false);
+    InstancePlayerBind* BindToInstance(InstanceSave* save, bool permanent, BindExtensionState extendState = EXTEND_STATE_NORMAL, bool load = false);
     void BindToInstance();
     void SetPendingBind(uint32 instanceId, uint32 bindTimer) { _pendingBindId = instanceId; _pendingBindTimer = bindTimer; }
     [[nodiscard]] bool HasPendingBind() const { return _pendingBindId > 0; }
     [[nodiscard]] uint32 GetPendingBind() const { return _pendingBindId; }
     void SendRaidInfo();
+
+
     void SendSavedInstances();
     void PrettyPrintRequirementsQuestList(const std::vector<const ProgressionRequirement*>& missingQuests) const;
     void PrettyPrintRequirementsAchievementsList(const std::vector<const ProgressionRequirement*>& missingAchievements) const;
     void PrettyPrintRequirementsItemsList(const std::vector<const ProgressionRequirement*>& missingItems) const;
     bool Satisfy(DungeonProgressionRequirements const* ar, uint32 target_map, bool report = false);
     bool CheckInstanceLoginValid();
+    bool CheckInstanceValidity(bool /*isLogin*/);
     [[nodiscard]] bool CheckInstanceCount(uint32 instanceId) const;
-
     void AddInstanceEnterTime(uint32 instanceId, time_t enterTime)
     {
         if (_instanceResetTimes.find(instanceId) == _instanceResetTimes.end())
@@ -2795,6 +2836,7 @@ public:
     void _LoadEntryPointData(PreparedQueryResult result);
     void _LoadGlyphs(PreparedQueryResult result);
     void _LoadTalents(PreparedQueryResult result);
+    void _LoadBoundInstances(PreparedQueryResult result);
     void _LoadInstanceTimeRestrictions(PreparedQueryResult result);
     void _LoadBrewOfTheMonth(PreparedQueryResult result);
     void _LoadCharacterSettings(PreparedQueryResult result);

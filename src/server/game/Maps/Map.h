@@ -441,7 +441,7 @@ public:
         CANNOT_ENTER_UNSPECIFIED_REASON
     };
 
-    virtual EnterState CannotEnter(Player* /*player*/, bool /*loginCheck = false*/) { return CAN_ENTER; }
+    virtual EnterState CannotEnter(Player* /*player*/, bool loginCheck = false) { return CAN_ENTER; }
 
     [[nodiscard]] const char* GetMapName() const;
 
@@ -833,20 +833,20 @@ enum InstanceResetMethod
     INSTANCE_RESET_ALL,                 // reset all option under portrait, resets only normal 5-mans
     INSTANCE_RESET_CHANGE_DIFFICULTY,   // on changing difficulty
     INSTANCE_RESET_GLOBAL,              // global id reset
-    INSTANCE_RESET_GROUP_JOIN,          // on joining group
-    INSTANCE_RESET_GROUP_LEAVE          // on leaving group
+    INSTANCE_RESET_GROUP_DISBAND,
+    INSTANCE_RESET_GROUP_JOIN,          // on joining group       
+    INSTANCE_RESET_RESPAWN_DELAY          
 };
 
 class InstanceMap : public Map
 {
 public:
-    InstanceMap(uint32 id, uint32 InstanceId, uint8 SpawnMode, Map* _parent);
-    ~InstanceMap() override;
+    InstanceMap(uint32 id, uint32 InstanceId, Difficulty SpawnMode, Map* _parent);
+    ~InstanceMap();
     bool AddPlayerToMap(Player*) override;
     void RemovePlayerFromMap(Player*, bool) override;
-    void AfterPlayerUnlinkFromMap() override;
     void Update(const uint32, const uint32, bool thread = true) override;
-    void CreateInstanceScript(bool load, std::string data, uint32 completedEncounterMask);
+    void CreateInstanceData(bool load);
     bool Reset(uint8 method, GuidList* globalSkipList = nullptr);
     [[nodiscard]] uint32 GetScriptId() const { return i_script_id; }
     [[nodiscard]] std::string const& GetScriptName() const;
@@ -856,9 +856,11 @@ public:
     void UnloadAll() override;
     EnterState CannotEnter(Player* player, bool loginCheck = false) override;
     void SendResetWarnings(uint32 timeLeft) const;
+    void SetResetSchedule(bool on);
 
-    [[nodiscard]] uint32 GetMaxPlayers() const;
-    [[nodiscard]] uint32 GetMaxResetDelay() const;
+    bool HasPermBoundPlayers() const;
+    uint32 GetMaxPlayers() const;
+    uint32 GetMaxResetDelay() const;
 
     void InitVisibilityDistance() override;
 
