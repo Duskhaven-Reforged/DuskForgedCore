@@ -340,8 +340,7 @@ public:
     void HandleAuraOverrideSpells(AuraApplication const* aurApp, uint8 mode, bool apply) const;
     void HandleAuraSetVehicle(AuraApplication const* aurApp, uint8 mode, bool apply) const;
     void HandlePreventResurrection(AuraApplication const* aurApp, uint8 mode, bool apply) const;
-    void HandleModTriggerSpellOnStacksSelf(AuraApplication const* aurApp, uint8 mode, bool apply) const;
-    void HandleModTriggerSpellOnStacksTarget(AuraApplication const* aurApp, uint8 mode, bool apply) const; 
+    void HandleModTriggerSpellOnStacks(AuraApplication const* aurApp, uint8 mode, bool apply) const;
     void HandleModToggleAuraCombatState(AuraApplication const* aurApp, uint8 mode, bool apply) const;
     void HandleCreateAreaTrigger(AuraApplication const* aurApp, uint8 mode, bool apply) const;
 
