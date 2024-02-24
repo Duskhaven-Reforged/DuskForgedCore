@@ -2027,49 +2027,6 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
             }
             break;
     }
-
-    if (apply)
-    {
-        /*Unit::AuraEffectList aurEffects = {};
-
-        if (caster == target) {
-            aurEffects = caster->GetAuraEffectsByType(SPELL_AURA_MOD_TRIGGER_SPELL_ON_STACKS_ON_SELF);
-        }
-        else {
-            aurEffects = caster->GetAuraEffectsByType(SPELL_AURA_MOD_TRIGGER_SPELL_ON_STACKS_ON_TARGET);
-        }
-        if (!aurEffects.empty())
-            for (auto aurEff : aurEffects)
-            {
-                auto eff = aurEff->GetSpellInfo()->GetEffect(SpellEffIndex(aurEff->GetEffIndex()));
-
-                if (aurApp->GetBase()->GetId() == eff.MiscValue)
-                    ProcessTriggerSpellOnStacks(aurApp->GetBase(), eff.MiscValueB, eff.TriggerSpell, eff.TargetA.GetTarget(), eff.Amplitude, caster, aurEff->GetBase()->GetEffect(aurEff->GetEffIndex()));
-            }*/
-    }
-}
-
-void Aura::ProcessTriggerSpellOnStacks(Aura* aurApp, int32 stackCount, int32 triggerSpell, Targets triggerSpellTarget, uint32 amplitude, Unit* caster, AuraEffect* const triggeringEffect)
-{
-    if (aurApp->GetStackAmount() == stackCount)
-    {
-        Unit* victim;
-        if (triggerSpellTarget == TARGET_UNIT_CASTER)
-            victim = caster;
-        else if (triggerSpellTarget == TARGET_UNIT_TARGET_ENEMY)
-        {
-            victim = aurApp->GetUnitOwner();
-
-            if (victim == caster)
-                victim = caster->GetTargetUnit();
-        }
-
-        if (victim->IsAlive())
-            caster->CastSpell(victim, triggerSpell, true, nullptr, triggeringEffect);
-
-        if (amplitude == 0)
-            aurApp->Remove();
-    }
 }
 
 bool Aura::CanBeAppliedOn(Unit* target)
