@@ -8700,7 +8700,7 @@ uint32 Unit::SpellDamageBonusDone(Unit* victim, SpellInfo const* spellProto, uin
     // Check for table values
     float coeff = spellProto->Effects[effIndex].BonusMultiplier;
     SpellBonusEntry const* bonus = sSpellMgr->GetSpellBonusData(spellProto->Id);
-    if (bonus || spellProto->Id == 1310029)
+    if (bonus)
     {
         if (damagetype == DOT)
         {
@@ -8722,13 +8722,6 @@ uint32 Unit::SpellDamageBonusDone(Unit* victim, SpellInfo const* spellProto, uin
                 float APbonus = float(victim->GetTotalAuraModifier(attType == BASE_ATTACK ? SPELL_AURA_MELEE_ATTACK_POWER_ATTACKER_BONUS : SPELL_AURA_RANGED_ATTACK_POWER_ATTACKER_BONUS));
                 APbonus += GetTotalAttackPowerValue(attType);
                 DoneTotal += int32(bonus->ap_bonus * stack * ApCoeffMod * APbonus);
-            }
-
-            if (spellProto->Id == 1310029)  // Aleist3r: hardcoding... well, someone had a nice idea to roll random SP bonus, I think it's better to do it here than mess in spell script
-            {
-                float coeffMin = 0.89f;
-                float coeffMax = 1.06f;
-                coeff = frand(coeffMin, coeffMax);
             }
         }
     }
