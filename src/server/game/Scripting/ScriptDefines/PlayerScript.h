@@ -149,7 +149,7 @@ public:
     virtual void OnSave(Player* /*player*/) { }
 
     // Called when a player is bound to an instance
-    virtual void OnBindToInstance(Player* /*player*/, Difficulty /*difficulty*/, uint32 /*mapId*/, bool /*permanent*/) { }
+    virtual void OnBindToInstance(Player* /*player*/, Difficulty /*difficulty*/, uint32 /*mapId*/, bool /*permanent*/, uint8) { }
 
     // Called when a player switches to a new zone
     virtual void OnUpdateZone(Player* /*player*/, uint32 /*newZone*/, uint32 /*newArea*/) { }
@@ -529,7 +529,7 @@ public:
      * @param bySpell Contains information about the spell that invoked the check
      */
     [[nodiscard]] virtual bool OnCanPlayerFlyInZone(Player* /*player*/, uint32 /*mapId*/, uint32 /*zoneId*/, SpellInfo const* /*bySpell*/) { return true; }
-    virtual void GenerateItem(Item* item, CustomItemTemplate itemProto, Player const* owner) { }
+    virtual void GenerateItem(CustomItemTemplate* itemProto, Player const* owner) { }
 
     // Passive Anticheat System
     virtual void AnticheatSetCanFlybyServer(Player* /*player*/, bool /*apply*/) { }

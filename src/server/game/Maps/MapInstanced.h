@@ -38,7 +38,7 @@ public:
     void UnloadAll() override;
     EnterState CannotEnter(Player* player, bool loginCheck = false) override;
 
-    Map* CreateInstanceForPlayer(const uint32 mapId, Player* player);
+    Map* CreateInstanceForPlayer(const uint32 mapId, Player* player, uint32 loginInstanceId);
     Map* FindInstanceMap(uint32 instanceId) const
     {
         InstancedMaps::const_iterator i = m_InstancedMaps.find(instanceId);

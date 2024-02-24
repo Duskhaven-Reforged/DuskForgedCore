@@ -36,34 +36,6 @@ public:
             memset(&_encounters, 0, sizeof(_encounters));
         }
 
-        void OnGameObjectCreate(GameObject* gameobject) override
-        {
-            switch (gameobject->GetEntry())
-            {
-                case GO_HEAVY_DOOR_1:
-                case GO_HEAVY_DOOR_2:
-                case GO_DOOR_LEVER_1:
-                case GO_DOOR_LEVER_2:
-                case GO_DOOR_LEVER_3:
-                case GO_CANNON:
-                    gameobject->UpdateSaveToDb(true);
-                    break;
-                case GO_FACTORY_DOOR:
-                    gameobject->UpdateSaveToDb(true);
-                    // GoState (Door opened) is restored during GO creation, but we need to set LootState to prevent Lever from closing it again
-                    if (_encounters[TYPE_RHAHK_ZOR] == DONE)
-                        gameobject->SetLootState(GO_ACTIVATED);
-                    break;
-                case GO_IRON_CLAD_DOOR:
-                    gameobject->UpdateSaveToDb(true);
-                    if (gameobject->GetStateSavedOnInstance() == GO_STATE_ACTIVE)
-                    {
-                        gameobject->DespawnOrUnsummon();
-                    }
-                    break;
-            }
-        }
-
         void SetData(uint32 type, uint32 data) override
         {
             switch (type)

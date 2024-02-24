@@ -685,11 +685,9 @@ void Spell::EffectSchoolDMG(SpellEffIndex effIndex)
 
             damageMultiplier = (damageMultiplier * 0.01) + m_originalCaster->SpellPctDamageModsDone(unitTarget, m_spellInfo, SPELL_DIRECT_DAMAGE);
 
-            damage = m_originalCaster->SpellDamageBonusDone(unitTarget, m_spellInfo, (uint32)damage, SPELL_DIRECT_DAMAGE, damageMultiplier);
+            damage = m_originalCaster->SpellDamageBonusDone(unitTarget, m_spellInfo, (uint32)damage, SPELL_DIRECT_DAMAGE, effIndex);
             damage = unitTarget->SpellDamageBonusTaken(m_originalCaster, m_spellInfo, (uint32)damage, SPELL_DIRECT_DAMAGE);
         }
-
-        damage /= damageDivisor;
 
         m_damage += damage;
     }
@@ -2232,7 +2230,7 @@ void Spell::EffectOpenLock(SpellEffIndex effIndex)
                     {
                         int32 xpLevel = goInfo->chest.xpMinLevel;
 
-                        Quest const* quest;
+                        Quest const* quest = sObjectMgr->GetQuestTemplate(24746);
                         player->GiveXP(quest->XPValue(player->getLevel(), xpLevel, xpDifficulty), nullptr);
                     }
                 }

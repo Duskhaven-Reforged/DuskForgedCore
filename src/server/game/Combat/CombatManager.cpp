@@ -88,18 +88,8 @@ void CombatReference::EndCombat()
     delete this;
 }
 
-bool PvPCombatReference::Update(uint32 tdiff)
+void CombatReference::Refresh()
 {
-    if (_combatTimer <= tdiff)
-        return false;
-    _combatTimer -= tdiff;
-    return true;
-}
-
-void PvPCombatReference::Refresh()
-{
-    _combatTimer = PVP_COMBAT_TIMEOUT;
-
     bool needFirstAI = false, needSecondAI = false;
     if (_suppressFirst)
     {
@@ -118,12 +108,31 @@ void PvPCombatReference::Refresh()
         CombatManager::NotifyAICombat(second, first);
 }
 
-void PvPCombatReference::SuppressFor(Unit* who)
+void CombatReference::SuppressFor(Unit* who)
 {
     Suppress(who);
     if (who->GetCombatManager().UpdateOwnerCombatState())
-        if (who->IsAIEnabled)
-            who->GetAI()->JustExitedCombat();
+        if (UnitAI* ai = who->GetAI())
+            ai->JustExitedCombat();
+}
+
+bool PvPCombatReference::Update(uint32 tdiff)
+{
+    if (_combatTimer <= tdiff)
+        return false;
+    _combatTimer -= tdiff;
+    return true;
+}
+
+void PvPCombatReference::RefreshTimer()
+{
+    _combatTimer = PVP_COMBAT_TIMEOUT;
+}
+
+CombatManager::~CombatManager()
+{
+    ASSERT(_pveRefs.empty(), "CombatManager::~CombatManager - %s: we still have %zu PvE combat references, one of them is with %s", _owner->GetGUID().ToString().c_str(), _pveRefs.size(), _pveRefs.begin()->first.ToString().c_str());
+    ASSERT(_pvpRefs.empty(), "CombatManager::~CombatManager - %s: we still have %zu PvP combat references, one of them is with %s", _owner->GetGUID().ToString().c_str(), _pvpRefs.size(), _pvpRefs.begin()->first.ToString().c_str());
 }
 
 void CombatManager::Update(uint32 tdiff)
@@ -169,8 +178,11 @@ bool CombatManager::SetInCombatWith(Unit* who)
         it->second->Refresh();
         return true;
     }
-    else if (_pveRefs.find(who->GetGUID()) != _pveRefs.end())
+    auto pveref = _pveRefs.find(who->GetGUID());
+    if (pveref != _pveRefs.end()) {
+        pveref->second->Refresh();
         return true;
+    }
 
     // Otherwise, check validity...
     if (!CombatManager::CanBeginCombat(_owner, who))
@@ -196,7 +208,7 @@ bool CombatManager::SetInCombatWith(Unit* who)
         NotifyAICombat(_owner, who);
     if (needOtherAI)
         NotifyAICombat(who, _owner);
-    return true;
+    return IsInCombatWith(who);
 }
 
 bool CombatManager::IsInCombatWith(ObjectGuid const& guid) const
@@ -284,6 +296,35 @@ void CombatManager::EndAllPvECombat()
     _owner->GetThreatManager().ClearAllThreat();
     while (!_pveRefs.empty())
         _pveRefs.begin()->second->EndCombat();
+}
+
+void CombatManager::RevalidateCombat()
+{
+    auto it = _pveRefs.begin(), end = _pveRefs.end();
+    while (it != end)
+    {
+        CombatReference* const ref = it->second;
+        if (!CanBeginCombat(_owner, ref->GetOther(_owner)))
+        {
+            it = _pveRefs.erase(it), end = _pveRefs.end(); // erase manually here to avoid iterator invalidation
+            ref->EndCombat();
+        }
+        else
+            ++it;
+    }
+
+    auto it2 = _pvpRefs.begin(), end2 = _pvpRefs.end();
+    while (it2 != end2)
+    {
+        CombatReference* const ref = it2->second;
+        if (!CanBeginCombat(_owner, ref->GetOther(_owner)))
+        {
+            it2 = _pvpRefs.erase(it2), end2 = _pvpRefs.end(); // erase manually here to avoid iterator invalidation
+            ref->EndCombat();
+        }
+        else
+            ++it2;
+    }
 }
 
 void CombatManager::EndAllPvPCombat()

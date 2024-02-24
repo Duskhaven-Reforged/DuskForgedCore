@@ -333,29 +333,7 @@ bool GameObject::Create(ObjectGuid::LowType guidlow, uint32 name_id, Map* map, u
     // GAMEOBJECT_BYTES_1, index at 0, 1, 2 and 3
     SetGoType(GameobjectTypes(goinfo->type));
 
-    if (IsInstanceGameobject())
-    {
-        switch (GetStateSavedOnInstance())
-        {
-            case 0:
-                SetGoState(GO_STATE_READY);
-                SwitchDoorOrButton(true);
-                break;
-            case 1:
-                SetGoState(GO_STATE_READY);
-                break;
-            case 2:
-                SetGoState(GO_STATE_ACTIVE_ALTERNATIVE);
-                break;
-            default:
-                SetGoState(go_state);
-                break;
-        }
-    }
-    else
-    {
-        SetGoState(go_state);
-    }
+    SetGoState(go_state);
 
     SetGoArtKit(artKit);
 
@@ -2500,41 +2478,6 @@ void GameObject::SetGoState(GOState state)
         else if (state == GO_STATE_READY)
             EnableCollision(!startOpen);*/
     }
-    /* Whenever a gameobject inside an instance changes
-     * save it's state on the database to be loaded properly
-     * on server restart or crash.
-     */
-    if (IsInstanceGameobject() && IsAbleToSaveOnDb())
-    {
-        // Save the gameobject state on the Database
-        if (!FindStateSavedOnInstance())
-        {
-            SaveInstanceData(GameobjectStateToInt(&state));
-        }
-        else
-        {
-            UpdateInstanceData(GameobjectStateToInt(&state));
-        }
-    }
-}
-
-bool GameObject::IsInstanceGameobject()
-{
-    // Avoid checking for unecessary gameobjects whose
-    // states don't matter for the dungeon progression
-    if (!ValidateGameobjectType())
-    {
-        return false;
-    }
-
-    if (auto* map = FindMap())
-    {
-        if (map->IsDungeon() || map->IsRaid())
-        {
-            return true;
-        }
-    }
-    return false;
 }
 
 bool GameObject::ValidateGameobjectType()
@@ -2580,66 +2523,6 @@ uint8 GameObject::GameobjectStateToInt(GOState* state)
 bool GameObject::IsAbleToSaveOnDb()
 {
     return m_saveStateOnDb;
-}
-
-void GameObject::UpdateSaveToDb(bool enable)
-{
-    m_saveStateOnDb = enable;
-
-    if (enable)
-    {
-        SavingStateOnDB();
-    }
-}
-
-void GameObject::SavingStateOnDB()
-{
-    if (IsInstanceGameobject())
-    {
-        GOState param = GetGoState();
-        if (!FindStateSavedOnInstance())
-        {
-            SaveInstanceData(GameobjectStateToInt(&param));
-        }
-    }
-}
-
-void GameObject::SaveInstanceData(uint8 state)
-{
-    uint32 id       = GetInstanceId();
-    uint32 guid     = GetSpawnId();
-
-    CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_INSERT_INSTANCE_SAVED_DATA);
-    stmt->SetData(0, id);
-    stmt->SetData(1, guid);
-    stmt->SetData(2, state);
-    CharacterDatabase.Execute(stmt);
-
-    sObjectMgr->NewInstanceSavedGameobjectState(id, guid, state);
-}
-
-void GameObject::UpdateInstanceData(uint8 state)
-{
-    uint32 id       = GetInstanceId();
-    uint32 guid     = GetSpawnId();
-
-    CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPDATE_INSTANCE_SAVED_DATA);
-    stmt->SetData(0, state);
-    stmt->SetData(1, guid);
-    stmt->SetData(2, id);
-    CharacterDatabase.Execute(stmt);
-
-    sObjectMgr->SetInstanceSavedGameobjectState(id, guid, state);
-}
-
-uint8 GameObject::GetStateSavedOnInstance()
-{
-    return sObjectMgr->GetInstanceSavedGameobjectState(GetInstanceId(), GetSpawnId());
-}
-
-bool GameObject::FindStateSavedOnInstance()
-{
-    return sObjectMgr->FindInstanceSavedGameobjectState(GetInstanceId(), GetSpawnId());
 }
 
 void GameObject::SetDisplayId(uint32 displayid)

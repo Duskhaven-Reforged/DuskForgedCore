@@ -25,6 +25,7 @@
 #include "MapUpdater.h"
 #include "Object.h"
 
+#include <boost/dynamic_bitset.hpp>
 #include <mutex>
 
 class Transport;
@@ -39,7 +40,7 @@ public:
 
     Map* CreateBaseMap(uint32 mapId);
     Map* FindBaseNonInstanceMap(uint32 mapId) const;
-    Map* CreateMap(uint32 mapId, Player* player);
+    Map* CreateMap(uint32 id, Player* player, uint32 loginInstanceId = 0);
     Map* FindMap(uint32 mapId, uint32 instanceId) const;
 
     Map* FindBaseMap(uint32 mapId) const // pussywizard: need this public for movemaps (mmaps)
@@ -128,15 +129,6 @@ public:
         return std::fmod(o, 2.0f * static_cast<float>(M_PI));
     }
 
-    /**
-    * @name GetInstanceIDs
-    * @return vector of instance IDs
-    */
-    std::vector<bool> GetInstanceIDs()
-    {
-        return _instanceIds;
-    }
-
     void DoDelayedMovesAndRemoves();
 
     Map::EnterState PlayerCannotEnter(uint32 mapid, Player* player, bool loginCheck = false);
@@ -148,8 +140,9 @@ public:
 
     // Instance ID management
     void InitInstanceIds();
-    void RegisterInstanceId(uint32 instanceId);
     uint32 GenerateInstanceId();
+    void RegisterInstanceId(uint32 instanceId);
+    void FreeInstanceId(uint32 instanceId);
 
     MapUpdater* GetMapUpdater() { return &m_updater; }
 
@@ -161,7 +154,7 @@ public:
     
     typedef std::unordered_map<uint32, Map*> MapMapType;
 private:
-    typedef std::vector<bool> InstanceIds;
+    typedef boost::dynamic_bitset<size_t> InstanceIds;
 
     MapMgr();
     ~MapMgr();
@@ -174,7 +167,7 @@ private:
     IntervalTimer i_timer[4]; // continents, bgs/arenas, instances, total from the beginning
     uint8 mapUpdateStep;
 
-    InstanceIds _instanceIds;
+    InstanceIds _freeInstanceIds;
     uint32 _nextInstanceId;
     MapUpdater m_updater;
 };

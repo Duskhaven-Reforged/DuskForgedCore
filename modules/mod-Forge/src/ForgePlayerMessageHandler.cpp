@@ -230,6 +230,13 @@ public:
             amount *= fc->GetConfig("Dynamic.XP.Rate.70-79", 4);
     }*/
 
+    void GenerateItem(CustomItemTemplate* itemProto, Player const* owner) override
+    {
+        itemProto->SetStackable(1);
+        itemProto->Save();
+        owner->SendItemQueryPacket(itemProto);
+    }
+
 private:
     TopicRouter* Router;
     ForgeCache* fc;

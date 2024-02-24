@@ -1750,6 +1750,7 @@ class spell_mage_arcane_barrage : public SpellScript
 
     void Register() override
     {
+        OnCheckCast += SpellCheckCastFn(spell_mage_arcane_barrage::CheckCast);;
         OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_mage_arcane_barrage::FilterTargets, EFFECT_0, TARGET_UNIT_TARGET_ENEMY);
         OnEffectHitTarget += SpellEffectFn(spell_mage_arcane_barrage::HandleOnEffectHitTarget, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
     }

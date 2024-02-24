@@ -11955,6 +11955,11 @@ float Unit::GetSpellMinRangeForTarget(Unit const* target, SpellInfo const* spell
         return spellInfo->GetMinRange();
     }
 
+    if (!target)
+    {
+        return spellInfo->GetMinRange(true);
+    }
+
     return spellInfo->GetMinRange(!IsHostileTo(target));
 }
 
@@ -15079,6 +15084,7 @@ void Unit::RemoveCharmedBy(Unit* charmer)
     ASSERT(type != CHARM_TYPE_VEHICLE || (GetTypeId() == TYPEID_UNIT && IsVehicle()));
 
     charmer->SetCharm(this, false);
+    m_combatManager.RevalidateCombat();
 
     StopAttackingInvalidTarget();
 

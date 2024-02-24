@@ -1633,7 +1633,10 @@ public:
         stmt->SetData(0, account);
         PreparedQueryResult result = LoginDatabase.Query(stmt);
 
-        return LookupPlayerSearchCommand(result, *limit ? *limit : -1, handler);
+        if (result)
+            return LookupPlayerSearchCommand(result, *limit ? *limit : -1, handler);
+
+        return false;
     }
 
     static bool HandleLookupPlayerEmailCommand(ChatHandler* handler, std::string email, Optional<int32> limit)
@@ -1642,7 +1645,10 @@ public:
         stmt->SetData(0, email);
         PreparedQueryResult result = LoginDatabase.Query(stmt);
 
-        return LookupPlayerSearchCommand(result, *limit ? *limit : -1, handler);
+        if (result)
+            return LookupPlayerSearchCommand(result, *limit ? *limit : -1, handler);
+
+        return false;
     }
 
     static bool LookupPlayerSearchCommand(PreparedQueryResult result, int32 limit, ChatHandler* handler)

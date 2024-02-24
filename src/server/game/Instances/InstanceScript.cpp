@@ -947,7 +947,7 @@ void InstanceScript::StartChallengeMode(Player* player, KeyInfo* key, uint8 leve
     visitor.Visit(instance->GetObjectsStore());
 
     // Tp back all players to begin
-    if (WorldSafeLocsEntry const* entranceSafeLocEntry = sObjectMgr->GetWorldSafeLoc(GetEntranceLocation()))
+    if (WorldSafeLocsEntry const* entranceSafeLocEntry = sObjectMgr->GetWorldSafeLoc(instance->GetId(), GetEntranceLocation()))
         _challengeEntranceLoc.Relocate(entranceSafeLocEntry->Loc);
     else if (AreaTriggerTeleport const* areaTrigger = sObjectMgr->GetMapEntranceTrigger(instance->GetId()))
         _challengeEntranceLoc.Relocate(areaTrigger->target_X, areaTrigger->target_Y, areaTrigger->target_Z, areaTrigger->target_Orientation);

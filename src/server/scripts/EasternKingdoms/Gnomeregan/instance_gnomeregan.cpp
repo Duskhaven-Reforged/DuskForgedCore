@@ -54,19 +54,6 @@ public:
             }
         }
 
-        void OnGameObjectCreate(GameObject* gameobject) override
-        {
-            switch (gameobject->GetEntry())
-            {
-                case GO_CAVE_IN_1:
-                case GO_CAVE_IN_2:
-                case GO_WORKSHOP_DOOR:
-                case GO_FINAL_CHAMBER_DOOR:
-                    gameobject->UpdateSaveToDb(true);
-                    break;
-            }
-        }
-
         void SetData(uint32 type, uint32 data) override
         {
             switch (type)

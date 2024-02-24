@@ -33,3 +33,9 @@ CREATE TABLE `forge_character_transmogsets` (
   PRIMARY KEY (`guid`,`setid`),
   KEY `Character` (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+ALTER table acore_characters.`character_instance`
+add column `entranceId` int not null default 0;
+
+ALTER table acore_characters.`instance`
+add column `entranceId` int not null default 0 after `completedEncounters`;

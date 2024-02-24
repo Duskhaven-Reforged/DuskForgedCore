@@ -98,11 +98,11 @@ bool ScriptMgr::OnCanPlayerFlyInZone(Player* player, uint32 mapId, uint32 zoneId
     return true;
 }
 
-void ScriptMgr::GenerateItem(Item* item, CustomItemTemplate itemProto, Player const* owner)
+void ScriptMgr::GenerateItem(CustomItemTemplate* itemProto, Player const* owner)
 {
-    ExecuteScript<PlayerScript>([item, itemProto, owner](PlayerScript* script)
+    ExecuteScript<PlayerScript>([itemProto, owner](PlayerScript* script)
         {
-            script->GenerateItem(item, itemProto, owner);
+            script->GenerateItem(itemProto, owner);
         });
 }
 
@@ -409,11 +409,11 @@ void ScriptMgr::OnPlayerFailedDelete(ObjectGuid guid, uint32 accountId)
     });
 }
 
-void ScriptMgr::OnPlayerBindToInstance(Player* player, Difficulty difficulty, uint32 mapid, bool permanent)
+void ScriptMgr::OnPlayerBindToInstance(Player* player, Difficulty difficulty, uint32 mapid, bool permanent, uint8 extendState)
 {
     ExecuteScript<PlayerScript>([&](PlayerScript* script)
     {
-        script->OnBindToInstance(player, difficulty, mapid, permanent);
+        script->OnBindToInstance(player, difficulty, mapid, permanent, extendState);
     });
 }
 
