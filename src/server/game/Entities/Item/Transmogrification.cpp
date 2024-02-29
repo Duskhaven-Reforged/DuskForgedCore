@@ -901,13 +901,62 @@ uint32 Transmogrification::AddItemVisualToCollection(Player* player, Item* item)
     return AddItemVisualToCollection(player, item->GetTemplate());
 }
 
+uint8 GetEquipmentSlotByInvType(ItemTemplate const* proto, Player* player) {
+    switch (proto->InventoryType)
+    {
+    case INVTYPE_HEAD:
+        return EQUIPMENT_SLOT_HEAD;
+    case INVTYPE_SHOULDERS:
+        return EQUIPMENT_SLOT_SHOULDERS;
+    case INVTYPE_BODY:
+        return EQUIPMENT_SLOT_BODY;
+    case INVTYPE_CHEST:
+    case INVTYPE_ROBE:
+        return EQUIPMENT_SLOT_CHEST;
+    case INVTYPE_WAIST:
+        return EQUIPMENT_SLOT_WAIST;
+    case INVTYPE_LEGS:
+        return EQUIPMENT_SLOT_LEGS;
+    case INVTYPE_FEET:
+        return EQUIPMENT_SLOT_FEET;
+    case INVTYPE_WRISTS:
+        return EQUIPMENT_SLOT_WRISTS;
+    case INVTYPE_HANDS:
+        return EQUIPMENT_SLOT_HANDS;
+    case INVTYPE_CLOAK:
+        return EQUIPMENT_SLOT_BACK;
+    case INVTYPE_WEAPON:
+    case INVTYPE_WEAPONMAINHAND:
+        return player->CanDualWield() ? EQUIPMENT_SLOT_MAINHAND+EQUIPMENT_SLOT_OFFHAND : EQUIPMENT_SLOT_MAINHAND;
+    case INVTYPE_SHIELD:
+    case INVTYPE_WEAPONOFFHAND:
+    case INVTYPE_HOLDABLE:
+        return EQUIPMENT_SLOT_OFFHAND;
+    case INVTYPE_RANGED:
+    case INVTYPE_RANGEDRIGHT:
+    case INVTYPE_THROWN:
+        return EQUIPMENT_SLOT_RANGED;
+    case INVTYPE_2HWEAPON:
+        return EQUIPMENT_SLOT_MAINHAND;
+    case INVTYPE_TABARD:
+        return EQUIPMENT_SLOT_TABARD;
+    default:
+        return NULL_SLOT;
+    }
+}
+
 uint32 Transmogrification::AddItemVisualToCollection(Player* player, const ItemTemplate* itemtemplate)
 {
-    auto slot = player->FindEquipSlot(itemtemplate, NULL_SLOT, true);
+    auto slot = GetEquipmentSlotByInvType(itemtemplate, player);
     if (!itemtemplate || !CanAddToCollection(player, itemtemplate) || slot == NULL_SLOT)
         return 0;   
 
-    return Save(player, slot, (ItemTemplate *) itemtemplate);
+    return slot > EQUIPMENT_SLOT_END ? SaveToMHandOF(player, itemtemplate) : Save(player, slot, (ItemTemplate*)itemtemplate);
+}
+
+uint32 Transmogrification::SaveToMHandOF(Player* player, const ItemTemplate* itemtemplate) {
+    Save(player, EQUIPMENT_SLOT_OFFHAND, (ItemTemplate*)itemtemplate);
+    return Save(player, EQUIPMENT_SLOT_MAINHAND, (ItemTemplate*)itemtemplate);
 }
 
 uint32 Transmogrification::AddEnchantVisualToCollection(Player* player, uint32 enchant_id)

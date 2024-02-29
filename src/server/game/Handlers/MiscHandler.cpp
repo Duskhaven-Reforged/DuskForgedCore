@@ -1321,8 +1321,10 @@ void WorldSession::HandleResetInstancesOpcode(WorldPacket& /*recv_data*/)
         if (group->IsLeader(_player->GetGUID()))
             group->ResetInstances(INSTANCE_RESET_ALL, false, false, _player);
     }
-    else
-        _player->ResetInstances(INSTANCE_RESET_ALL, true, false);
+    else {
+        _player->ResetInstances(INSTANCE_RESET_ALL, true);
+        _player->ResetInstances(INSTANCE_RESET_ALL, false);
+    }
 }
 
 void WorldSession::HandleSetDungeonDifficultyOpcode(WorldPacket& recv_data)

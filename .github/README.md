@@ -15,4 +15,4 @@ More specific detailed instructions on how to utilize the DuskForgeCore will be 
 ## Authors & Contributors
 
 This core exists thanks to the [authors](https://github.com/azerothcore/azerothcore-wotlk/blob/master/AUTHORS) for the base version of the core.
-This core is now a joint venture between the Duskhaven and Forged Team.
+This core is now a joint venture between the Duskhaven and Forged Team!

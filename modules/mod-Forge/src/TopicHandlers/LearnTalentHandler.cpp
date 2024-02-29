@@ -81,7 +81,7 @@ public:
                             }
                         }
                         else {
-                            classMap = fc->_cacheClassNodeToSpell[pClass];
+                            classMap = fc->_cacheClassNodeToSpell[iam.player->getClassMask()];
                             specMap = fc->_cacheSpecNodeToSpell[specId];
                             treeLen = classMap.size() + specMap.size();
 
@@ -97,7 +97,7 @@ public:
                                         spell = specMap[c + 1 - treeindex];
                                     }
                                     else {
-                                        tabId = fc->_cacheClassNodeToClassTree[pClass];
+                                        tabId = fc->_cacheClassNodeToClassTree[iam.player->getClassMask()];
                                         spell = classMap[c + 1];
                                     }
 
@@ -155,7 +155,6 @@ public:
                                 }
                             }
 
-                            iam.player->SetActiveSpec(specId);
                             fc->UpdateCharacterSpec(iam.player, spec);
 
                             cm->SendActiveSpecInfo(iam.player);

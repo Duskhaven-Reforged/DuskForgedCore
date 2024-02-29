@@ -3341,7 +3341,7 @@ ItemTemplate const* ObjectMgr::GetItemTemplate(uint32 entry)
 // hater: custom items
 ItemTemplate* ObjectMgr::GetItemTemplateMutable(uint32 entry)
 {
-    return _itemTemplateStoreFast[entry];
+    return entry < _itemTemplateStoreFast.size() ? _itemTemplateStoreFast[entry] : nullptr;
 }
 
 ItemTemplate* ObjectMgr::CreateItemTemplate(uint32 entry, uint32 copyID)

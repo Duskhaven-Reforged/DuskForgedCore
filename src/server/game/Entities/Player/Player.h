@@ -2495,20 +2495,20 @@ public:
     /***                 INSTANCE SYSTEM                   ***/
     /*********************************************************/
 
-    typedef std::unordered_map<Difficulty, std::unordered_map<uint32 /*mapId*/, InstancePlayerBind>> BoundInstancesMap;
+    typedef std::unordered_map<uint32 /*mapId*/, InstancePlayerBind> BoundInstancesMap;
 
     void UpdateHomebindTime(uint32 time);
 
     uint32 m_HomebindTimer;
     bool m_InstanceValid;
     // permanent binds and solo binds by difficulty
-    BoundInstancesMap m_boundInstances;
+    BoundInstancesMap m_boundInstances[MAX_DIFFICULTY];
     InstancePlayerBind* GetBoundInstance(uint32 mapid, Difficulty difficulty, bool withExpired = false);
     InstancePlayerBind const* GetBoundInstance(uint32 mapid, Difficulty difficulty) const;
-    BoundInstancesMap::iterator GetBoundInstances(Difficulty difficulty) { return m_boundInstances.find(difficulty); }
+    BoundInstancesMap& GetBoundInstances(Difficulty difficulty) { return m_boundInstances[difficulty]; }
     InstanceSave* GetInstanceSave(uint32 mapid);
     void UnbindInstance(uint32 mapid, Difficulty difficulty, bool unload = false);
-    void UnbindInstance(BoundInstancesMap::mapped_type::iterator& itr, BoundInstancesMap::iterator& difficultyItr, bool unload = false);
+    void UnbindInstance(BoundInstancesMap::iterator& itr, Difficulty difficulty, bool unload = false);
     InstancePlayerBind* BindToInstance(InstanceSave* save, bool permanent, BindExtensionState extendState = EXTEND_STATE_NORMAL, bool load = false);
     void BindToInstance();
     void SetPendingBind(uint32 instanceId, uint32 bindTimer) { _pendingBindId = instanceId; _pendingBindTimer = bindTimer; }
