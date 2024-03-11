@@ -13519,11 +13519,6 @@ void Unit::AddComboPoints(Unit* target, int8 count)
 
 void Unit::ClearComboPoints(bool clearPoints)
 {
-    if (!m_comboTarget)
-    {
-        return;
-    }
-
     // remove Premed-like effects
     // (NB: this Aura retains the CP while it's active - now that CP have reset, it shouldn't be there anymore)
     RemoveAurasByType(SPELL_AURA_RETAIN_COMBO_POINTS);

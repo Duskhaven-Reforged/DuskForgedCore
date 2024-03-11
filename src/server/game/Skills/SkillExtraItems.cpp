@@ -94,7 +94,7 @@ void LoadSkillPerfectItemTable()
         }
 
         uint32 perfectItemType = fields[3].Get<uint32>();
-        if (!sObjectMgr->GetItemTemplate(perfectItemType))
+        if (!sObjectMgr->GetItemTemplateMutable(perfectItemType))
         {
             LOG_ERROR("sql.sql", "Skill perfection data for spell {} references non-existent perfect item id {} in `skill_perfect_item_template`!", spellId, perfectItemType);
             continue;

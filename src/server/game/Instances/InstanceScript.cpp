@@ -146,11 +146,37 @@ void InstanceScript::OnPlayerEnter(Player* player)
 
         CastChallengePlayerSpell(player);
     }
+
+    if (_firstEntry) {
+        if (instance->GetId() == 189) {
+            int32 posX = player->GetPosition().GetPositionX();
+            if (posX == 1688)
+                SetEntranceLocation(0);
+            else if (posX == 855)
+                SetEntranceLocation(1);
+            else if (posX == 1610)
+                SetEntranceLocation(2);
+            else
+                SetEntranceLocation(3);
+        }
+
+        if (WorldSafeLocsEntry const* entranceSafeLocEntry = sObjectMgr->GetWorldSafeLoc(instance->GetId(), GetEntranceLocation()))
+            _challengeEntranceLoc.Relocate(entranceSafeLocEntry->Loc);
+
+        _firstEntry = false;
+    }
 }
 
 void InstanceScript::OnPlayerExit(Player* player)
 {
     player->RemoveAurasDueToSpell(SPELL_CHALLENGER_BURDEN);
+
+    if (instance->IsDungeon()) {
+        Map::PlayerList const& plrList = instance->GetPlayers();
+
+        if (plrList.getSize() - 1 < 1)
+            _firstEntry = true;
+    }
 }
 
 void InstanceScript::OnPlayerDeath(Player* /*player*/)

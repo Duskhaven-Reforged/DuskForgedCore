@@ -667,7 +667,7 @@ void Player::RewardQuest(Quest const* quest, uint32 reward, Object* questGiver, 
 
     for (uint8 i = 0; i < QUEST_ITEM_OBJECTIVES_COUNT; ++i)
     {
-        if (ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplate(quest->RequiredItemId[i]))
+        if (ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplateMutable(quest->RequiredItemId[i]))
         {
             if (quest->RequiredItemCount[i] > 0 && itemTemplate->Bonding == BIND_QUEST_ITEM && !quest->IsRepeatable() && !HasQuestForItem(quest->RequiredItemId[i], quest_id, true))
                 DestroyItemCount(quest->RequiredItemId[i], 9999, true);
@@ -677,7 +677,7 @@ void Player::RewardQuest(Quest const* quest, uint32 reward, Object* questGiver, 
     }
     for (uint8 i = 0; i < QUEST_SOURCE_ITEM_IDS_COUNT; ++i)
     {
-        if (ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplate(quest->ItemDrop[i]))
+        if (ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplateMutable(quest->ItemDrop[i]))
         {
             if (quest->ItemDropQuantity[i] > 0 && itemTemplate->Bonding == BIND_QUEST_ITEM && !quest->IsRepeatable() && !HasQuestForItem(quest->ItemDrop[i], quest_id))
                 DestroyItemCount(quest->ItemDrop[i], 9999, true);
@@ -709,7 +709,7 @@ void Player::RewardQuest(Quest const* quest, uint32 reward, Object* questGiver, 
         }
         for (uint32 reward = 0; reward < quest->GetRewChoiceItemsCount(); ++reward) {
             if (quest->RewardChoiceItemCount[reward]) {
-                Transmogrification::instance().AddToCollection(this, sObjectMgr->GetItemTemplate(quest->RewardChoiceItemId[reward]));
+                Transmogrification::instance().AddToCollection(this, sObjectMgr->GetItemTemplateMutable(quest->RewardChoiceItemId[reward]));
             }
         }
     }
@@ -732,7 +732,7 @@ void Player::RewardQuest(Quest const* quest, uint32 reward, Object* questGiver, 
                     problematicItems.emplace_back(itemId, quest->RewardItemIdCount[i]);
 
                 if (quest->RewardItemIdCount[i]) {
-                    Transmogrification::instance().AddToCollection(this, sObjectMgr->GetItemTemplate(quest->RewardItemId[i]));
+                    Transmogrification::instance().AddToCollection(this, sObjectMgr->GetItemTemplateMutable(quest->RewardItemId[i]));
                 }
             }
         }
@@ -964,12 +964,12 @@ void Player::FailQuest(uint32 questId)
 
         // Destroy quest items on quest failure.
         for (uint8 i = 0; i < QUEST_ITEM_OBJECTIVES_COUNT; ++i)
-            if (ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplate(quest->RequiredItemId[i]))
+            if (ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplateMutable(quest->RequiredItemId[i]))
                 if (quest->RequiredItemCount[i] > 0 && itemTemplate->Bonding == BIND_QUEST_ITEM)
                     DestroyItemCount(quest->RequiredItemId[i], quest->RequiredItemCount[i], true);
 
         for (uint8 i = 0; i < QUEST_SOURCE_ITEM_IDS_COUNT; ++i)
-            if (ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplate(quest->ItemDrop[i]))
+            if (ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplateMutable(quest->ItemDrop[i]))
                 if (quest->ItemDropQuantity[i] > 0 && itemTemplate->Bonding == BIND_QUEST_ITEM)
                     DestroyItemCount(quest->ItemDrop[i], quest->ItemDropQuantity[i], true);
     }
@@ -981,12 +981,12 @@ void Player::AbandonQuest(uint32 questId)
     {
         // It will Destroy quest items on quests abandons.
         for (uint8 i = 0; i < QUEST_ITEM_OBJECTIVES_COUNT; ++i)
-            if (ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplate(quest->RequiredItemId[i]))
+            if (ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplateMutable(quest->RequiredItemId[i]))
                 if (quest->RequiredItemCount[i] > 0 && itemTemplate->Bonding == BIND_QUEST_ITEM)
                     DestroyItemCount(quest->RequiredItemId[i], quest->RequiredItemCount[i], true);
 
         for (uint8 i = 0; i < QUEST_SOURCE_ITEM_IDS_COUNT; ++i)
-            if (ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplate(quest->ItemDrop[i]))
+            if (ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplateMutable(quest->ItemDrop[i]))
                 if (quest->ItemDropQuantity[i] > 0 && itemTemplate->Bonding == BIND_QUEST_ITEM)
                     DestroyItemCount(quest->ItemDrop[i], quest->ItemDropQuantity[i], true);
     }
@@ -1414,7 +1414,7 @@ bool Player::TakeQuestSourceItem(uint32 questId, bool msg)
     if (quest)
     {
         uint32 srcItemId = quest->GetSrcItemId();
-        ItemTemplate const* item = sObjectMgr->GetItemTemplate(srcItemId);
+        ItemTemplate const* item = sObjectMgr->GetItemTemplateMutable(srcItemId);
 
         if (srcItemId > 0)
         {
@@ -2379,7 +2379,7 @@ bool Player::HasQuestForItem(uint32 itemid, uint32 excludeQuestId /* 0 */, bool 
                 // examined item is a source item
                 if (qinfo->ItemDrop[j] == itemid)
                 {
-                    ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(itemid);
+                    ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutable(itemid);
                     uint32 ownedCount = GetItemCount(itemid, true);
                     // 'unique' item
                     if ((pProto->MaxCount && int32(ownedCount) < pProto->MaxCount) || (turnIn && int32(ownedCount) >= pProto->MaxCount))

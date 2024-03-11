@@ -416,17 +416,28 @@ int32 SpellEffectInfo::CalcValue(Unit const* caster, int32 const* bp, Unit const
 
     // base amount modification based on spell lvl vs caster lvl
     // xinef: added basePointsPerLevel check
-    if (caster && basePointsPerLevel != 0.0f)
+    if (caster)
     {
-        int32 level = int32(caster->GetLevel());
-        if (level > int32(_spellInfo->MaxLevel) && _spellInfo->MaxLevel > 0)
-            level = int32(_spellInfo->MaxLevel);
-        else if (level < int32(_spellInfo->BaseLevel))
-            level = int32(_spellInfo->BaseLevel);
+        if (basePointsPerLevel != 0.0f) {
+            int32 level = int32(caster->GetLevel());
+            if (level > int32(_spellInfo->MaxLevel) && _spellInfo->MaxLevel > 0)
+                level = int32(_spellInfo->MaxLevel);
+            else if (level < int32(_spellInfo->BaseLevel))
+                level = int32(_spellInfo->BaseLevel);
 
-        // xinef: if base level is greater than spell level, reduce by base level (eg. pilgrims foods)
-        level -= int32(std::max(_spellInfo->BaseLevel, _spellInfo->SpellLevel));
-        basePoints += int32(level * basePointsPerLevel);
+            // xinef: if base level is greater than spell level, reduce by base level (eg. pilgrims foods)
+            level -= int32(std::max(_spellInfo->BaseLevel, _spellInfo->SpellLevel));
+            basePoints += int32(level * basePointsPerLevel);
+        }
+        else if (basePoints && _spellInfo->HasAttribute(SPELL_ATTR0_SCALES_WITH_CREATURE_LEVEL)) {
+            if (Player* player = ((Unit*)caster)->ToPlayer()) {
+                // general formula is L+(L-10)(L-10)(.016)
+                int32 level = int32(caster->GetLevel());
+                int32 pct = int32(level + (level - 10) * (level - 10) * .016f);
+
+                basePoints = CalculatePct(basePoints, pct);
+            }
+        }
     }
 
     // roll in a range <1;EffectDieSides> as of patch 3.3.3

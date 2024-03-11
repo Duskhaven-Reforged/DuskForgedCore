@@ -606,6 +606,10 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     // Deserter tracker
     PrepareStatement(CHAR_INS_DESERTER_TRACK, "INSERT INTO battleground_deserters (guid, type, datetime) VALUES (?, ?, NOW())", CONNECTION_ASYNC);
 
+        // Anticheat Lua Cheaters
+    PrepareStatement(CHAR_INS_ANTICHEAT_LUA_CHEATERS, "INSERT IGNORE INTO `lua_cheaters` (guid, account, macro) VALUES (?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_SEL_ANTICHEAT_LUA_CHEATERS, "SELECT guid, account FROM lua_cheaters WHERE account = ?", CONNECTION_SYNCH);
+
     // hater: custom items
     PrepareStatement(CHAR_UPD_CUSTOM_ITEM,
         "REPLACE INTO custom_item_template ("

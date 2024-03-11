@@ -58,6 +58,29 @@ InstanceSaveMgr* InstanceSaveMgr::instance()
     return &instance;
 }
 
+void InstanceSaveMgr::Unload()
+{
+    lock_instLists = true;
+    for (InstanceSaveHashMap::iterator itr = m_instanceSaveById.begin(); itr != m_instanceSaveById.end(); ++itr)
+    {
+        InstanceSave* save = itr->second;
+
+        for (InstanceSave::PlayerListType::iterator itr2 = save->m_playerList.begin(), next = itr2; itr2 != save->m_playerList.end(); itr2 = next)
+        {
+            ++next;
+            (*itr2)->UnbindInstance(save->GetMapId(), save->GetDifficultyID(), true);
+        }
+
+        for (InstanceSave::GroupListType::iterator itr2 = save->m_groupList.begin(), next = itr2; itr2 != save->m_groupList.end(); itr2 = next)
+        {
+            ++next;
+            (*itr2)->UnbindInstance(save->GetMapId(), save->GetDifficultyID(), true);
+        }
+
+        delete save;
+    }
+}
+
 /*
 - adding instance into manager
 */

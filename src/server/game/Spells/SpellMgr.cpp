@@ -399,7 +399,7 @@ bool SpellMgr::ComputeIsSpellValid(SpellInfo const* spellInfo, bool msg)
                         }
                     }
                     // also possible IsLootCrafting case but fake item must exist anyway
-                    else if (!sObjectMgr->GetItemTemplate(spellInfo->Effects[i].ItemType))
+                    else if (!sObjectMgr->GetItemTemplateMutable(spellInfo->Effects[i].ItemType))
                     {
                         if (msg)
                             LOG_ERROR("sql.sql", "Craft spell {} create not-exist in DB item (Entry: {}) and then...", spellInfo->Id, spellInfo->Effects[i].ItemType);
@@ -427,7 +427,7 @@ bool SpellMgr::ComputeIsSpellValid(SpellInfo const* spellInfo, bool msg)
     {
         for (uint8 j = 0; j < MAX_SPELL_REAGENTS; ++j)
         {
-            if (spellInfo->Reagent[j] > 0 && !sObjectMgr->GetItemTemplate(spellInfo->Reagent[j]))
+            if (spellInfo->Reagent[j] > 0 && !sObjectMgr->GetItemTemplateMutable(spellInfo->Reagent[j]))
             {
                 if (msg)
                     LOG_ERROR("sql.sql", "Craft spell {} have not-exist reagent in DB item (Entry: {}) and then...", spellInfo->Id, spellInfo->Reagent[j]);

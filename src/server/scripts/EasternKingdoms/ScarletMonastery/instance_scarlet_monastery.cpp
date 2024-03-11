@@ -91,6 +91,8 @@ public:
                 if (!ScarletList.empty())
                     for (std::list<Creature*>::iterator itr = ScarletList.begin(); itr != ScarletList.end(); itr++) (*itr)->SetFaction(FACTION_FRIENDLY);
             }
+
+            InstanceScript::OnPlayerEnter(player);
         }
 
         void OnPlayerAreaUpdate(Player* player, uint32 /*oldArea*/, uint32 /*newArea*/) override

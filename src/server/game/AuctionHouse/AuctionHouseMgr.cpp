@@ -75,8 +75,8 @@ static bool SortAuction(AuctionEntry* left, AuctionEntry* right, AuctionSortOrde
             }
             case AUCTION_SORT_ITEM:
             {
-                ItemTemplate const* protoLeft = sObjectMgr->GetItemTemplate(left->item_template);
-                ItemTemplate const* protoRight = sObjectMgr->GetItemTemplate(right->item_template);
+                ItemTemplate const* protoLeft = sObjectMgr->GetItemTemplateMutable(left->item_template);
+                ItemTemplate const* protoRight = sObjectMgr->GetItemTemplateMutable(right->item_template);
                 if (!protoLeft || !protoRight)
                 {
                     continue;
@@ -118,8 +118,8 @@ static bool SortAuction(AuctionEntry* left, AuctionEntry* right, AuctionSortOrde
             }
             case AUCTION_SORT_MINLEVEL:
             {
-                ItemTemplate const* protoLeft  = sObjectMgr->GetItemTemplate(left->item_template);
-                ItemTemplate const* protoRight = sObjectMgr->GetItemTemplate(right->item_template);
+                ItemTemplate const* protoLeft  = sObjectMgr->GetItemTemplateMutable(left->item_template);
+                ItemTemplate const* protoRight = sObjectMgr->GetItemTemplateMutable(right->item_template);
                 if (!protoLeft || !protoRight)
                 {
                     continue;
@@ -150,8 +150,8 @@ static bool SortAuction(AuctionEntry* left, AuctionEntry* right, AuctionSortOrde
             }
             case AUCTION_SORT_RARITY:
             {
-                ItemTemplate const* protoLeft  = sObjectMgr->GetItemTemplate(left->item_template);
-                ItemTemplate const*  protoRight = sObjectMgr->GetItemTemplate(right->item_template);
+                ItemTemplate const* protoLeft  = sObjectMgr->GetItemTemplateMutable(left->item_template);
+                ItemTemplate const*  protoRight = sObjectMgr->GetItemTemplateMutable(right->item_template);
                 if (!protoLeft || !protoRight)
                 {
                     continue;
@@ -505,7 +505,7 @@ void AuctionHouseMgr::LoadAuctionItems()
         ObjectGuid::LowType item_guid = fields[11].Get<uint32>();
         uint32 item_template = fields[12].Get<uint32>();
 
-        ItemTemplate const* proto = sObjectMgr->GetItemTemplate(item_template);
+        ItemTemplate const* proto = sObjectMgr->GetItemTemplateMutable(item_template);
         if (!proto)
         {
             LOG_ERROR("auctionHouse", "AuctionHouseMgr::LoadAuctionItems: Unknown item (GUID: {} id: #{}) in auction, skipped.", item_guid, item_template);

@@ -242,6 +242,7 @@ public:
     void MoveJump(float x, float y, float z, float speedXY, float speedZ, uint32 id = 0, Unit const* target = nullptr);
     void MoveJumpWithGravity(Position const& pos, float speedXY, float gravity, uint32 id = 0, Unit const* target = nullptr);
     void MoveFall(uint32 id = 0, bool addFlagForNPC = false);
+    void MoveFallPlayer(uint32 id = 0);
 
     void MoveSeekAssistance(float x, float y, float z);
     void MoveSeekAssistanceDistract(uint32 timer);

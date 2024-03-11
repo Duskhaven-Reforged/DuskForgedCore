@@ -3321,7 +3321,7 @@ void ObjectMgr::LoadItemTemplates()
 
             uint32 item_id = entry->ItemId[j];
 
-            if (!GetItemTemplate(item_id))
+            if (!GetItemTemplateMutable(item_id))
                 notFoundOutfit.insert(item_id);
         }
     }
@@ -3333,23 +3333,21 @@ void ObjectMgr::LoadItemTemplates()
     LOG_INFO("server.loading", " ");
 }
 
-ItemTemplate const* ObjectMgr::GetItemTemplate(uint32 entry)
+ItemTemplate const* ObjectMgr::GetItemTemplateMutable(uint32 entry)
 {
     return entry < _itemTemplateStoreFast.size() ? _itemTemplateStoreFast[entry] : nullptr;
 }
 
 // hater: custom items
-ItemTemplate* ObjectMgr::GetItemTemplateMutable(uint32 entry)
+ItemTemplate* ObjectMgr::GetItemTemplateMutableMutable(uint32 entry)
 {
-    return entry < _itemTemplateStoreFast.size() ? _itemTemplateStoreFast[entry] : nullptr;
+    return &_itemTemplateStore[entry];
 }
 
 ItemTemplate* ObjectMgr::CreateItemTemplate(uint32 entry, uint32 copyID)
 {
-    if (entry > _itemTemplateStoreFast.size())
-        _itemTemplateStoreFast.resize(entry + 200000, nullptr);
-
-    ItemTemplate* copy = (_itemTemplateStoreFast[entry] = _itemTemplateStoreFast[copyID]);
+    // hater: TY Tester for giving us the MRs for all custom item stuff :)
+    ItemTemplate* copy = &(_itemTemplateStore[entry] = _itemTemplateStore[copyID]);
     copy->ItemId = entry;
     copy->m_isDirty = true;
     copy->_LoadTotalAP();
@@ -3620,7 +3618,7 @@ void ObjectMgr::LoadItemSetNames()
         {
             uint32 entry = *itr;
             // add data from item_template if available
-            pProto = sObjectMgr->GetItemTemplate(entry);
+            pProto = sObjectMgr->GetItemTemplateMutable(entry);
             if (pProto)
             {
                 LOG_ERROR("sql.sql", "Item set part (Entry: {}) does not have entry in `item_set_names`, adding data from `item_template`.", entry);
@@ -4001,7 +3999,7 @@ void ObjectMgr::LoadPlayerInfo()
 
                 uint32 item_id = fields[2].Get<uint32>();
 
-                if (!GetItemTemplate(item_id))
+                if (!GetItemTemplateMutable(item_id))
                 {
                     LOG_ERROR("sql.sql", "Item id {} (race {} class {}) in `playercreateinfo_item` table but not listed in `item_template`, ignoring.", item_id, current_race, current_class);
                     continue;
@@ -4992,7 +4990,7 @@ void ObjectMgr::LoadQuests()
 
         if (qinfo->StartItem)
         {
-            if (!sObjectMgr->GetItemTemplate(qinfo->StartItem))
+            if (!sObjectMgr->GetItemTemplateMutable(qinfo->StartItem))
             {
                 LOG_ERROR("sql.sql", "Quest {} has `StartItem` = {} but item with entry {} does not exist, quest can't be done.",
                                  qinfo->GetQuestId(), qinfo->StartItem, qinfo->StartItem);
@@ -5043,7 +5041,7 @@ void ObjectMgr::LoadQuests()
 
                 qinfo->SetSpecialFlag(QUEST_SPECIAL_FLAGS_DELIVER);
 
-                if (!sObjectMgr->GetItemTemplate(id))
+                if (!sObjectMgr->GetItemTemplateMutable(id))
                 {
                     LOG_ERROR("sql.sql", "Quest {} has `RequiredItemId{}` = {} but item with entry {} does not exist, quest can't be done.",
                                      qinfo->GetQuestId(), j + 1, id, id);
@@ -5063,7 +5061,7 @@ void ObjectMgr::LoadQuests()
             uint32 id = qinfo->ItemDrop[j];
             if (id)
             {
-                if (!sObjectMgr->GetItemTemplate(id))
+                if (!sObjectMgr->GetItemTemplateMutable(id))
                 {
                     LOG_ERROR("sql.sql", "Quest {} has `ItemDrop{}` = {} but item with entry {} does not exist, quest can't be done.",
                                      qinfo->GetQuestId(), j + 1, id, id);
@@ -5124,7 +5122,7 @@ void ObjectMgr::LoadQuests()
             uint32 id = qinfo->RewardChoiceItemId[j];
             if (id)
             {
-                if (!sObjectMgr->GetItemTemplate(id))
+                if (!sObjectMgr->GetItemTemplateMutable(id))
                 {
                     LOG_ERROR("sql.sql", "Quest {} has `RewardChoiceItemId{}` = {} but item with entry {} does not exist, quest will not reward this item.",
                                      qinfo->GetQuestId(), j + 1, id, id);
@@ -5170,7 +5168,7 @@ void ObjectMgr::LoadQuests()
             uint32 id = qinfo->RewardItemId[j];
             if (id)
             {
-                if (!sObjectMgr->GetItemTemplate(id))
+                if (!sObjectMgr->GetItemTemplateMutable(id))
                 {
                     LOG_ERROR("sql.sql", "Quest {} has `RewardItemId{}` = {} but item with entry {} does not exist, quest will not reward this item.",
                                      qinfo->GetQuestId(), j + 1, id, id);
@@ -5688,7 +5686,7 @@ void ObjectMgr::LoadScripts(ScriptsType type)
 
             case SCRIPT_COMMAND_CREATE_ITEM:
                 {
-                    if (!GetItemTemplate(tmp.CreateItem.ItemEntry))
+                    if (!GetItemTemplateMutable(tmp.CreateItem.ItemEntry))
                     {
                         LOG_ERROR("sql.sql", "Table `{}` has nonexistent item (entry: {}) in SCRIPT_COMMAND_CREATE_ITEM for script id {}",
                                          tableName, tmp.CreateItem.ItemEntry, tmp.id);
@@ -7054,7 +7052,7 @@ void ObjectMgr::LoadAccessRequirements()
                 case 2:
                 {
                     //Item
-                    ItemTemplate const* pProto = GetItemTemplate(progression_requirement->id);
+                    ItemTemplate const* pProto = GetItemTemplateMutable(progression_requirement->id);
                     if (!pProto)
                     {
                         LOG_ERROR("sql.sql", "Required item {} for faction {} does not exist for map {} difficulty {}, remove or fix this item requirement.", progression_requirement->id, requirement_faction, mapid, difficulty);
@@ -9104,7 +9102,7 @@ void ObjectMgr::LoadCreatureOutfits()
             if (displayInfo > 0) // entry
             {
                 uint32 item_entry = static_cast<uint32>(displayInfo);
-                if (ItemTemplate const* proto = sObjectMgr->GetItemTemplate(item_entry))
+                if (ItemTemplate const* proto = sObjectMgr->GetItemTemplateMutable(item_entry))
                     co->outfitdisplays[slot] = proto->DisplayInfoID;
                 else if (auto * dbcentry = sItemStore.LookupEntry(item_entry))
                     co->outfitdisplays[slot] = dbcentry->DisplayInfoID;
@@ -9744,7 +9742,7 @@ bool ObjectMgr::IsVendorItemValid(uint32 vendor_entry, uint32 item_id, int32 max
     }
     */
 
-    if (!sObjectMgr->GetItemTemplate(item_id))
+    if (!sObjectMgr->GetItemTemplateMutable(item_id))
     {
         if (player)
             ChatHandler(player->GetSession()).PSendSysMessage(LANG_ITEM_NOT_FOUND, item_id);
@@ -10167,9 +10165,9 @@ void ObjectMgr::LoadFactionChangeItems()
         uint32 alliance = fields[0].Get<uint32>();
         uint32 horde = fields[1].Get<uint32>();
 
-        if (!GetItemTemplate(alliance))
+        if (!GetItemTemplateMutable(alliance))
             LOG_ERROR("sql.sql", "Item {} (alliance_id) referenced in `player_factionchange_items` does not exist, pair skipped!", alliance);
-        else if (!GetItemTemplate(horde))
+        else if (!GetItemTemplateMutable(horde))
             LOG_ERROR("sql.sql", "Item {} (horde_id) referenced in `player_factionchange_items` does not exist, pair skipped!", horde);
         else
             FactionChangeItems[alliance] = horde;
@@ -10609,13 +10607,13 @@ void ObjectMgr::LoadMailServerTemplates()
             return;
         }
 
-        ItemTemplate const* itemTemplateA = sObjectMgr->GetItemTemplate(servMail.itemA);
+        ItemTemplate const* itemTemplateA = sObjectMgr->GetItemTemplateMutable(servMail.itemA);
         if (!itemTemplateA && servMail.itemA)
         {
             LOG_ERROR("sql.sql", "Table `mail_server_template` has invalid item in itemA {} for id {}, skipped.", servMail.itemA, servMail.id);
             return;
         }
-        ItemTemplate const* itemTemplateH = sObjectMgr->GetItemTemplate(servMail.itemH);
+        ItemTemplate const* itemTemplateH = sObjectMgr->GetItemTemplateMutable(servMail.itemH);
         if (!itemTemplateH && servMail.itemH)
         {
             LOG_ERROR("sql.sql", "Table `mail_server_template` has invalid item in itemH {} for id {}, skipped.", servMail.itemH, servMail.id);
