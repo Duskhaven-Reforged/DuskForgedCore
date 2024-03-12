@@ -124,7 +124,7 @@ void LootItemStorage::AddNewStoredLoot(Loot* loot, Player* /*player*/)
             //if (!li->AllowedForPlayer(player))
             //    continue;
 
-            ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplate(li->itemid);
+            ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplateMutable(li->itemid);
             if (!itemTemplate || itemTemplate->IsCurrencyToken())
                 continue;
 
@@ -161,7 +161,7 @@ void LootItemStorage::AddNewStoredLoot(Loot* loot, Player* /*player*/)
 
 bool LootItemStorage::LoadStoredLoot(Item* item, Player* player)
 {
-    ItemTemplate const* proto = sObjectMgr->GetItemTemplate(item->GetEntry());
+    ItemTemplate const* proto = sObjectMgr->GetItemTemplateMutable(item->GetEntry());
     if (!proto)
     {
         return false;

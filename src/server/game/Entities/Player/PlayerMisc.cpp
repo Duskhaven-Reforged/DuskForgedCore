@@ -396,7 +396,7 @@ void Player::SendItemRetrievalMail(std::vector<std::pair<uint32, uint32>> mailIt
     {
         SendMailTempateVector toSendItems;
 
-        ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplate(itemEntry);
+        ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplateMutable(itemEntry);
         if (!itemTemplate)
         {
             LOG_ERROR("entities.player.items", "> SendItemRetrievalMail: Item id {} is invalid", itemEntry);

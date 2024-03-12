@@ -494,7 +494,7 @@ public:
         uint32 maxResults = sWorld->getIntConfig(CONFIG_MAX_RESULTS_LOOKUP_COMMANDS);
 
         // Search in `item_template`
-        for (auto const& [entry, itemTemplate] : *sObjectMgr->GetItemTemplateStore())
+        for (auto const& [entry, itemTemplate] : *sObjectMgr->GetItemTemplateMutableStore())
         {
             int localeIndex = handler->GetSessionDbLocaleIndex();
             if (localeIndex >= 0)

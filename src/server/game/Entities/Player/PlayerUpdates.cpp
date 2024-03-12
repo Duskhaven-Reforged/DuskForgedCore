@@ -1541,7 +1541,7 @@ void Player::UpdatePotionCooldown(Spell* spell)
         // spell/item pair let set proper cooldown (except not existed charged
         // spell cooldown spellmods for potions)
         if (ItemTemplate const* proto =
-                sObjectMgr->GetItemTemplate(GetLastPotionId()))
+                sObjectMgr->GetItemTemplateMutable(GetLastPotionId()))
             for (uint8 idx = 0; idx < MAX_ITEM_SPELLS; ++idx)
                 if (proto->Spells[idx].SpellId &&
                     proto->Spells[idx].SpellTrigger == ITEM_SPELLTRIGGER_ON_USE)

@@ -239,4 +239,4 @@ public:
     void MakeBlankSlate();
 };
 
-CustomItemTemplate GetItemTemplate(uint32 id);
+CustomItemTemplate GetItemTemplateMutable(uint32 id);

@@ -2596,9 +2596,6 @@ class spell_mage_frostbolt : public SpellScript
 
         if (caster->HasAura(SPELL_MAGE_GLACIAL_ASSAULT_AURA))
             caster->CastSpell(caster, SPELL_MAGE_GLACIAL_ASSAULT_PROC, true);
-
-        if (caster->GetAura(SPELL_MAGE_ICICLE_AURA)->GetStackAmount() == 5)
-            caster->CastSpell(GetHitUnit(), SPELL_MAGE_ICICLE_SPELL, true);
     }
 
     void HandleOnHit()
@@ -2611,6 +2608,10 @@ class spell_mage_frostbolt : public SpellScript
             if (irand(1, 100) <= chance)
                 caster->CastSpell(caster, SPELL_MAGE_MISSILE_BARRAGE_TRIGGER, true);
         }
+        
+        if (caster->HasAura(SPELL_MAGE_ICICLE_AURA))
+            if (caster->GetAura(SPELL_MAGE_ICICLE_AURA)->GetStackAmount() == 5)
+                caster->CastSpell(GetHitUnit(), SPELL_MAGE_ICICLE_SPELL, true);
     }
 
     void HandleAfterHit()

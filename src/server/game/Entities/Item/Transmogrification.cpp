@@ -118,7 +118,7 @@ std::string Transmogrification::GetItemIcon(uint32 entry, uint32 width, uint32 h
 
     std::ostringstream ss;
     ss << "|TInterface";
-    const ItemTemplate* temp = sObjectMgr->GetItemTemplate(entry);
+    const ItemTemplate* temp = sObjectMgr->GetItemTemplateMutable(entry);
     const ItemDisplayInfoEntry* dispInfo = NULL;
     if (temp)
     {
@@ -230,7 +230,7 @@ std::string Transmogrification::GetItemLink(uint32 entry, WorldSession* session)
 {
     LOG_DEBUG("custom.transmog", "Transmogrification::GetItemLink");
 
-    const ItemTemplate* temp = sObjectMgr->GetItemTemplate(entry);
+    const ItemTemplate* temp = sObjectMgr->GetItemTemplateMutable(entry);
     std::ostringstream oss;
     oss << "|c" << std::hex << ItemQualityColors[temp->Quality] << std::dec <<
         "|Hitem:" << entry << ":0:0:0:0:0:0:0:0:0|h[" << GetItemName(temp, session) << "]|h|r";
@@ -563,7 +563,7 @@ TransmogResult Transmogrification::TrySetPendingTransmog(Player* player, uint32 
     bool hasTemplate = entry != NormalEntry && entry != InvisibleEntry;
     if (hasTemplate)
     {
-        itemtemplate = sObjectMgr->GetItemTemplate(entry);
+        itemtemplate = sObjectMgr->GetItemTemplateMutable(entry);
         if (!itemtemplate)
         {
             LOG_DEBUG("custom.transmog", "Transmogrification::Transmogrify - %s (%s) tried to transmogrify slot %u with a non-existant item entry %u.", player->GetName().c_str(), player->GetGUID().ToString().c_str(), slot, entry);
@@ -1092,7 +1092,7 @@ bool Transmogrification::HasPendingTransmog(Player* player, uint8 slot, Item** r
         }
         else
         {
-            decltype(auto) sourceTemplate = sObjectMgr->GetItemTemplate(pending);
+            decltype(auto) sourceTemplate = sObjectMgr->GetItemTemplateMutable(pending);
             if (!sourceTemplate)
                 return false;
             if (CannotTransmogrifyItemWithItem(player, item->GetTemplate(), sourceTemplate, false))
@@ -1210,7 +1210,7 @@ int32 Transmogrification::CalculateTransmogCost(uint32 entry)
         return 0;
     if (entry == NormalEntry)
         return 0;
-    auto const* temp = sObjectMgr->GetItemTemplate(entry);
+    auto const* temp = sObjectMgr->GetItemTemplateMutable(entry);
     if (!temp)
         return 0;
     int32 cost = 0;

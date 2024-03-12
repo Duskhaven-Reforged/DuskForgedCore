@@ -294,7 +294,7 @@ bool Item::Create(ObjectGuid::LowType guidlow, uint32 itemid, Player const* owne
     SetGuidValue(ITEM_FIELD_CONTAINED, owner ? owner->GetGUID() : ObjectGuid::Empty);
 
     // Do item creation here
-    auto itemProto = sObjectMgr->GetItemTemplate(itemid);
+    auto itemProto = sObjectMgr->GetItemTemplateMutable(itemid);
     if (!itemProto)
         return false;
 
@@ -569,7 +569,7 @@ void Item::DeleteFromInventoryDB(CharacterDatabaseTransaction trans)
 
 ItemTemplate const* Item::GetTemplate() const
 {
-    return sObjectMgr->GetItemTemplate(GetEntry());
+    return sObjectMgr->GetItemTemplateMutable(GetEntry());
 }
 
 Player* Item::GetOwner()const
@@ -656,7 +656,7 @@ uint32 Item::GetSpell()
 
 int32 Item::GenerateItemRandomPropertyId(uint32 item_id)
 {
-    ItemTemplate const* itemProto = sObjectMgr->GetItemTemplate(item_id);
+    ItemTemplate const* itemProto = sObjectMgr->GetItemTemplateMutable(item_id);
 
     if (!itemProto)
         return 0;
@@ -1024,7 +1024,7 @@ bool Item::GemsFitSockets() const
         uint32 gemid = enchantEntry->GemID;
         if (gemid)
         {
-            ItemTemplate const* gemProto = sObjectMgr->GetItemTemplate(gemid);
+            ItemTemplate const* gemProto = sObjectMgr->GetItemTemplateMutable(gemid);
             if (gemProto)
             {
                 GemPropertiesEntry const* gemProperty = sGemPropertiesStore.LookupEntry(gemProto->GemProperties);
@@ -1078,7 +1078,7 @@ uint8 Item::GetGemCountWithLimitCategory(uint32 limitCategory) const
         if (!enchantEntry)
             continue;
 
-        ItemTemplate const* gemProto = sObjectMgr->GetItemTemplate(enchantEntry->GemID);
+        ItemTemplate const* gemProto = sObjectMgr->GetItemTemplateMutable(enchantEntry->GemID);
         if (!gemProto)
             continue;
 
@@ -1124,7 +1124,7 @@ Item* Item::CreateItem(uint32 item, uint32 count, Player const* player, bool clo
     if (count < 1)
         return nullptr;                                        //don't create item at zero count
 
-    ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(item);
+    ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutable(item);
     if (pProto)
     {
         if (count > pProto->GetMaxStackSize())

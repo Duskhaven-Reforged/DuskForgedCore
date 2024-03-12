@@ -126,7 +126,7 @@ bool Acore::Hyperlinks::LinkTags::item::StoreTo(ItemLinkData& val, std::string_v
     if (!t.TryConsumeTo(itemId))
         return false;
 
-    val.Item = sObjectMgr->GetItemTemplate(itemId);
+    val.Item = sObjectMgr->GetItemTemplateMutable(itemId);
     val.IsBuggedInspectLink = false;
 
     // randomPropertyId is actually a int16 in the client

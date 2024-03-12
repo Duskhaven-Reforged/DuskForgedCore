@@ -571,7 +571,7 @@ void WorldSession::HandleItemQuerySingleOpcode(WorldPacket& recvData)
 
     LOG_DEBUG("network.opcode", "STORAGE: Item Query = {}", item);
 
-    ItemTemplate* pProto = sObjectMgr->GetItemTemplateMutable(item);
+    ItemTemplate* pProto = sObjectMgr->GetItemTemplateMutableMutable(item);
     if (pProto)
     {
         pProto->InitializeQueryData();
@@ -978,7 +978,7 @@ void WorldSession::SendListInventory(ObjectGuid vendorGuid, uint32 vendorEntry)
     {
         if (VendorItem const* item = items->GetItem(slot))
         {
-            if (ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplate(item->item))
+            if (ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplateMutable(item->item))
             {
                 if (!(itemTemplate->AllowableClass & _player->getClassMask()) && itemTemplate->Bonding == BIND_WHEN_PICKED_UP && !_player->IsGameMaster())
                 {
@@ -1420,7 +1420,7 @@ void WorldSession::HandleSocketOpcode(WorldPacket& recvData)
                     {
                         // existing gem
                         if (SpellItemEnchantmentEntry const* enchantEntry = sSpellItemEnchantmentStore.LookupEntry(OldEnchants[j]))
-                            if (ItemTemplate const* jProto = sObjectMgr->GetItemTemplate(enchantEntry->GemID))
+                            if (ItemTemplate const* jProto = sObjectMgr->GetItemTemplateMutable(enchantEntry->GemID))
                                 if (iGemProto->ItemLimitCategory == jProto->ItemLimitCategory)
                                     ++limit_newcount;
                     }

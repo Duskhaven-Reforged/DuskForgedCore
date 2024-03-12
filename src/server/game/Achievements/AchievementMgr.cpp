@@ -413,7 +413,7 @@ bool AchievementCriteriaData::Meets(uint32 criteria_id, Player const* source, Un
         }
         case ACHIEVEMENT_CRITERIA_DATA_TYPE_S_EQUIPED_ITEM:
         {
-            ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(miscvalue1);
+            ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutableMutable(miscvalue1);
             if (!pProto)
                 return false;
             return pProto->ItemLevel >= equipped_item.item_level && pProto->Quality >= equipped_item.item_quality;
@@ -440,7 +440,7 @@ bool AchievementCriteriaData::Meets(uint32 criteria_id, Player const* source, Un
         }
         case ACHIEVEMENT_CRITERIA_DATA_TYPE_S_ITEM_QUALITY:
         {
-            ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(miscvalue1);
+            ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutableMutable(miscvalue1);
             if (!pProto)
                 return false;
             return pProto->Quality == item.item_quality;
@@ -1432,7 +1432,7 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                     if (miscValue2 != achievementCriteria->roll_greed_on_loot.rollValue)
                         continue;
 
-                    ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(miscValue1);
+                    ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutable(miscValue1);
                     if (!pProto)
                         continue;
 
@@ -1563,7 +1563,7 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                     // AchievementMgr::UpdateAchievementCriteria might also be called on login - skip in this case
                     if (!miscValue1)
                         continue;
-                    ItemTemplate const* proto = sObjectMgr->GetItemTemplate(miscValue1);
+                    ItemTemplate const* proto = sObjectMgr->GetItemTemplateMutable(miscValue1);
                     if (!proto || proto->Quality < ITEM_QUALITY_EPIC)
                         continue;
                     AchievementCriteriaDataSet const* data = sAchievementMgr->GetCriteriaDataSet(achievementCriteria);
@@ -2989,7 +2989,7 @@ void AchievementGlobalMgr::LoadRewards()
 
         if (reward.itemId)
         {
-            if (!sObjectMgr->GetItemTemplate(reward.itemId))
+            if (!sObjectMgr->GetItemTemplateMutable(reward.itemId))
             {
                 // Not sure it's an error, it's probably an outDebug instead, because we can simply send a mail with no reward, right?
                 LOG_ERROR("sql.sql", "Table `achievement_reward` (Entry: {}) has invalid item_template id {}. Reward mail will not contain any item.", entry, reward.itemId);

@@ -6,6 +6,8 @@
 #include "Player.h"
 #include "Config.h"
 #include "Chat.h"
+#include "Guild.h"
+#include "GuildMgr.h"
 #include "Spell.h"
 #include "WorldPacket.h"
 #include "TopicRouter.h"
@@ -68,6 +70,12 @@ public:
     void OnEquip(Player* player, Item* item, uint8 bag, uint8 slot, bool update) override
     {
 
+    }
+
+    void OnFirstLogin(Player* player) override {
+        if (sConfigMgr->GetBoolDefault("StarterGuild.autojoin", false))
+            if (Guild* guild = sGuildMgr->GetGuildById(sConfigMgr->GetIntDefault("StarterGuild.id", 0)))
+                guild->AddMember(player->GetGUID());
     }
 
     void OnLogin(Player* player) override
@@ -180,7 +188,7 @@ public:
 
     void OnLootItem(Player* player, Item* item, uint32 count, ObjectGuid lootguid) override
     {
-        OnAddItem(player, item->GetTemplate()->ItemId, count);
+
     }
 
     //called after player.additem is called. DO NOT CREATE LOOPS WITH THIS.

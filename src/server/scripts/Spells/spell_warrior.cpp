@@ -759,12 +759,12 @@ class spell_warr_rend : public AuraScript
 
     void RemoveEffect(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
     {
-        Unit* caster = GetCaster();
-        Unit* target = GetTarget();
-        if (caster->HasAura(AURA_WARRIOR_SWIRLING_STEEL))
-            if (!(GetTargetApplication()->GetRemoveMode() == AURA_REMOVE_BY_DEATH && caster && target && caster->IsPlayer() && caster->ToPlayer()->isHonorOrXPTarget(target))) {
-                caster->ToPlayer()->ModifySpellCooldown(SPELL_WARRIOR_THROW_SPEAR, sSpellMgr->GetSpellInfo(AURA_WARRIOR_SWIRLING_STEEL)->GetEffect(EFFECT_1).CalcValue());
-            }
+        if(Unit* caster = GetCaster())
+            if(Unit* target = GetTarget())
+                if (caster->HasAura(AURA_WARRIOR_SWIRLING_STEEL))
+                    if (!(GetTargetApplication()->GetRemoveMode() == AURA_REMOVE_BY_DEATH && caster && target && caster->IsPlayer() && caster->ToPlayer()->isHonorOrXPTarget(target))) {
+                        caster->ToPlayer()->ModifySpellCooldown(SPELL_WARRIOR_THROW_SPEAR, sSpellMgr->GetSpellInfo(AURA_WARRIOR_SWIRLING_STEEL)->GetEffect(EFFECT_1).CalcValue());
+                    }
     }
 
     void Register() override

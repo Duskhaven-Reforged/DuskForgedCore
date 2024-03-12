@@ -395,7 +395,7 @@ bool Guild::BankTab::LoadItemFromDB(Field* fields)
         return false;
     }
 
-    ItemTemplate const* proto = sObjectMgr->GetItemTemplate(itemEntry);
+    ItemTemplate const* proto = sObjectMgr->GetItemTemplateMutable(itemEntry);
     if (!proto)
     {
         LOG_ERROR("guild", "Unknown item (GUID: {}, id: {}) in guild bank, skipped.", itemGuid, itemEntry);
