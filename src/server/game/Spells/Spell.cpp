@@ -4264,7 +4264,7 @@ void Spell::_handle_finish_phase()
     // Take for real after all targets are processed
     if (m_needComboPoints)
     {
-        m_caster->ClearComboPoints();
+        m_caster->ClearComboPoints(true);
     }
 
     // Real add combo points from effects
