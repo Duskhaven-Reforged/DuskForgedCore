@@ -541,6 +541,11 @@ void WorldSession::HandleSetSelectionOpcode(WorldPacket& recv_data)
 
     _player->SetSelection(guid);
 
+    if (Unit* unit = ObjectAccessor::GetUnit(*_player, guid)) {
+        if (unit->IsAlive() && !_player->IsFriendlyTo(unit) && unit->isTargetableForAttack(true, _player))
+            _player->AddComboPoints(unit, 0);
+    }
+
     // Change target of current autoshoot spell
     if (guid)
     {

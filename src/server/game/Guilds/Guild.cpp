@@ -1670,7 +1670,7 @@ void Guild::HandleMemberDepositMoney(WorldSession* session, uint32 amount)
     _ModifyBankMoney(trans, amount, true);
 
     player->ModifyMoney(-int32(amount));
-    player->SaveGoldToDB(trans);
+    player->SaveInventoryAndGoldToDB(trans);
     _LogBankEvent(trans, GUILD_BANK_LOG_DEPOSIT_MONEY, uint8(0), player, amount);
 
     CharacterDatabase.CommitTransaction(trans);
@@ -1710,7 +1710,7 @@ bool Guild::HandleMemberWithdrawMoney(WorldSession* session, uint32 amount, bool
         if (!player->ModifyMoney(amount))
             return false;
 
-        player->SaveGoldToDB(trans);
+        player->SaveInventoryAndGoldToDB(trans);
     }
 
     // Update remaining money amount

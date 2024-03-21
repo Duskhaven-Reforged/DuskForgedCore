@@ -162,12 +162,6 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
         return;
     }
 
-    if (!player->HasEnoughMoney(reqmoney))
-    {
-        player->SendMailResult(0, MAIL_SEND, MAIL_ERR_NOT_ENOUGH_MONEY);
-        return;
-    }
-
     Player* receive = ObjectAccessor::FindConnectedPlayer(receiverGuid);
 
     uint32 rc_teamId = TEAM_NEUTRAL;
@@ -187,6 +181,13 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
             mails_count = playerData->MailCount;
         }
     }
+
+    if (!player->HasEnoughMoney(reqmoney))
+    {
+        player->SendMailResult(0, MAIL_SEND, MAIL_ERR_NOT_ENOUGH_MONEY);
+        return;
+    }
+
     //do not allow to have more than 100 mails in mailbox.. mails count is in opcode uint8!!! - so max can be 255..
     if (mails_count > 100)
     {
@@ -619,7 +620,7 @@ void WorldSession::HandleMailTakeMoney(WorldPacket& recvData)
 
     // save money and mail to prevent cheating
     CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
-    player->SaveGoldToDB(trans);
+    player->SaveInventoryAndGoldToDB(trans);
     player->_SaveMail(trans);
     CharacterDatabase.CommitTransaction(trans);
 }

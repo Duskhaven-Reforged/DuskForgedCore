@@ -1037,7 +1037,7 @@ void Player::setDeathState(DeathState s, bool /*despawn = false*/)
         // drunken state is cleared on death
         SetDrunkValue(0);
         // lost combo points at any target (targeted combo points clear in Unit::setDeathState)
-        ClearComboPoints(false);
+        ClearComboPoints(true);
 
         clearResurrectRequestData();
 
@@ -1717,7 +1717,7 @@ void Player::RemoveFromWorld()
         StopCastingCharm();
         StopCastingBindSight();
         UnsummonPetTemporaryIfAny();
-        ClearComboPoints(); // pussywizard: crashfix
+        ClearComboPoints(true); // pussywizard: crashfix
         ClearComboPointHolders(); // pussywizard: crashfix
         if (ObjectGuid lguid = GetLootGUID()) // pussywizard: crashfix
             m_session->DoLootRelease(lguid);
@@ -1789,8 +1789,6 @@ void Player::RegenerateAll()
     {
         if (!IsInCombat())
             AddComboPoints(-1);
-
-        m_ComboPointDegenTimer -= 10000;
     }
 
     if (m_regenTimerCount >= 2000)

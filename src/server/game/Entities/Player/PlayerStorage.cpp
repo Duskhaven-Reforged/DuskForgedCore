@@ -7483,11 +7483,7 @@ void Player::SaveToDB(CharacterDatabaseTransaction trans, bool create, bool logo
 void Player::SaveInventoryAndGoldToDB(CharacterDatabaseTransaction trans)
 {
     _SaveInventory(trans);
-    SaveGoldToDB(trans);
-}
 
-void Player::SaveGoldToDB(CharacterDatabaseTransaction trans)
-{
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UDP_CHAR_MONEY);
     stmt->SetData(0, GetMoney());
     stmt->SetData(1, GetGUID().GetCounter());
