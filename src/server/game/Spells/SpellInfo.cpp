@@ -408,7 +408,7 @@ bool SpellEffectInfo::IsUnitOwnedAuraEffect() const
     return IsAreaAuraEffect() || Effect == SPELL_EFFECT_APPLY_AURA;
 }
 
-int32 SpellEffectInfo::CalcValue(Unit const* caster, int32 const* bp, Unit const* /*target*/) const
+int32 SpellEffectInfo::CalcValue(Unit const* caster, int32 const* bp, Unit const* target) const
 {
     float basePointsPerLevel = RealPointsPerLevel;
     int32 basePoints = bp ? *bp : BasePoints;
@@ -418,8 +418,13 @@ int32 SpellEffectInfo::CalcValue(Unit const* caster, int32 const* bp, Unit const
     // xinef: added basePointsPerLevel check
     if (caster)
     {
-        if (basePointsPerLevel != 0.0f) {
+        if (basePointsPerLevel != 0.0f)
+        {
             int32 level = int32(caster->GetLevel());
+            if (target && _spellInfo->HasAttribute(SPELL_ATTR1_CU_USE_TARGETS_LEVEL_FOR_SPELL_SCALING))
+                level = int32(target->GetLevel());
+            else if (_spellInfo->HasAttribute(SPELL_ATTR1_CU_IGNORES_CASTER_LEVEL))
+                level = sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL);
             if (level > int32(_spellInfo->MaxLevel) && _spellInfo->MaxLevel > 0)
                 level = int32(_spellInfo->MaxLevel);
             else if (level < int32(_spellInfo->BaseLevel))
@@ -429,13 +434,20 @@ int32 SpellEffectInfo::CalcValue(Unit const* caster, int32 const* bp, Unit const
             level -= int32(std::max(_spellInfo->BaseLevel, _spellInfo->SpellLevel));
             basePoints += int32(level * basePointsPerLevel);
         }
-        else if (basePoints && _spellInfo->HasAttribute(SPELL_ATTR0_SCALES_WITH_CREATURE_LEVEL)) {
-            if (Player* player = ((Unit*)caster)->ToPlayer()) {
-                // general formula is L+(L-10)(L-10)(.016)
-                int32 level = int32(caster->GetLevel());
-                int32 pct = int32(level + (level - 10) * (level - 10) * .016f);
+        else if (basePoints && _spellInfo->HasAttribute(SPELL_ATTR0_SCALES_WITH_CREATURE_LEVEL))
+        {
+            // Aleist3r: this conditional is just fucking beautiful; I need this formula to work in certain cases outside of just damage or healing effect
+            if ((_spellInfo->HasAttribute(SPELL_ATTR1_CU_SCALE_DAMAGE_OR_HEALING_EFFECT) && _spellInfo->ComputeIsDamagingOrHealingEffect()) ||
+                (!_spellInfo->HasAttribute(SPELL_ATTR1_CU_SCALE_DAMAGE_OR_HEALING_EFFECT) && !_spellInfo->ComputeIsDamagingOrHealingEffect()))
+            {
+                if (Player* player = ((Unit*)caster)->ToPlayer())
+                {
+                    // general formula is L+(L-10)(L-10)(.016)
+                    int32 level = int32(caster->GetLevel());
+                    int32 pct = int32(level + (level - 10) * (level - 10) * .016f);
 
-                basePoints = CalculatePct(basePoints, pct);
+                    basePoints = CalculatePct(basePoints, pct);
+                }
             }
         }
     }
@@ -455,7 +467,7 @@ int32 SpellEffectInfo::CalcValue(Unit const* caster, int32 const* bp, Unit const
                               : irand(randomPoints, 1);
 
             basePoints += randvalue;
-            break;
+            break;                     // Aleist3r: I would like some Pat's math magic for DieSides too :P
     }
 
     float value = float(basePoints);
@@ -809,6 +821,7 @@ SpellInfo::SpellInfo(SpellEntry const* spellEntry)
     AttributesEx6 = spellEntry->AttributesEx6;
     AttributesEx7 = spellEntry->AttributesEx7;
     AttributesCu = 0;
+    AttributesExCu = 0;
     Stances = spellEntry->Stances;
     StancesNot = spellEntry->StancesNot;
     Targets = spellEntry->Targets;
@@ -1268,7 +1281,7 @@ bool SpellInfo::CanBeUsedInCombat() const
 
 bool SpellInfo::RequiresCombat() const
 {
-    return (AttributesCu & SPELL_ATTR0_CU_REQUIRES_COMBAT);
+    return HasAttribute(SPELL_ATTR1_CU_REQUIRES_COMBAT);
 }
 
 bool SpellInfo::IsPositive() const
@@ -1320,6 +1333,50 @@ bool SpellInfo::IsRangedWeaponSpell() const
 bool SpellInfo::IsAutoRepeatRangedSpell() const
 {
     return AttributesEx2 & SPELL_ATTR2_AUTO_REPEAT;
+}
+
+bool SpellInfo::ComputeIsDamagingOrHealingEffect() const
+{
+    for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
+    {
+        switch (Effects[i].Effect)
+        {
+            case SPELL_EFFECT_SCHOOL_DAMAGE:
+            case SPELL_EFFECT_HEALTH_LEECH:
+            case SPELL_EFFECT_HEAL:
+            case SPELL_EFFECT_WEAPON_DAMAGE_NOSCHOOL:
+            case SPELL_EFFECT_WEAPON_PERCENT_DAMAGE:
+            case SPELL_EFFECT_WEAPON_DAMAGE:
+            case SPELL_EFFECT_HEAL_MECHANICAL:
+            case SPELL_EFFECT_NORMALIZED_WEAPON_DMG:
+            case SPELL_EFFECT_HEAL_PCT:
+                return true;
+            case SPELL_EFFECT_APPLY_AURA:
+            case SPELL_EFFECT_APPLY_AREA_AURA_ENEMY:
+            case SPELL_EFFECT_APPLY_AREA_AURA_FRIEND:
+            case SPELL_EFFECT_APPLY_AREA_AURA_OWNER:
+            case SPELL_EFFECT_APPLY_AREA_AURA_PARTY:
+            case SPELL_EFFECT_APPLY_AREA_AURA_PET:
+            case SPELL_EFFECT_APPLY_AREA_AURA_RAID:
+            case SPELL_EFFECT_PERSISTENT_AREA_AURA:
+            {
+                switch (Effects[i].ApplyAuraName)
+                {
+                case SPELL_AURA_PERIODIC_DAMAGE:
+                case SPELL_AURA_PERIODIC_HEAL:
+                case SPELL_AURA_DAMAGE_SHIELD:
+                case SPELL_AURA_OBS_MOD_HEALTH:
+                case SPELL_AURA_PROC_TRIGGER_DAMAGE:
+                case SPELL_AURA_PERIODIC_LEECH:
+                case SPELL_AURA_PERIODIC_HEALTH_FUNNEL:
+                case SPELL_AURA_PERIODIC_DAMAGE_PERCENT:
+                        return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 bool SpellInfo::IsAffected(uint32 familyName, flag96 const& familyFlags) const

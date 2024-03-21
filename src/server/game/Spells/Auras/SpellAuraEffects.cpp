@@ -1175,6 +1175,9 @@ float AuraEffect::CalcPeriodicCritChance(Unit const* caster, Unit const* target)
                         critChance = modOwner->SpellDoneCritChance(nullptr, GetSpellInfo(), GetSpellInfo()->GetSchoolMask(), BASE_ATTACK, true);
                     break;
             }
+
+            if (GetSpellInfo()->HasAttribute(SPELL_ATTR1_CU_PERIODIC_CAN_CRIT))
+                critChance = modOwner->SpellDoneCritChance(nullptr, GetSpellInfo(), GetSpellInfo()->GetSchoolMask(), (GetSpellInfo()->DmgClass == SPELL_DAMAGE_CLASS_RANGED ? RANGED_ATTACK : BASE_ATTACK), true);
         }
     }
     if (target && critChance > 0.0f)
