@@ -3237,7 +3237,7 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit* victim, SpellInfo const* spellInfo
 
     bool canDodge = !spellInfo->HasAttribute(SPELL_ATTR7_NO_ATTACK_DODGE);
     bool canParry = !spellInfo->HasAttribute(SPELL_ATTR7_NO_ATTACK_PARRY);
-    bool canBlock = spellInfo->HasAttribute(SPELL_ATTR3_COMPLETELY_BLOCKED) && !spellInfo->HasAttribute(SPELL_ATTR0_CU_DIRECT_DAMAGE);
+    bool canBlock = spellInfo->HasAttribute(SPELL_ATTR3_COMPLETELY_BLOCKED) && !spellInfo->HasAttribute(SPELL_ATTR0_CU_DIRECT_DAMAGE) && !spellInfo->HasAttribute(SPELL_ATTR1_CU_NO_ATTACK_BLOCK);
 
     // Same spells cannot be parry/dodge
     if (spellInfo->HasAttribute(SPELL_ATTR0_NO_ACTIVE_DEFENSE))
