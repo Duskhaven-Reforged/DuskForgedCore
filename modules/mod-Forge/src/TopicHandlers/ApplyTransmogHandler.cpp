@@ -48,7 +48,7 @@ public:
         const ItemTemplate* tmogRecv = target->GetTemplate();
 
         Item* tmogSrc;
-        auto appearance = sObjectMgr->GetItemTemplate(display);
+        auto appearance = sObjectMgr->GetItemTemplateMutableMutable(display);
 
         if (tmogRecv->ItemId != display && display)
             tmogSrc = Item::CreateItem(display, 1, 0);

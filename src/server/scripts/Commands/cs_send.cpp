@@ -85,7 +85,7 @@ public:
 
             uint32 itemID = *Acore::StringTo<uint32>(itemTokens.at(0));
 
-            ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplate(itemID);
+            ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplateMutable(itemID);
             if (!itemTemplate)
             {
                 handler->SendErrorMessage(LANG_COMMAND_ITEMIDINVALID, itemID);

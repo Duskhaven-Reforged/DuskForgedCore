@@ -20,7 +20,7 @@ CreatureOutfit::CreatureOutfit(uint8 race, Gender gender) : race(race), gender(g
 
 CreatureOutfit& CreatureOutfit::SetItemEntry(EquipmentSlots slot, uint32 item_entry)
 {
-    if (ItemTemplate const* proto = sObjectMgr->GetItemTemplate(item_entry))
+    if (ItemTemplate const* proto = sObjectMgr->GetItemTemplateMutable(item_entry))
         outfitdisplays[slot] = proto->DisplayInfoID;
     else
         outfitdisplays[slot] = 0;

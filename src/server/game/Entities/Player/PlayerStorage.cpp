@@ -17,6 +17,7 @@
 
 #include "AccountMgr.h"
 #include "AchievementMgr.h"
+#include "AnticheatMgr.h"
 #include "ArenaTeam.h"
 #include "ArenaTeamMgr.h"
 #include "Battlefield.h"
@@ -775,7 +776,7 @@ bool Player::HasItemOrGemWithIdEquipped(uint32 item, uint32 count, uint8 except_
         }
     }
 
-    ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(item);
+    ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutable(item);
     if (pProto && pProto->GemProperties)
     {
         for (uint8 i = EQUIPMENT_SLOT_START; i < EQUIPMENT_SLOT_END; ++i)
@@ -832,7 +833,7 @@ bool Player::HasItemOrGemWithLimitCategoryEquipped(uint32 limitCategory, uint32 
 
 InventoryResult Player::CanTakeMoreSimilarItems(uint32 entry, uint32 count, Item* pItem, uint32* no_space_count) const
 {
-    ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(entry);
+    ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutable(entry);
     if (!pProto)
     {
         if (no_space_count)
@@ -1135,7 +1136,7 @@ InventoryResult Player::CanStoreItem(uint8 bag, uint8 slot, ItemPosCountVec& des
 {
     LOG_DEBUG("entities.player.items", "STORAGE: CanStoreItem bag = {}, slot = {}, item = {}, count = {}", bag, slot, entry, count);
 
-    ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(entry);
+    ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutable(entry);
     if (!pProto)
     {
         if (no_space_count)
@@ -2506,7 +2507,7 @@ InventoryResult Player::CanUseAmmo(uint32 item) const
         return EQUIP_ERR_YOU_ARE_DEAD;
     //if (isStunned())
     //    return EQUIP_ERR_YOU_ARE_STUNNED;
-    ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(item);
+    ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutable(item);
     if (pProto)
     {
         if (pProto->InventoryType != INVTYPE_AMMO)
@@ -2578,7 +2579,7 @@ Item* Player::StoreNewItem(ItemPosCountVec const& dest, uint32 item, bool update
     if (pItem)
     {
         // pussywizard: obtaining blue or better items saves to db
-        if (ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(item))
+        if (ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutable(item))
             if (pProto->Quality >= ITEM_QUALITY_RARE)
                 AdditionalSavingAddMask(ADDITIONAL_SAVING_INVENTORY_AND_GOLD);
 
@@ -2755,7 +2756,7 @@ Item* Player::EquipNewItem(uint16 pos, uint32 item, bool update)
     if (!IsEquipmentPos(pos) || sScriptMgr->CanSaveEquipNewItem(this, _item, pos, update))
     {
         // pussywizard: obtaining blue or better items saves to db
-        if (ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(item))
+        if (ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutable(item))
             if (pProto->Quality >= ITEM_QUALITY_RARE)
                 AdditionalSavingAddMask(ADDITIONAL_SAVING_INVENTORY_AND_GOLD);
 
@@ -4099,7 +4100,7 @@ void Player::SendEquipError(InventoryResult msg, Item* pItem, Item* pItem2, uint
             case EQUIP_ERR_CANT_EQUIP_LEVEL_I:
             case EQUIP_ERR_PURCHASE_LEVEL_TOO_LOW:
             {
-                ItemTemplate const* proto = pItem ? pItem->GetTemplate() : sObjectMgr->GetItemTemplate(itemid);
+                ItemTemplate const* proto = pItem ? pItem->GetTemplate() : sObjectMgr->GetItemTemplateMutable(itemid);
                 data << uint32(proto ? proto->RequiredLevel : 0);
                 break;
             }
@@ -4114,7 +4115,7 @@ void Player::SendEquipError(InventoryResult msg, Item* pItem, Item* pItem2, uint
             case EQUIP_ERR_ITEM_MAX_LIMIT_CATEGORY_SOCKETED_EXCEEDED:
             case EQUIP_ERR_ITEM_MAX_LIMIT_CATEGORY_EQUIPPED_EXCEEDED:
             {
-                ItemTemplate const* proto = pItem ? pItem->GetTemplate() : sObjectMgr->GetItemTemplate(itemid);
+                ItemTemplate const* proto = pItem ? pItem->GetTemplate() : sObjectMgr->GetItemTemplateMutable(itemid);
                 data << uint32(proto ? proto->ItemLimitCategory : 0);
                 break;
             }
@@ -5533,7 +5534,7 @@ bool Player::LoadFromDB(ObjectGuid playerGuid, CharacterDatabaseQueryHolder cons
             }
 
             transmogrification_appearances[type].insert(entry);
-            if (auto item = GetItemTemplate(entry)) {
+            if (auto item = GetItemTemplateMutable(entry)) {
                 auto visual = item->GetDisplayInfoID();
                 _tmogVisualToItem[type][visual] = entry;
             }
@@ -6056,7 +6057,7 @@ Item* Player::_LoadItem(CharacterDatabaseTransaction trans, uint32 zoneId, uint3
     Item* item = nullptr;
     ObjectGuid::LowType itemGuid  = fields[13].Get<uint32>();
     uint32 itemEntry = fields[14].Get<uint32>();
-    if (ItemTemplate const* proto = sObjectMgr->GetItemTemplate(itemEntry))
+    if (ItemTemplate const* proto = sObjectMgr->GetItemTemplateMutable(itemEntry))
     {
         bool remove = false;
         item = NewItemOrBag(proto);
@@ -6065,7 +6066,7 @@ Item* Player::_LoadItem(CharacterDatabaseTransaction trans, uint32 zoneId, uint3
             auto const transmog = item->GetTransmog();
             bool hasTemplate = transmog != NormalEntry && transmog != InvisibleEntry;
             if (transmog && hasTemplate) {
-                auto source = sObjectMgr->GetItemTemplate(transmog);
+                auto source = sObjectMgr->GetItemTemplateMutable(transmog);
                 if (!source || Transmogrification::instance().CannotTransmogrifyItemWithItem(this, proto, source, false))
                     item->SetTransmog(0); // Player swapped factions? Or settings changed.
             }
@@ -6200,7 +6201,7 @@ Item* Player::_LoadMailedItem(ObjectGuid const& playerGuid, Player* player, uint
     ObjectGuid::LowType itemGuid = fields[11].Get<uint32>();
     uint32 itemEntry = fields[12].Get<uint32>();
 
-    ItemTemplate const* proto = sObjectMgr->GetItemTemplate(itemEntry);
+    ItemTemplate const* proto = sObjectMgr->GetItemTemplateMutable(itemEntry);
     if (!proto)
     {
         LOG_ERROR("entities.player", "Player {} ({}) has unknown item in mailed items (GUID: {}, Entry: {}) in mail ({}), deleted.",
@@ -6602,7 +6603,8 @@ void Player::_LoadGroup()
 
 void Player::_LoadBoundInstances(PreparedQueryResult result)
 {
-    m_boundInstances.clear();
+    for (uint8 i = 0; i < MAX_DIFFICULTY; ++i)
+        m_boundInstances[Difficulty(i)].clear();
 
     Group* group = GetGroup();
 
@@ -6687,32 +6689,10 @@ InstancePlayerBind* Player::GetBoundInstance(uint32 mapid, Difficulty difficulty
     if (!mapDiff)
         return nullptr;
 
-    auto difficultyItr = m_boundInstances.find(difficulty);
-    if (difficultyItr == m_boundInstances.end())
-        return nullptr;
-
-    auto itr = difficultyItr->second.find(mapid);
-    if (itr != difficultyItr->second.end())
+    BoundInstancesMap::iterator itr = m_boundInstances[difficulty].find(mapid);
+    if (itr != m_boundInstances[difficulty].end())
         if (itr->second.extendState || withExpired)
             return &itr->second;
-    return nullptr;
-}
-
-InstancePlayerBind const* Player::GetBoundInstance(uint32 mapid, Difficulty difficulty) const
-{
-    // some instances only have one difficulty
-    MapDifficulty const* mapDiff = GetDownscaledMapDifficultyData(mapid, difficulty);
-    if (!mapDiff)
-        return nullptr;
-
-    auto difficultyItr = m_boundInstances.find(difficulty);
-    if (difficultyItr == m_boundInstances.end())
-        return nullptr;
-
-    auto itr = difficultyItr->second.find(mapid);
-    if (itr != difficultyItr->second.end())
-        return &itr->second;
-
     return nullptr;
 }
 
@@ -6731,18 +6711,13 @@ InstanceSave* Player::GetInstanceSave(uint32 mapid)
 
 void Player::UnbindInstance(uint32 mapid, Difficulty difficulty, bool unload)
 {
-    auto difficultyItr = m_boundInstances.find(difficulty);
-    if (difficultyItr != m_boundInstances.end())
-    {
-        auto itr = difficultyItr->second.find(mapid);
-        if (itr != difficultyItr->second.end())
-            UnbindInstance(itr, difficultyItr, unload);
-    }
+    BoundInstancesMap::iterator itr = m_boundInstances[difficulty].find(mapid);
+    UnbindInstance(itr, difficulty, unload);
 }
 
-void Player::UnbindInstance(BoundInstancesMap::mapped_type::iterator& itr, BoundInstancesMap::iterator& difficultyItr, bool unload)
+void Player::UnbindInstance(BoundInstancesMap::iterator& itr, Difficulty difficulty, bool unload)
 {
-    if (itr != difficultyItr->second.end())
+    if (itr != m_boundInstances[difficulty].end())
     {
         if (!unload)
         {
@@ -6758,7 +6733,7 @@ void Player::UnbindInstance(BoundInstancesMap::mapped_type::iterator& itr, Bound
             GetSession()->SendCalendarRaidLockout(itr->second.save, false);
 
         itr->second.save->RemovePlayer(this);               // save can become invalid
-        difficultyItr->second.erase(itr++);
+        m_boundInstances[difficulty].erase(itr++);
     }
 }
 
@@ -6854,9 +6829,9 @@ void Player::SendRaidInfo()
 
     time_t now = GameTime::GetGameTime().count();
 
-    for (auto difficultyItr = m_boundInstances.begin(); difficultyItr != m_boundInstances.end(); ++difficultyItr)
+    for (uint8 i = 0; i < MAX_DIFFICULTY; ++i)
     {
-        for (auto itr = difficultyItr->second.begin(); itr != difficultyItr->second.end(); ++itr)
+        for (BoundInstancesMap::iterator itr = m_boundInstances[i].begin(); itr != m_boundInstances[i].end(); ++itr)
         {
             InstancePlayerBind const& bind = itr->second;
             if (bind.perm)
@@ -6885,9 +6860,9 @@ void Player::SendSavedInstances()
     bool hasBeenSaved = false;
     WorldPacket data;
 
-    for (BoundInstancesMap::const_iterator difficultyItr = m_boundInstances.begin(); difficultyItr != m_boundInstances.end(); ++difficultyItr)
+    for (uint8 i = 0; i < MAX_DIFFICULTY; ++i)
     {
-        for (auto itr = difficultyItr->second.begin(); itr != difficultyItr->second.end(); ++itr)
+        for (BoundInstancesMap::iterator itr = m_boundInstances[i].begin(); itr != m_boundInstances[i].end(); ++itr)
         {
             InstancePlayerBind const& bind = itr->second;
             if (bind.perm)                             // only permanent binds are sent
@@ -6906,9 +6881,9 @@ void Player::SendSavedInstances()
     if (!hasBeenSaved)
         return;
 
-    for (BoundInstancesMap::const_iterator difficultyItr = m_boundInstances.begin(); difficultyItr != m_boundInstances.end(); ++difficultyItr)
+    for(uint8 i = 0; i < MAX_DIFFICULTY; ++i)
     {
-        for (auto itr = difficultyItr->second.begin(); itr != difficultyItr->second.end(); ++itr)
+        for (BoundInstancesMap::iterator itr = m_boundInstances[i].begin(); itr != m_boundInstances[i].end(); ++itr)
         {
             InstancePlayerBind const& bind = itr->second;
             if (bind.perm)                             // only permanent binds are sent
@@ -6996,7 +6971,7 @@ void Player::PrettyPrintRequirementsItemsList(const std::vector<const Progressio
     LocaleConstant loc_idx = GetSession()->GetSessionDbLocaleIndex();
     for (const ProgressionRequirement* missingReq : missingItems)
     {
-        ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplate(missingReq->id);
+        ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplateMutable(missingReq->id);
         if (!itemTemplate)
         {
             continue;
@@ -7183,7 +7158,7 @@ bool Player::Satisfy(DungeonProgressionRequirements const* ar, uint32 target_map
                     else if (missingPlayerItems.size())
                     {
                         LocaleConstant loc_idx = GetSession()->GetSessionDbLocaleIndex();
-                        std::string name = sObjectMgr->GetItemTemplate(missingPlayerItems[0]->id)->Name1;
+                        std::string name = sObjectMgr->GetItemTemplateMutable(missingPlayerItems[0]->id)->Name1;
                         if (ItemLocale const* il = sObjectMgr->GetItemLocale(missingPlayerItems[0]->id))
                         {
                             ObjectMgr::GetLocaleString(il->Name, loc_idx, name);
@@ -7493,6 +7468,12 @@ void Player::SaveToDB(CharacterDatabaseTransaction trans, bool create, bool logo
     if (m_session->isLogingOut() || !sWorld->getBoolConfig(CONFIG_STATS_SAVE_ONLY_ON_LOGOUT))
         _SaveStats(trans);
 
+    // we save the data here to prevent spamming
+    sAnticheatMgr->SavePlayerData(this);
+
+    // in this way we prevent to spam the db by each report made!
+    // sAnticheatMgr->SavePlayerData(this);
+
     // save pet (hunter pet level and experience and all type pets health/mana).
     if (Pet* pet = GetPet())
         pet->SavePetToDB(PET_SAVE_AS_CURRENT);
@@ -7502,11 +7483,7 @@ void Player::SaveToDB(CharacterDatabaseTransaction trans, bool create, bool logo
 void Player::SaveInventoryAndGoldToDB(CharacterDatabaseTransaction trans)
 {
     _SaveInventory(trans);
-    SaveGoldToDB(trans);
-}
 
-void Player::SaveGoldToDB(CharacterDatabaseTransaction trans)
-{
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UDP_CHAR_MONEY);
     stmt->SetData(0, GetMoney());
     stmt->SetData(1, GetGUID().GetCounter());
@@ -7574,15 +7551,17 @@ void Player::SaveLoadoutActions(uint32 specId, uint8 loadoutId)
     trans->Append(stmt);
 
     for (auto button : m_actionButtons) {
-        stmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_CHAR_ACTION_LOADOUT);
-        stmt->SetData(0, GetGUID().GetCounter());
-        stmt->SetData(1, specId);
-        stmt->SetData(2, loadoutId);
-        stmt->SetData(3, button.first);
-        stmt->SetData(4, button.second.GetAction());
-        stmt->SetData(5, uint8(button.second.GetType()));
+        if (button.second.uState != ACTIONBUTTON_DELETED) {
+            stmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_CHAR_ACTION_LOADOUT);
+            stmt->SetData(0, GetGUID().GetCounter());
+            stmt->SetData(1, specId);
+            stmt->SetData(2, loadoutId);
+            stmt->SetData(3, button.first);
+            stmt->SetData(4, button.second.GetAction());
+            stmt->SetData(5, uint8(button.second.GetType()));
 
-        trans->Append(stmt);
+            trans->Append(stmt);
+        }
     }
     CharacterDatabase.CommitTransaction(trans);
 }

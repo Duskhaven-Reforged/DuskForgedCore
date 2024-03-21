@@ -57,7 +57,6 @@ public:
                             fc->ForgetTalents(iam.player, spec, CLASS_TREE);
                             fc->ForgetTalents(iam.player, spec, TALENT_TREE);
                             spec->CharacterSpecTabId = tabId;
-                            iam.player->SetActiveSpec(tabId);
                             LearnInitialSpecSpellsAndTalents(iam.player, tabId);
                             CharacterDatabase.Execute("update acore_characters.forge_character_specs set charspec = {}, active = 1 where guid = {}", tabId, iam.player->GetGUID().GetCounter());
                             

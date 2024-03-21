@@ -1,27 +1,3 @@
-/*
- *MIT License
- *
- *Copyright (c) 2023 Azerothcore
- *
- *Permission is hereby granted, free of charge, to any person obtaining a copy
- *of this software and associated documentation files (the "Software"), to deal
- *in the Software without restriction, including without limitation the rights
- *to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *copies of the Software, and to permit persons to whom the Software is
- *furnished to do so, subject to the following conditions:
- *
- *The above copyright notice and this permission notice shall be included in all
- *copies or substantial portions of the Software.
- *
- *THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *SOFTWARE.
- */
-
 #ifndef SC_ACMGR_H
 #define SC_ACMGR_H
 
@@ -30,13 +6,14 @@
 #include "ScriptMgr.h"
 #include "AnticheatData.h"
 #include "Chat.h"
-#include "ObjectGuid.h"
-#include "EventEmitter.h"
+#include "Player.h"
+#include <unordered_map>
+#include "WorldSession.h"
 
 class Player;
 class AnticheatData;
 
-enum ReportTypes : uint8
+enum ReportTypes
 {
     SPEED_HACK_REPORT = 0,
     FLY_HACK_REPORT = 1,
@@ -53,11 +30,12 @@ enum ReportTypes : uint8
     NO_FALL_DAMAGE_HACK_REPORT = 12,
     OP_ACK_HACK_REPORT = 13,
     COUNTER_MEASURES_REPORT = 14
+
    // MAX_REPORT_TYPES
 };
 
-// GUID is the key.
-typedef std::map<ObjectGuid, AnticheatData> AnticheatPlayersDataMap;
+// GUIDLow is the key.
+typedef std::map<uint32, AnticheatData> AnticheatPlayersDataMap;
 
 class ServerOrderData
 {
@@ -85,12 +63,13 @@ class AnticheatMgr
            static AnticheatMgr* instance = new AnticheatMgr();
            return instance;
         }
-
-        EventEmitter<void(Player*, uint16)> OnReport;
-
+        void SetAllowedMovement(Player* player, bool);
         void StartHackDetection(Player* player, MovementInfo movementInfo, uint32 opcode);
         void SavePlayerData(Player* player);
         void SavePlayerDataDaily(Player* player);
+        void OnPlayerMove(Player* player, MovementInfo mi, uint32 opcode);
+        void StartScripts();
+
         void HandlePlayerLogin(Player* player);
         void HandlePlayerLogout(Player* player);
         void AckUpdate(Player* player, uint32 diff);
@@ -101,47 +80,47 @@ class AnticheatMgr
         void CheckForOrderAck(uint32 opcode);
         std::vector<ServerOrderData> _opackorders; // Packets sent by server, triggering *_ACK from client
 
-        uint32 GetTotalReports(ObjectGuid guid);
-        float GetAverage(ObjectGuid guid);
-        uint32 GetTypeReports(ObjectGuid guid, ReportTypes type);
-
-        [[nodiscard]] const char* GetReportNameFromReportType(ReportTypes reportType);
+        uint32 GetTotalReports(uint32 lowGUID);
+        float GetAverage(uint32 lowGUID);
+        uint32 GetTypeReports(uint32 lowGUID, uint8 type);
 
         void AnticheatGlobalCommand(ChatHandler* handler);
-        void AnticheatDeleteCommand(ObjectGuid guid);
+        void AnticheatDeleteCommand(uint32 guid);
         void AnticheatPurgeCommand(ChatHandler* handler);
         void ResetDailyReportStates();
+        void SetMapId(uint32 MapID) { m_MapId = MapID; }
+        [[nodiscard]] uint32 GetMapId() const { return m_MapId; }
+        void LoadBlockedLuaFunctions();
+        void SaveLuaCheater(uint32 guid, uint32 accountId, std::string macro);
+        bool CheckIsLuaCheater(uint32 accountId);
+        bool CheckBlockedLuaFunctions(AccountData accountData[NUM_ACCOUNT_DATA_TYPES], Player* player = nullptr);
 
     private:
         void SpeedHackDetection(Player* player, MovementInfo movementInfo);
         void FlyHackDetection(Player* player, MovementInfo movementInfo);
-        void JumpHackDetection(Player* player, MovementInfo movementInfo, uint32 opcode);
-        void TeleportPlaneHackDetection(Player* player, MovementInfo, uint32 opcode);
-        void ClimbHackDetection(Player* player, MovementInfo movementInfo, uint32 opcode);
-        void TeleportHackDetection(Player* player, MovementInfo movementInfo);
-        void IgnoreControlHackDetection(Player* player, MovementInfo movementInfo, uint32 opcode);
-        void GravityHackDetection(Player* player, MovementInfo movementInfo);
         void WalkOnWaterHackDetection(Player* player, MovementInfo movementInfo);
+        void JumpHackDetection(Player* player, MovementInfo movementInfo,uint32 opcode);
+        void TeleportPlaneHackDetection(Player* player, MovementInfo movementInfo, uint32 opcode);
+        void ClimbHackDetection(Player* player, MovementInfo movementInfo, uint32 opcode);
+        void IgnoreControlHackDetection(Player* player, MovementInfo movementInfo, uint32 opcode);
+        void TeleportHackDetection(Player* player, MovementInfo movementInfo);
         void ZAxisHackDetection(Player* player, MovementInfo movementInfo);
         void AntiSwimHackDetection(Player* player, MovementInfo movementInfo, uint32 opcode);
         void AntiKnockBackHackDetection(Player* player, MovementInfo movementInfo);
+        void GravityHackDetection(Player* player, MovementInfo movementInfo);
         void NoFallDamageDetection(Player* player, MovementInfo movementInfo);
-        void BGreport(Player* player, MovementInfo movementInfo);
-        void CheckStartPositions(Player* player, MovementInfo movementInfo);
+        void BGreport(Player* player);
+        void CheckBGOriginPositions(Player* player);
         void BGStartExploit(Player* player, MovementInfo movementInfo);
-        void BuildReport(Player* player, ReportTypes reportType, Optional<MovementInfo> optMovementInfo);
-        bool MustCheckTempReports(ReportTypes type);
-        void SendMiddleScreenGMMessage(std::string str);
+        void BuildReport(Player* player,uint8 reportType);
 
-        [[nodiscard]] uint32 GetAlertFrequencyConfigFromReportType(ReportTypes reportType);
-        [[nodiscard]] uint32 GetMinimumReportInChatThresholdConfigFromReportType(ReportTypes reportType);
-        [[nodiscard]] uint32 GetMaximumReportInChatThresholdConfigFromReportType(ReportTypes reportType);
-        void BuildAndSendReportToIngameGameMasters(Player* player, ReportTypes reportType, Optional<MovementInfo> optMovementInfo);
-
-        [[nodiscard]] uint32 GetTeleportSkillCooldownDurationInMS(Player* player) const;
-        [[nodiscard]] float GetTeleportSkillDistanceInYards(Player* player) const;
-        [[nodiscard]] float GetPlayerCurrentSpeedRate(Player* player) const;
+        bool MustCheckTempReports(uint8 type);
+        uint32 _counter = 0;
+        uint32 _alertFrequency = 0;
+        uint32 _assignedspeeddiff = 0;
         uint32 _updateCheckTimer = 4000;
+        uint32 m_MapId = uint32(-1);
+        std::unordered_map<std::string, bool> _luaBlockedFunctions;
         std::array<Position, PVP_TEAMS_COUNT> _startPosition;
         Position const* GetTeamStartPosition(TeamId teamId) const;
         AnticheatPlayersDataMap m_Players;                        ///< Player data

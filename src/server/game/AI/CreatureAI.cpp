@@ -292,24 +292,25 @@ bool CreatureAI::UpdateVictimWithGaze()
 
 bool CreatureAI::UpdateVictim()
 {
+    uint32 ent = me->GetEntry();
+
     if (!me->IsEngaged())
         return false;
-
+    
     if (!me->HasReactState(REACT_PASSIVE))
     {
         if (Unit* victim = me->SelectVictim())
-            AttackStart(victim);
+            if (victim != me->GetVictim())
+                AttackStart(victim);
+
         return me->GetVictim();
     }
-    // xinef: if we have any victim, just return true
-    else if (me->GetVictim() && me->GetExactDist(me->GetVictim()) < 30.0f)
-        return true;
-    else if (me->GetThreatManager().GetThreatListSize() <= 1)
+    else if (!me->IsInCombat())
     {
-        EnterEvadeMode();
+        EnterEvadeMode(EvadeReason::EVADE_REASON_NO_HOSTILES);
         return false;
     }
-    else
+    else if (me->GetVictim())
         me->AttackStop();
 
     return true;

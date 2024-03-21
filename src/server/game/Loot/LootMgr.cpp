@@ -66,7 +66,7 @@ struct LootGroupInvalidSelector : public Acore::unary_function<LootStoreItem*, b
 
         if (!item->reference)
         {
-            ItemTemplate const* _proto = sObjectMgr->GetItemTemplate(item->itemid);
+            ItemTemplate const* _proto = sObjectMgr->GetItemTemplateMutable(item->itemid);
             if (!_proto)
                 return true;
 
@@ -315,7 +315,7 @@ bool LootStoreItem::Roll(bool rate, Player const* player, Loot& loot, LootStore 
     if (reference)                                   // reference case
         return roll_chance_f(_chance * (rate ? sWorld->getRate(RATE_DROP_ITEM_REFERENCED) : 1.0f));
 
-    ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(itemid);
+    ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutable(itemid);
 
     float qualityModifier = pProto && rate ? sWorld->getRate(qualityToRate[pProto->Quality]) : 1.0f;
 
@@ -339,7 +339,7 @@ bool LootStoreItem::IsValid(LootStore const& store, uint32 entry) const
 
     if (!reference)                                  // item (quest or non-quest) entry, maybe grouped
     {
-        ItemTemplate const* proto = sObjectMgr->GetItemTemplate(itemid);
+        ItemTemplate const* proto = sObjectMgr->GetItemTemplateMutable(itemid);
         if (!proto)
         {
             LOG_ERROR("sql.sql", "Table '{}' Entry {} Item {}: item entry not listed in `item_template` - skipped", store.GetName(), entry, itemid);
@@ -389,7 +389,7 @@ LootItem::LootItem(LootStoreItem const& li)
     itemIndex    = 0;
     conditions   = li.conditions;
 
-    ItemTemplate const* proto = sObjectMgr->GetItemTemplate(itemid);
+    ItemTemplate const* proto = sObjectMgr->GetItemTemplateMutable(itemid);
     freeforall  = proto && (proto->Flags & ITEM_FLAG_MULTI_DROP);
     follow_loot_rules = proto && (proto->FlagsCu & ITEM_FLAGS_CU_FOLLOW_LOOT_RULES);
 
@@ -409,7 +409,7 @@ LootItem::LootItem(LootStoreItem const& li)
 // Basic checks for player/item compatibility - if false no chance to see the item in the loot
 bool LootItem::AllowedForPlayer(Player const* player, ObjectGuid source) const
 {
-    ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(itemid);
+    ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutable(itemid);
     if (!pProto)
     {
         return false;
@@ -493,7 +493,7 @@ void LootItem::AddAllowedLooter(Player const* player)
 // Inserts the item into the loot (called by LootTemplate processors)
 void Loot::AddItem(LootStoreItem const& item)
 {
-    ItemTemplate const* proto = sObjectMgr->GetItemTemplate(item.itemid);
+    ItemTemplate const* proto = sObjectMgr->GetItemTemplateMutable(item.itemid);
     if (!proto)
         return;
 
@@ -594,7 +594,7 @@ bool Loot::FillLoot(uint32 lootId, LootStore const& store, Player* lootOwner, bo
 
         for (uint8 i = 0; i < items.size(); ++i)
         {
-            if (ItemTemplate const* proto = sObjectMgr->GetItemTemplate(items[i].itemid))
+            if (ItemTemplate const* proto = sObjectMgr->GetItemTemplateMutable(items[i].itemid))
                 if (proto->Quality < uint32(group->GetLootThreshold()))
                     items[i].is_underthreshold = true;
         }
@@ -634,7 +634,7 @@ void Loot::FillNotNormalLootFor(Player* player)
             item = &quest_items[i - itemsSize];
 
         if (!item->is_looted && item->freeforall && item->AllowedForPlayer(player, sourceWorldObjectGUID))
-            if (ItemTemplate const* proto = sObjectMgr->GetItemTemplate(item->itemid))
+            if (ItemTemplate const* proto = sObjectMgr->GetItemTemplateMutable(item->itemid))
                 if (proto->IsCurrencyToken())
                 {
                     InventoryResult msg;
@@ -974,7 +974,7 @@ ByteBuffer& operator<<(ByteBuffer& b, LootItem const& li)
 {
     b << uint32(li.itemid);
     b << uint32(li.count);                                  // nr of items of this type
-    b << uint32(sObjectMgr->GetItemTemplate(li.itemid)->DisplayInfoID);
+    b << uint32(sObjectMgr->GetItemTemplateMutable(li.itemid)->DisplayInfoID);
     b << uint32(li.randomSuffix);
     b << uint32(li.randomPropertyId);
     //b << uint8(0);                                        // slot type - will send after this function call
@@ -1989,7 +1989,7 @@ void LoadLootTemplates_Disenchant()
     LootIdSet lootIdSet, lootIdSetUsed;
     uint32 count = LootTemplates_Disenchant.LoadAndCollectLootIds(lootIdSet);
 
-    ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateStore();
+    ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateMutableStore();
     for (ItemTemplateContainer::const_iterator itr = its->begin(); itr != its->end(); ++itr)
     {
         if (uint32 lootid = itr->second.DisenchantID)
@@ -2086,7 +2086,7 @@ void LoadLootTemplates_Item()
     uint32 count = LootTemplates_Item.LoadAndCollectLootIds(lootIdSet);
 
     // remove real entries and check existence loot
-    ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateStore();
+    ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateMutableStore();
     for (ItemTemplateContainer::const_iterator itr = its->begin(); itr != its->end(); ++itr)
         if (lootIdSet.find(itr->second.ItemId) != lootIdSet.end() && itr->second.Flags & ITEM_FLAG_HAS_LOOT)
             lootIdSet.erase(itr->second.ItemId);
@@ -2112,7 +2112,7 @@ void LoadLootTemplates_Milling()
     uint32 count = LootTemplates_Milling.LoadAndCollectLootIds(lootIdSet);
 
     // remove real entries and check existence loot
-    ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateStore();
+    ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateMutableStore();
     for (ItemTemplateContainer::const_iterator itr = its->begin(); itr != its->end(); ++itr)
     {
         if (!(itr->second.Flags & ITEM_FLAG_IS_MILLABLE))
@@ -2179,7 +2179,7 @@ void LoadLootTemplates_Prospecting()
     uint32 count = LootTemplates_Prospecting.LoadAndCollectLootIds(lootIdSet);
 
     // remove real entries and check existence loot
-    ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateStore();
+    ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateMutableStore();
     for (ItemTemplateContainer::const_iterator itr = its->begin(); itr != its->end(); ++itr)
     {
         if (!(itr->second.Flags & ITEM_FLAG_IS_PROSPECTABLE))

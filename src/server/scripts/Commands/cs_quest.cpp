@@ -68,7 +68,7 @@ public:
         uint32 entry = quest->GetQuestId();
 
         // check item starting quest (it can work incorrectly if added without item in inventory)
-        ItemTemplateContainer const* itc = sObjectMgr->GetItemTemplateStore();
+        ItemTemplateContainer const* itc = sObjectMgr->GetItemTemplateMutableStore();
         ItemTemplateContainer::const_iterator result = find_if(itc->begin(), itc->end(), Finder<uint32, ItemTemplate>(entry, &ItemTemplate::StartQuest));
 
         if (result != itc->end())
@@ -612,7 +612,7 @@ public:
                     }
 
                     // Skip invalid items.
-                    if (!sObjectMgr->GetItemTemplate(itr.first))
+                    if (!sObjectMgr->GetItemTemplateMutable(itr.first))
                     {
                         continue;
                     }

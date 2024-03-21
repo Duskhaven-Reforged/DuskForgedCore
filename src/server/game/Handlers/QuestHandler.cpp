@@ -139,7 +139,7 @@ void WorldSession::HandleQuestgiverAcceptQuestOpcode(WorldPacket& recvData)
         // pussywizard: exploit fix, can't share quests that give items to be sold
         if (object->GetTypeId() == TYPEID_PLAYER)
             if (uint32 itemId = quest->GetSrcItemId())
-                if (ItemTemplate const* srcItem = sObjectMgr->GetItemTemplate(itemId))
+                if (ItemTemplate const* srcItem = sObjectMgr->GetItemTemplateMutable(itemId))
                     if (srcItem->SellPrice > 0)
                         return;
 
@@ -473,7 +473,7 @@ void WorldSession::HandleQuestConfirmAccept(WorldPacket& recvData)
 
         // pussywizard: exploit fix, can't share quests that give items to be sold
         if (uint32 itemId = quest->GetSrcItemId())
-            if (ItemTemplate const* srcItem = sObjectMgr->GetItemTemplate(itemId))
+            if (ItemTemplate const* srcItem = sObjectMgr->GetItemTemplateMutable(itemId))
                 if (srcItem->SellPrice > 0)
                     return;
 

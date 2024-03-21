@@ -107,6 +107,7 @@ public:
     uint32 AddItemVisualToCollection(Player* player, Item* item);
     uint32 AddItemVisualToCollection(Player* player, const ItemTemplate* itemtemplate);
     uint32 AddEnchantVisualToCollection(Player* player, uint32 enchant_id);
+    uint32 SaveToMHandOF(Player* player, const ItemTemplate* itemtemplate);
     bool CanAddToCollection(Player* player, Item* item);
     bool CanAddToCollection(Player* player, ItemTemplate const* itemTemplate);
     bool CanAddEnchantToCollection(Player* player, Item* item);

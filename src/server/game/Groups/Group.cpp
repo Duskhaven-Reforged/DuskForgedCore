@@ -769,9 +769,9 @@ void Group::ConvertLeaderInstancesToGroup(Player* player, Group* group, bool swi
 {
     // copy all binds to the group, when changing leader it's assumed the character
     // will not have any solo binds
-    for (auto difficultyItr = player->m_boundInstances.begin(); difficultyItr != player->m_boundInstances.end(); ++difficultyItr)
+    for (uint8 i = 0; i < MAX_DIFFICULTY; ++i)
     {
-        for (auto itr = difficultyItr->second.begin(); itr != difficultyItr->second.end();)
+        for (Player::BoundInstancesMap::iterator itr = player->m_boundInstances[i].begin(); itr != player->m_boundInstances[i].end();)
         {
             if (!switchLeader || !group->GetBoundInstance(itr->second.save->GetDifficultyID(), itr->first))
                 if (itr->second.extendState) // not expired
@@ -781,7 +781,7 @@ void Group::ConvertLeaderInstancesToGroup(Player* player, Group* group, bool swi
             if (switchLeader && !itr->second.perm)
             {
                 // increments itr in call
-                player->UnbindInstance(itr, difficultyItr, false);
+                player->UnbindInstance(itr, Difficulty(i), false);
             }
             else
                 ++itr;
@@ -1042,7 +1042,7 @@ void Group::GroupLoot(Loot* loot, WorldObject* pLootedObject)
         if (i->freeforall)
             continue;
 
-        item = sObjectMgr->GetItemTemplate(i->itemid);
+        item = sObjectMgr->GetItemTemplateMutable(i->itemid);
         if (!item)
         {
             continue;
@@ -1128,7 +1128,7 @@ void Group::GroupLoot(Loot* loot, WorldObject* pLootedObject)
         if (!i->follow_loot_rules)
             continue;
 
-        item = sObjectMgr->GetItemTemplate(i->itemid);
+        item = sObjectMgr->GetItemTemplateMutable(i->itemid);
         if (!item)
         {
             continue;
@@ -1190,7 +1190,7 @@ void Group::NeedBeforeGreed(Loot* loot, WorldObject* lootedObject)
         if (i->freeforall)
             continue;
 
-        item = sObjectMgr->GetItemTemplate(i->itemid);
+        item = sObjectMgr->GetItemTemplateMutable(i->itemid);
 
         //roll for over-threshold item if it's one-player loot
         if (item->Quality >= uint32(m_lootThreshold))
@@ -1268,7 +1268,7 @@ void Group::NeedBeforeGreed(Loot* loot, WorldObject* lootedObject)
         if (!i->follow_loot_rules)
             continue;
 
-        item = sObjectMgr->GetItemTemplate(i->itemid);
+        item = sObjectMgr->GetItemTemplateMutable(i->itemid);
         ObjectGuid newitemGUID = ObjectGuid::Create<HighGuid::Item>(sObjectMgr->GetGenerator<HighGuid::Item>().Generate());
         Roll* r = new Roll(newitemGUID, *i);
 
@@ -1582,7 +1582,7 @@ void Group::CountTheRoll(Rolls::iterator rollI, Map* allowedMap)
                         item->is_looted = true;
                         roll->getLoot()->NotifyItemRemoved(roll->itemSlot);
                         roll->getLoot()->unlootedCount--;
-                        ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(roll->itemid);
+                        ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutable(roll->itemid);
                         player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_CAST_SPELL, 13262); // Disenchant
 
                         ItemPosCountVec dest;

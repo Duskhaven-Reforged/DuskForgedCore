@@ -118,7 +118,7 @@ std::string Transmogrification::GetItemIcon(uint32 entry, uint32 width, uint32 h
 
     std::ostringstream ss;
     ss << "|TInterface";
-    const ItemTemplate* temp = sObjectMgr->GetItemTemplate(entry);
+    const ItemTemplate* temp = sObjectMgr->GetItemTemplateMutable(entry);
     const ItemDisplayInfoEntry* dispInfo = NULL;
     if (temp)
     {
@@ -230,7 +230,7 @@ std::string Transmogrification::GetItemLink(uint32 entry, WorldSession* session)
 {
     LOG_DEBUG("custom.transmog", "Transmogrification::GetItemLink");
 
-    const ItemTemplate* temp = sObjectMgr->GetItemTemplate(entry);
+    const ItemTemplate* temp = sObjectMgr->GetItemTemplateMutable(entry);
     std::ostringstream oss;
     oss << "|c" << std::hex << ItemQualityColors[temp->Quality] << std::dec <<
         "|Hitem:" << entry << ":0:0:0:0:0:0:0:0:0|h[" << GetItemName(temp, session) << "]|h|r";
@@ -563,7 +563,7 @@ TransmogResult Transmogrification::TrySetPendingTransmog(Player* player, uint32 
     bool hasTemplate = entry != NormalEntry && entry != InvisibleEntry;
     if (hasTemplate)
     {
-        itemtemplate = sObjectMgr->GetItemTemplate(entry);
+        itemtemplate = sObjectMgr->GetItemTemplateMutable(entry);
         if (!itemtemplate)
         {
             LOG_DEBUG("custom.transmog", "Transmogrification::Transmogrify - %s (%s) tried to transmogrify slot %u with a non-existant item entry %u.", player->GetName().c_str(), player->GetGUID().ToString().c_str(), slot, entry);
@@ -901,13 +901,62 @@ uint32 Transmogrification::AddItemVisualToCollection(Player* player, Item* item)
     return AddItemVisualToCollection(player, item->GetTemplate());
 }
 
+uint8 GetEquipmentSlotByInvType(ItemTemplate const* proto, Player* player) {
+    switch (proto->InventoryType)
+    {
+    case INVTYPE_HEAD:
+        return EQUIPMENT_SLOT_HEAD;
+    case INVTYPE_SHOULDERS:
+        return EQUIPMENT_SLOT_SHOULDERS;
+    case INVTYPE_BODY:
+        return EQUIPMENT_SLOT_BODY;
+    case INVTYPE_CHEST:
+    case INVTYPE_ROBE:
+        return EQUIPMENT_SLOT_CHEST;
+    case INVTYPE_WAIST:
+        return EQUIPMENT_SLOT_WAIST;
+    case INVTYPE_LEGS:
+        return EQUIPMENT_SLOT_LEGS;
+    case INVTYPE_FEET:
+        return EQUIPMENT_SLOT_FEET;
+    case INVTYPE_WRISTS:
+        return EQUIPMENT_SLOT_WRISTS;
+    case INVTYPE_HANDS:
+        return EQUIPMENT_SLOT_HANDS;
+    case INVTYPE_CLOAK:
+        return EQUIPMENT_SLOT_BACK;
+    case INVTYPE_WEAPON:
+    case INVTYPE_WEAPONMAINHAND:
+        return player->CanDualWield() ? EQUIPMENT_SLOT_MAINHAND+EQUIPMENT_SLOT_OFFHAND : EQUIPMENT_SLOT_MAINHAND;
+    case INVTYPE_SHIELD:
+    case INVTYPE_WEAPONOFFHAND:
+    case INVTYPE_HOLDABLE:
+        return EQUIPMENT_SLOT_OFFHAND;
+    case INVTYPE_RANGED:
+    case INVTYPE_RANGEDRIGHT:
+    case INVTYPE_THROWN:
+        return EQUIPMENT_SLOT_RANGED;
+    case INVTYPE_2HWEAPON:
+        return EQUIPMENT_SLOT_MAINHAND;
+    case INVTYPE_TABARD:
+        return EQUIPMENT_SLOT_TABARD;
+    default:
+        return NULL_SLOT;
+    }
+}
+
 uint32 Transmogrification::AddItemVisualToCollection(Player* player, const ItemTemplate* itemtemplate)
 {
-    auto slot = player->FindEquipSlot(itemtemplate, NULL_SLOT, true);
+    auto slot = GetEquipmentSlotByInvType(itemtemplate, player);
     if (!itemtemplate || !CanAddToCollection(player, itemtemplate) || slot == NULL_SLOT)
         return 0;   
 
-    return Save(player, slot, (ItemTemplate *) itemtemplate);
+    return slot > EQUIPMENT_SLOT_END ? SaveToMHandOF(player, itemtemplate) : Save(player, slot, (ItemTemplate*)itemtemplate);
+}
+
+uint32 Transmogrification::SaveToMHandOF(Player* player, const ItemTemplate* itemtemplate) {
+    Save(player, EQUIPMENT_SLOT_OFFHAND, (ItemTemplate*)itemtemplate);
+    return Save(player, EQUIPMENT_SLOT_MAINHAND, (ItemTemplate*)itemtemplate);
 }
 
 uint32 Transmogrification::AddEnchantVisualToCollection(Player* player, uint32 enchant_id)
@@ -1043,7 +1092,7 @@ bool Transmogrification::HasPendingTransmog(Player* player, uint8 slot, Item** r
         }
         else
         {
-            decltype(auto) sourceTemplate = sObjectMgr->GetItemTemplate(pending);
+            decltype(auto) sourceTemplate = sObjectMgr->GetItemTemplateMutable(pending);
             if (!sourceTemplate)
                 return false;
             if (CannotTransmogrifyItemWithItem(player, item->GetTemplate(), sourceTemplate, false))
@@ -1161,7 +1210,7 @@ int32 Transmogrification::CalculateTransmogCost(uint32 entry)
         return 0;
     if (entry == NormalEntry)
         return 0;
-    auto const* temp = sObjectMgr->GetItemTemplate(entry);
+    auto const* temp = sObjectMgr->GetItemTemplateMutable(entry);
     if (!temp)
         return 0;
     int32 cost = 0;

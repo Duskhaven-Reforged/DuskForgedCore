@@ -52,7 +52,7 @@ private:
 
         for (auto entry : player->transmogrification_appearances[slotId]) {
             if (slotId < EQUIPMENT_SLOT_END) {
-                if(auto source = sObjectMgr->GetItemTemplate(entry))
+                if(auto source = sObjectMgr->GetItemTemplateMutableMutable(entry))
                     if (source->AllowableClass & player->getClassMask() && source->AllowableRace & player->getRaceMask())
                         msg = msg + std::to_string(entry)
                         + "^" + std::to_string(source->Class)

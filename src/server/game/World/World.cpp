@@ -23,6 +23,7 @@
 #include "AccountMgr.h"
 #include "AchievementMgr.h"
 #include "AddonMgr.h"
+#include "AnticheatMgr.h"
 #include "AreaTriggerDataStore.h"
 #include "ArenaTeamMgr.h"
 #include "AsyncAuctionListing.h"
@@ -1431,6 +1432,57 @@ void World::LoadConfigSettings(bool reload)
     _bool_configs[CONFIG_ENABLE_MMAPS]       = sConfigMgr->GetOption<bool>("MoveMaps.Enable", true);
     MMAP::MMapFactory::InitializeDisabledMaps();
 
+    // ANTICHEAT
+    _bool_configs[CONFIG_ANTICHEAT_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.Enable", false);
+    _bool_configs[CONFIG_ANTICHEAT_ENABLE_ON_GM] = sConfigMgr->GetOption<bool>("Anticheat.EnabledOnGmAccounts", false);
+    _bool_configs[CONFIG_LUABLOCKER_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.LUAblocker", false);
+    _bool_configs[CONFIG_ANTICHEAT_JUMPHACK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.DetectJumpHack", false);
+    _bool_configs[CONFIG_ANTICHEAT_ADV_JUMPHACK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.StricterDetectJumpHack", false);
+    _bool_configs[CONFIG_ANTICHEAT_WATERWALKHACK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.DetectWaterWalkHack", false);
+    _bool_configs[CONFIG_ANTICHEAT_FLYHACK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.DetectFlyHack", false);
+    _bool_configs[CONFIG_ANTICHEAT_FLYHACKSTRICT_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.StricterFlyHackCheck", false);
+    _bool_configs[CONFIG_ANTICHEAT_TELEPANEHACK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.DetectTelePlaneHack", false);
+    _bool_configs[CONFIG_ANTICHEAT_IGNORECONTROLHACK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.IgnoreControlHack", false);
+    _bool_configs[CONFIG_ANTICHEAT_ZAXISHACK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.DetectZaxisHack", false);
+    _bool_configs[CONFIG_ANTICHEAT_TELEPORTHACK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.DetectTelePortHack", false);
+    _bool_configs[CONFIG_ANTICHEAT_CLIMBHACK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.DetectClimbHack", false);
+    _bool_configs[CONFIG_ANTICHEAT_SPEEDHACK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.DetectSpeedHack", false);
+    _bool_configs[CONFIG_ANTICHEAT_ANTISWIM_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.AntiSwimHack", false);
+    _bool_configs[CONFIG_ANTICHEAT_GRAVITY_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.DetectGravityHack", false);
+    _bool_configs[CONFIG_ANTICHEAT_ANTIKNOCKBACK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.AntiKnockBack", false);
+    _bool_configs[CONFIG_ANTICHEAT_NO_FALL_DAMAGE_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.NoFallDamage", false);
+    _bool_configs[CONFIG_ANTICHEAT_BG_START_HACK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.DetectBGStartHack", false);
+    _bool_configs[CONFIG_ANTICHEAT_BG_START_COUNTERHACK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.BG.StartAreaTeleport", false);
+    _bool_configs[CONFIG_ANTICHEAT_OP_ACK_HACK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.OpAckOrderHack", false);
+    _bool_configs[CONFIG_ANTICHEAT_CM_TIMEMANIPULATION] = sConfigMgr->GetOption<bool>("Anticheat.CM.TIMEMANIPULATION", true);
+    _bool_configs[CONFIG_ANTICHEAT_CM_FLYHACK] = sConfigMgr->GetOption<bool>("Anticheat.CM.FLYHACK", false);
+    _bool_configs[CONFIG_ANTICHEAT_CM_TELEPORT] = sConfigMgr->GetOption<bool>("Anticheat.CM.Teleport", false);
+    _bool_configs[CONFIG_ANTICHEAT_BG_StartAreaTeleport] = sConfigMgr->GetOption<bool>("Anticheat.BG.StartAreaTeleport", false);
+    _bool_configs[CONFIG_ANTICHEAT_CM_SPEEDHACK] = sConfigMgr->GetOption<bool>("Anticheat.CM.SPEEDHACK", false);
+    _bool_configs[CONFIG_ANTICHEAT_CM_JUMPHACK] = sConfigMgr->GetOption<bool>("Anticheat.CM.JUMPHACK", false);
+    _bool_configs[CONFIG_ANTICHEAT_CM_ADVJUMPHACK] = sConfigMgr->GetOption<bool>("Anticheat.CM.ADVJUMPHACK", false);
+    _bool_configs[CONFIG_ANTICHEAT_CM_IGNOREZ] = sConfigMgr->GetOption<bool>("Anticheat.CM.IGNOREZ", false);
+    _bool_configs[CONFIG_ANTICHEAT_CM_WRITELOG] = sConfigMgr->GetOption<bool>("Anticheat.CM.WriteLog", false);
+    _bool_configs[CONFIG_ANTICHEAT_CM_ALERTSCREEN] = sConfigMgr->GetOption<bool>("Anticheat.CM.ALERTSCREEN", false);
+    _bool_configs[CONFIG_ANTICHEAT_CM_ALERTCHAT] = sConfigMgr->GetOption<bool>("Anticheat.CM.ALERTCHAT", false);
+    _bool_configs[CONFIG_ANTICHEAT_WRITELOG_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.WriteLog", false);
+    _bool_configs[CONFIG_ANTICHEAT_AUTOKICK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.KickPlayer", false);
+    _bool_configs[CONFIG_ANTICHEAT_ANNOUNCEKICK_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.AnnounceKick", false);
+    _bool_configs[CONFIG_ANTICHEAT_AUTOBAN_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.BanPlayer", false);
+    _bool_configs[CONFIG_ANTICHEAT_ANNOUNCEBAN_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.AnnounceBan", false);
+    _bool_configs[CONFIG_ANTICHEAT_AUTOJAIL_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.JailPlayer", false);
+    _bool_configs[CONFIG_ANTICHEAT_ANNOUNCEJAIL_ENABLE] = sConfigMgr->GetOption<bool>("Anticheat.AnnounceJail", false);
+    _int_configs[CONFIG_ANTICHEAT_REPORTS_INGAME_NOTIFICATION] = sConfigMgr->GetOption<int32>("Anticheat.ReportsForIngameWarnings", 70);
+    _int_configs[CONFIG_ANTICHEAT_MAX_REPORTS_FOR_DAILY_REPORT] = sConfigMgr->GetOption<int32>("Anticheat.MaxReportsForDailyReport",70);
+    _int_configs[CONFIG_ANTICHEAT_REPORT_IN_CHAT_MIN] = sConfigMgr->GetOption<int32>("Anticheat.ReportinChat.Min", 70);
+    _int_configs[CONFIG_ANTICHEAT_REPORT_IN_CHAT_MAX] = sConfigMgr->GetOption<int32>("Anticheat.ReportinChat.Max", 80);
+
+    _int_configs[CONFIG_ANTICHEAT_SPEED_LIMIT_TOLERANCE] = sConfigMgr->GetOption<int32>("Anticheat.SpeedLimitTolerance", 4);
+    _int_configs[CONFIG_ANTICHEAT_MAX_REPORTS_FOR_BANS] = sConfigMgr->GetOption<int32>("Anticheat.ReportsForBan", 70);
+    _int_configs[CONFIG_ANTICHEAT_MAX_REPORTS_FOR_KICKS] = sConfigMgr->GetOption<int32>("Anticheat.ReportsForKick", 70);
+    _int_configs[CONFIG_ANTICHEAT_MAX_REPORTS_FOR_JAILS] = sConfigMgr->GetOption<int32>("Anticheat.ReportsForJail", 70);
+    _int_configs[CONFIG_ANTICHEAT_ALERT_FREQUENCY] = sConfigMgr->GetOption<int32>("Anticheat.AlertFrequency", 5);
+
     // Wintergrasp
     _int_configs[CONFIG_WINTERGRASP_ENABLE]              = sConfigMgr->GetOption<int32>("Wintergrasp.Enable", 1);
     _int_configs[CONFIG_WINTERGRASP_PLR_MAX]             = sConfigMgr->GetOption<int32>("Wintergrasp.PlayerMax", 100);
@@ -2188,6 +2240,9 @@ void World::SetInitialWorldSettings()
 
     LOG_INFO("server.loading", "Calculate Random Battleground Reset Time..." );
     InitRandomBGResetTime();
+
+    LOG_INFO("server.loading", "Loading Anticheat LUA blocked data...");
+    sAnticheatMgr->LoadBlockedLuaFunctions();
 
     LOG_INFO("server.loading", "Calculate Deletion Of Old Calendar Events Time...");
     InitCalendarOldEventsDeletionTime();
@@ -3130,6 +3185,8 @@ void World::ResetDailyQuests()
 
     // change available dailies
     sPoolMgr->ChangeDailyQuests();
+
+    sAnticheatMgr->ResetDailyReportStates();
 }
 
 void World::LoadDBAllowedSecurityLevel()
