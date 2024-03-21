@@ -144,7 +144,7 @@ public:
             uint32 count     = fields[2].Get<uint32>();
 
             std::string itemName = "";
-            if (ItemTemplate const* item = sObjectMgr->GetItemTemplate(itemId))
+            if (ItemTemplate const* item = sObjectMgr->GetItemTemplateMutable(itemId))
             {
                 itemName = item->Name1;
             }
@@ -189,7 +189,7 @@ public:
             return false;
         }
 
-        ItemTemplate const* item = sObjectMgr->GetItemTemplate(itemId);
+        ItemTemplate const* item = sObjectMgr->GetItemTemplateMutable(itemId);
 
         if (!item)
         {
@@ -323,7 +323,7 @@ public:
                     if (reqItem)
                     {
                         // Skip invalid items.
-                        if (!sObjectMgr->GetItemTemplate(reqItem))
+                        if (!sObjectMgr->GetItemTemplateMutable(reqItem))
                         {
                             continue;
                         }

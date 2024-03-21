@@ -65,7 +65,7 @@ void ChallengeModeMgr::Reward(Player* player, uint8 challengeLevel)
     //std::vector<ItemTemplate const*> stuffLoots;
     //for (JournalEncounterItemEntry const* journalEncounterItem : items)
     //{
-    //    ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplate(journalEncounterItem->ItemID);
+    //    ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplateMutable(journalEncounterItem->ItemID);
     //    if (!itemTemplate)
     //        continue;
 

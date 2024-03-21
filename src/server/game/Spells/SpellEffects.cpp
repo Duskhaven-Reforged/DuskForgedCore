@@ -1259,6 +1259,11 @@ void Spell::EffectTeleportUnits(SpellEffIndex /*effIndex*/)
         return;
     }
 
+    if (Player* player = m_caster->ToPlayer())
+    {
+        player->SetCanTeleport(true);
+    }
+
     // Init dest coordinates
     uint32 mapid = destTarget->GetMapId();
     if (mapid == MAPID_INVALID)
@@ -1705,7 +1710,7 @@ void Spell::DoCreateItem(uint8 /*effIndex*/, uint32 itemId)
 
     uint32 newitemid = itemId;
 
-    ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(newitemid);
+    ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutable(newitemid);
     if (!pProto)
     {
         player->SendEquipError(EQUIP_ERR_ITEM_NOT_FOUND, nullptr, nullptr);
@@ -3765,6 +3770,20 @@ void Spell::EffectInterruptCast(SpellEffIndex effIndex)
     {
         if (Spell* spell = unitTarget->GetCurrentSpell(CurrentSpellTypes(i)))
         {
+            // if player is lua cheater dont interrupt cast until timer reached 600ms
+            if (auto player = m_caster->ToPlayer())
+            {
+                if (player->GetSession()->IsLuaCheater())
+                {
+                    if (spell->GetCastTime() - spell->GetTimer() < 600)
+                    {
+                        std::string goXYZ = ".go xyz " + std::to_string(player->GetPositionX()) + " " + std::to_string(player->GetPositionY()) + " " + std::to_string(player->GetPositionZ() + 1.0f) + " " + std::to_string(player->GetMap()->GetId()) + " " + std::to_string(player->GetOrientation());
+                        LOG_INFO("anticheat", "ANTICHEAT COUNTER MEASURE::Played {} attempted repeat LUA spell Casting - IP: {} - Flagged at: {}", player->GetName(), player->GetSession()->GetRemoteAddress(), goXYZ);
+                        return;
+                    }
+                }
+            }
+
             SpellInfo const* curSpellInfo = spell->m_spellInfo;
             // check if we can interrupt spell
             if ((spell->getState() == SPELL_STATE_CASTING
@@ -6312,7 +6331,7 @@ void Spell::EffectLearnTransmogSet(SpellEffIndex effIndex)
 
     for (uint32 i = 0; i < MAX_ITEM_SET_ITEMS; ++i)
         if (setEntry->itemId[i])
-            Transmogrification::instance().AddToCollection(player, sObjectMgr->GetItemTemplate(setEntry->itemId[i]));
+            Transmogrification::instance().AddToCollection(player, sObjectMgr->GetItemTemplateMutable(setEntry->itemId[i]));
 }
 
 void Spell::EffectJumpCharge(SpellEffIndex effIndex)
@@ -6564,7 +6583,7 @@ void Spell::EffectRechargeManaGem(SpellEffIndex /*effIndex*/)
 
     uint32 item_id = m_spellInfo->Effects[EFFECT_0].ItemType;
 
-    ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(item_id);
+    ItemTemplate const* pProto = sObjectMgr->GetItemTemplateMutable(item_id);
     if (!pProto)
     {
         player->SendEquipError(EQUIP_ERR_ITEM_NOT_FOUND, nullptr, nullptr);

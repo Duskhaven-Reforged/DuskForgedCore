@@ -4707,7 +4707,7 @@ void AuraEffect::HandleModPercentStat(AuraApplication const* aurApp, uint8 mode,
 
     if (GetMiscValue() < -1 || GetMiscValue() > 4)
     {
-        LOG_ERROR("spells.aura.effect", "WARNING: Misc Value for SPELL_AURA_MOD_PERCENT_STAT not valid");
+        LOG_ERROR("spells.aura.effect", "WARNING: Spell {} effect {} has an invalid misc value ({}) for SPELL_AURA_MOD_PERCENT_STAT ", GetId(), GetEffIndex(), GetMiscValue());
         return;
     }
 
@@ -4885,7 +4885,7 @@ void AuraEffect::HandleModTotalPercentStat(AuraApplication const* aurApp, uint8 
 
     if (GetMiscValue() < -1 || GetMiscValue() > 4)
     {
-        LOG_ERROR("spells.aura.effect", "WARNING: Misc Value for SPELL_AURA_MOD_PERCENT_STAT not valid");
+        LOG_ERROR("spells.aura.effect", "WARNING: Spell {} effect {} has an invalid misc value ({}) for SPELL_AURA_MOD_PERCENT_STAT ", GetId(), GetEffIndex(), GetMiscValue());
         return;
     }
 

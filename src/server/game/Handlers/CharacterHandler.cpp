@@ -2208,8 +2208,8 @@ void WorldSession::HandleCharFactionOrRaceChangeCallback(std::shared_ptr<Charact
                     };
 
                     uint32 nodeId = itr.first;
-                    uint8 field = (uint8)((nodeId - 1) / 32);
-                    uint32 submask = 1 << ((nodeId - 1) % 32);
+                    uint8 field = (uint8)((nodeId) / 32);
+                    uint32 submask = 1 << ((nodeId) % 32);
 
                     if ((factionMask[field] & submask) == 0)
                     {

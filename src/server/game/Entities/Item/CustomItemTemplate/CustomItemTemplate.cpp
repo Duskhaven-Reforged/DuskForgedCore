@@ -495,9 +495,9 @@ bool CustomItemTemplate::IsConjuredConsumable() { return info->IsConjuredConsuma
 bool CustomItemTemplate::HasSignature() { return info->HasSignature(); };
 //
 
-CustomItemTemplate GetItemTemplate(uint32 entry)
+CustomItemTemplate GetItemTemplateMutable(uint32 entry)
 {
-    return CustomItemTemplate(sObjectMgr->GetItemTemplateMutable(entry));
+    return CustomItemTemplate(sObjectMgr->GetItemTemplateMutableMutable(entry));
 }
 
 ItemTemplate* CustomItemTemplate::_GetInfo()

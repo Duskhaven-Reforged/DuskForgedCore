@@ -332,8 +332,8 @@ void ForgeCommonMessage::SendTalents(Player* player)
             case CharacterPointType::TALENT_TREE: {
                 if (!sConfigMgr->GetBoolDefault("echos", false)) {
                     uint32 i = 0;
-                    auto classTree = spec->Talents[fc->_cacheClassNodeToClassTree[player->getClass()]];
-                    auto classMap = fc->_cacheClassNodeToSpell[pClass];
+                    auto classTree = spec->Talents[fc->_cacheClassNodeToClassTree[player->getClassMask()]];
+                    auto classMap = fc->_cacheClassNodeToSpell[player->getClassMask()];
 
                     auto specTree = spec->Talents[spec->CharacterSpecTabId];
                     auto specMap = fc->_cacheSpecNodeToSpell[spec->CharacterSpecTabId];
@@ -490,7 +490,7 @@ void ForgeCommonMessage::SendSpecInfo(Player* player)
                 ForgeCharacterPoint* tp = fc->GetCommonCharacterPoint(player, tpt);
                 ForgeCharacterPoint* cps = fc->GetSpecPoints(player, tpt, spec->Id);
 
-                msg = msg + delimiter + std::to_string((int)tpt) + "$" + std::to_string(cps->Sum) + "$" + std::to_string(tp->Sum) + "$"  + std::to_string(m->Sum) + "$" + std::to_string(m->Max);
+                msg = msg + delimiter + std::to_string((int)tpt) + "$" + std::to_string(cps->Sum) + "$" + std::to_string(tp->Sum) + "$"  + std::to_string(cps->Max) + "$" + std::to_string(m->Max);
                 k++;
             }
 

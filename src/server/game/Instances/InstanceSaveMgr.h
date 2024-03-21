@@ -153,6 +153,8 @@ public:
     static InstanceSaveMgr* instance();
     typedef std::unordered_map<uint32 /*InstanceId*/, InstanceSave*> InstanceSaveHashMap;
 
+    void Unload();
+
     struct InstResetEvent
     {
         uint8 type;

@@ -642,6 +642,45 @@ void MotionMaster::MoveFall(uint32 id /*=0*/, bool addFlagForNPC)
     Mutate(new EffectMovementGenerator(id), MOTION_SLOT_CONTROLLED);
 }
 
+// Created a new method per advice to avoid any unforseen issue with MoveFall()
+void MotionMaster::MoveFallPlayer(uint32 id/* = 0*/)
+{
+    // Use larger distance for vmap height search than in most other cases
+    float tz = _owner->GetMapHeight(_owner->GetPositionX(), _owner->GetPositionY(), _owner->GetPositionZ(), true, MAX_FALL_DISTANCE);
+    if (tz <= INVALID_HEIGHT)
+    {
+        LOG_DEBUG("movement.motionmaster", "MotionMaster::MoveFall: '{}', unable to retrieve a proper height at map Id: {} (X: {}, Y: {}, Z: {})",
+            _owner->GetGUID().ToString(), _owner->GetMap()->GetId(), _owner->GetPositionX(), _owner->GetPositionY(), _owner->GetPositionZ());
+        return;
+    }
+
+    // Abort too if the ground is very near
+    if (std::fabs(_owner->GetPositionZ() - tz) < 0.1f)
+        return;
+
+    // rooted units don't move (also setting falling+root flag causes client freezes)
+    if (_owner->HasUnitState(UNIT_STATE_ROOT | UNIT_STATE_STUNNED))
+        return;
+
+    _owner->AddUnitMovementFlag(MOVEMENTFLAG_FALLING);
+    _owner->m_movementInfo.SetFallTime(0);
+
+    // We run spline movement for players, this is not a blizzlike feat per shauren.
+    if (_owner->GetTypeId() == TYPEID_PLAYER)
+    {
+        _owner->ToPlayer()->SetFallInformation(0, _owner->GetPositionZ());
+    }
+
+    std::function<void(Movement::MoveSplineInit&)> initializer = [=, this](Movement::MoveSplineInit& init)
+    {
+        init.MoveTo(_owner->GetPositionX(), _owner->GetPositionY(), tz + _owner->GetHoverHeight(), false);
+        init.SetFall();
+        init.Launch(); // This launches the spline movement
+    };
+
+    Mutate(new EffectMovementGenerator(id), MOTION_SLOT_CONTROLLED);
+}
+
 void MotionMaster::MoveCharge(float x, float y, float z, float speed, uint32 id, const Movement::PointsArray* path, bool generatePath, float orientation /* = 0.0f*/, ObjectGuid targetGUID /*= ObjectGuid::Empty*/)
 {
     // Xinef: do not allow to move with UNIT_FLAG_DISABLE_MOVE

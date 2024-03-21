@@ -70,7 +70,7 @@ struct ItemTemplateVisitor
 {
     using value_type = ItemTemplate const*;
     value_type operator()(Hyperlink<item> item) const { return item->Item; }
-    value_type operator()(uint32 item) { return sObjectMgr->GetItemTemplate(item); }
+    value_type operator()(uint32 item) { return sObjectMgr->GetItemTemplateMutable(item); }
 };
 
 ChatCommandResult Acore::Impl::ChatCommands::ArgInfo<ItemTemplate const*>::TryConsume(ItemTemplate const*& data, ChatHandler const* handler, std::string_view args)

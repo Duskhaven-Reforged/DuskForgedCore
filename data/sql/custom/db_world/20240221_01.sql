@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS  `world_safe_locs`;
+-- acore_world.world_safe_locs definition
 CREATE TABLE `world_safe_locs` (
-  `ID` int NOT NULL,
+  `ID` int NOT NULL default 0,
   `Map` int NOT NULL,
   `LocX` float NOT NULL,
   `LocY` float NOT NULL,
@@ -9,6 +10,18 @@ CREATE TABLE `world_safe_locs` (
   PRIMARY KEY (`ID`,`Map`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 ROW_FORMAT=DYNAMIC;
 
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 0, -8827.66, 620.367, 94.2332, 3.7);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(1, 0, -4918.88, -940.406, 501.564, 5.4234);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(2, 0, -14297.2, 530.993, 8.77916, 3.9886);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(3, 0, 1584.14, 240.308, -52.1534, 0.041783);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 189, 1688.99, 1053.48, 18.6775, 0.00117);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(1, 189, 855.683, 1321.5, 18.6709, 0.001747);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(2, 189, 1610.83, -323.433, 18.6738, 6.28022);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(3, 189, 255.346, -209.09, 18.6773, 6.26656);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(1, 1, 1629.85, -4373.64, 31.5573, 3.6976);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(2, 1, -1277.37, 124.804, 131.287, 5.2227);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(3, 1, -7177.15, -3785.34, 8.36981, 6.10237);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 1, 9949.56, 2284.21, 1341.39, 1.5958);
 INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 33, -229.135, 2109.18, 76.8898, 1.267);
 INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 36, -16.4, -383.07, 61.78, 1.86);
 INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 43, -163.49, 132.9, -73.66, 5.83);
@@ -21,17 +34,19 @@ INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VA
 INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 209, 1213.52, 841.59, 8.93, 6.09);
 INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 230, 458.32, 26.52, -70.67, 4.95);
 INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 249, 29.1607, -71.3372, -8.18032, 4.58);
-INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 309, -11916.1, -1230.53, 92.5334, 4.71867);
-INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 409, 1096.0, -467.0, -104.6, 3.64);
-INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 496, -7671.09, -1104.75, 397.623, 0.601251);
-INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 509, -8429.74, 1512.14, 31.9074, 2.58);
-INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 531, -8231.33, 2010.6, 129.331, 0.929912);
 INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 289, 196.37, 127.05, 134.91, 6.09);
-INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 389, 3.81, -14.82, -17.84, 4.39);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 309, -11916.1, -1230.53, 92.5334, 4.71867);
 INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 329, 3593.15, -3646.56, 138.5, 5.33);
 INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 349, 1019.69, -458.31, -43.43, 0.31);
 INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 369, 68.3006, 2490.91, -4.29647, 3.12192);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 389, 3.81, -14.82, -17.84, 4.39);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 409, 1096.0, -467.0, -104.6, 3.64);
 INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 429, 44.4499, -154.822, -2.71201, 0.0);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 496, -7671.09, -1104.75, 397.623, 0.601251);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 509, -8429.74, 1512.14, 31.9074, 2.58);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 530, 9487.69, -7278.2, 14.2866, 6.16478);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(1, 530, -3965.7, -11653.6, -138.844, 0.851215);
+INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 531, -8231.33, 2010.6, 129.331, 0.929912);
 INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 532, -11100.0, -2003.98, 49.8927, 0.577268);
 INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 533, 3005.68, -3447.77, 293.93, 4.65);
 INSERT INTO acore_world.world_safe_locs (ID, `Map`, LocX, LocY, LocZ, Facing) VALUES(0, 540, -40.8716, -19.7538, -13.8065, 1.11133);
