@@ -213,7 +213,20 @@ enum SpellCustomAttributes
 
 enum SpellCustomAttributes2
 {
-    SPELL_ATTR0_CU_REQUIRES_COMBAT = 0x00000001,
+    SPELL_ATTR1_CU_REQUIRES_COMBAT                      = 0x00000001,
+    SPELL_ATTR1_CU_NO_ATTACK_BLOCK                      = 0x00000002,
+    SPELL_ATTR1_CU_SCALE_DAMAGE_EFFECTS_ONLY            = 0x00000004,
+    SPELL_ATTR1_CU_SCALE_HEALING_EFFECTS_ONLY           = 0x00000008,
+    SPELL_ATTR1_CU_USE_TARGETS_LEVEL_FOR_SPELL_SCALING  = 0x00000010,
+    SPELL_ATTR1_CU_REMOVE_OUTSIDE_DUNGEONS_AND_RAIDS    = 0x00000020, //TODO
+    SPELL_ATTR1_CU_NOT_USABLE_IN_INSTANCES              = 0x00000040, //TODO
+    SPELL_ATTR1_CU_PERIODIC_CAN_CRIT                    = 0x00000080,
+    SPELL_ATTR1_CU_RESET_COOLDOWN_ON_ENCOUNTER_END      = 0x00000100, //TODO
+    SPELL_ATTR1_CU_IGNORES_CASTER_LEVEL                 = 0x00000200,
+    SPELL_ATTR1_CU_ONLY_PROC_FROM_CLASS_ABILITIES       = 0x00000400, //TODO
+    SPELL_ATTR1_CU_ACTIVATES_REQUIRED_SHAPESHIFT        = 0x00000800, //TODO
+
+    SPELL_ATTR1_CU_SCALE_DAMAGE_OR_HEALING_EFFECT       = SPELL_ATTR1_CU_SCALE_DAMAGE_EFFECTS_ONLY | SPELL_ATTR1_CU_SCALE_HEALING_EFFECTS_ONLY,
 };
 
 uint32 GetTargetFlagMask(SpellTargetObjectTypes objType);
@@ -335,6 +348,7 @@ public:
     uint32 AttributesEx6;
     uint32 AttributesEx7;
     uint32 AttributesCu;
+    uint32 AttributesExCu;
     uint32 Stances;
     uint32 StancesNot;
     uint32 Targets;
@@ -428,6 +442,7 @@ public:
     inline bool HasAttribute(SpellAttr6 attribute) const { return (AttributesEx6 & attribute) != 0; }
     inline bool HasAttribute(SpellAttr7 attribute) const { return (AttributesEx7 & attribute) != 0; }
     inline bool HasAttribute(SpellCustomAttributes customAttribute) const { return (AttributesCu & customAttribute) != 0; }
+    inline bool HasAttribute(SpellCustomAttributes2 customAttribute) const { return (AttributesExCu & customAttribute) != 0; }
 
     bool IsExplicitDiscovery() const;
     bool IsLootCrafting() const;
@@ -473,6 +488,7 @@ public:
     bool IsBreakingStealth() const;
     bool IsRangedWeaponSpell() const;
     bool IsAutoRepeatRangedSpell() const;
+    bool ComputeIsDamagingOrHealingEffect() const;
 
     WeaponAttackType GetAttackType() const;
 
