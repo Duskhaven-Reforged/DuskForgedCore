@@ -5703,6 +5703,28 @@ SpellCastResult Spell::CheckCast(bool strict)
         if (m_spellInfo->HasAttribute(SPELL_ATTR0_ONLY_INDOORS) &&
                 m_caster->IsOutdoors())
             return SPELL_FAILED_ONLY_INDOORS;
+
+        if (m_spellInfo->HasAttribute(SPELL_ATTR1_CU_NOT_USABLE_IN_INSTANCES))
+        {
+
+            Map* map = m_caster->GetMap();
+            if (map && map->Instanceable())
+            {
+                m_customError = SPELL_CUSTOM_ERROR_NOT_IN_INSTANCES;
+                return SPELL_FAILED_CUSTOM_ERROR;
+            }
+        }
+
+        if (m_spellInfo->HasAttribute(SPELL_ATTR1_CU_USABLE_IN_INSTANCES_ONLY))
+        {
+
+            Map* map = m_caster->GetMap();
+            if (map && !map->Instanceable())
+            {
+                m_customError = SPELL_CUSTOM_ERROR_ONLY_IN_INSTANCES;
+                return SPELL_FAILED_CUSTOM_ERROR;
+            }
+        }
     }
 
     // only check at first call, Stealth auras are already removed at second call

@@ -1379,8 +1379,8 @@ enum SpellCustomErrors
     SPELL_CUSTOM_ERROR_ALL_POTIONS_USED                 = 88, // The potions have all been depleted by Professor Putricide.
     SPELL_CUSTOM_ERROR_89                               = 89, // ""
     SPELL_CUSTOM_ERROR_REQUIRES_LEVEL_65                = 90, // Requires level 65
-    SPELL_CUSTOM_ERROR_91                               = 91, // ""
-    SPELL_CUSTOM_ERROR_92                               = 92, // ""
+    SPELL_CUSTOM_ERROR_NOT_IN_INSTANCES                 = 91, // You can't cast this spell in instances.
+    SPELL_CUSTOM_ERROR_ONLY_IN_INSTANCES                = 92, // You can cast this spell only in instances.
     SPELL_CUSTOM_ERROR_93                               = 93, // ""
     SPELL_CUSTOM_ERROR_94                               = 94, // ""
     SPELL_CUSTOM_ERROR_95                               = 95, // ""

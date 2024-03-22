@@ -614,7 +614,20 @@ void BossAI::_Reset()
     ClearUniqueTimedEventsDone();
     _healthCheckEvents.clear();
     if (instance)
+    {
         instance->SetBossState(_bossId, NOT_STARTED);
+
+        // Aleist3r: Duskhaven, reset all cooldowns on wipe, raids only
+        Map* map = me->GetMap();
+        Map::PlayerList const& players = map->GetPlayers();
+        for (Map::PlayerList::const_iterator i = players.begin(); i != players.end(); ++i)
+            if (Player* player = i->GetSource())
+                if (map && map->IsRaid())
+                {
+                    player->RemoveAllSpellCooldown();
+                    player->RemoveSpellRelatedDebuffs();
+                }
+    }
 }
 
 void BossAI::_JustDied()
@@ -627,6 +640,17 @@ void BossAI::_JustDied()
     {
         instance->SetBossState(_bossId, DONE);
         instance->SaveToDB();
+
+        // Aleist3r: Duskhaven, reset all cooldowns on boss kill, raids only
+        Map* map = me->GetMap();
+        Map::PlayerList const& players = map->GetPlayers();
+        for (Map::PlayerList::const_iterator i = players.begin(); i != players.end(); ++i)
+            if (Player* player = i->GetSource())
+                if (map && map->IsRaid())
+                {
+                    player->RemoveAllSpellCooldown();
+                    player->RemoveSpellRelatedDebuffs();
+                }
     }
 }
 

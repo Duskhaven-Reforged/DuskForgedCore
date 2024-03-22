@@ -1860,6 +1860,15 @@ void Player::UpdateAreaDependentAuras(uint32 newArea)
                 GetMapId(), m_zoneUpdateId, newArea, this, false) !=
             SPELL_CAST_OK)
             RemoveOwnedAura(iter);
+        else if (iter->second->GetSpellInfo()->HasAttribute(SPELL_ATTR1_CU_REMOVE_OUTSIDE_DUNGEONS_AND_RAIDS))
+        {
+            Map* map = GetMap();
+
+            if (map && !(map->IsDungeon() && map->IsRaid()))
+                RemoveOwnedAura(iter);
+            else
+                ++iter;
+        }
         else
             ++iter;
     }
@@ -1881,6 +1890,15 @@ void Player::UpdateAreaDependentAuras(uint32 newArea)
                             GetMapId(), m_zoneUpdateId, newArea, nullptr) !=
                         SPELL_CAST_OK)
                         controlled->RemoveOwnedAura(auraIter);
+                    else if (auraIter->second->GetSpellInfo()->HasAttribute(SPELL_ATTR1_CU_REMOVE_OUTSIDE_DUNGEONS_AND_RAIDS))
+                    {
+                        Map* map = GetMap();
+
+                        if (map && !(map->IsDungeon() && map->IsRaid()))
+                            controlled->RemoveOwnedAura(auraIter);
+                        else
+                            ++auraIter;
+                    }
                     else
                         ++auraIter;
                 }

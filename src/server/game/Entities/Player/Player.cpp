@@ -3660,6 +3660,28 @@ void Player::RemoveAllSpellCooldownWithoutIds(std::vector<uint32> idsToKeep)
     }
 }
 
+// Aleist3r: long-ish debuffs that disallows certain spells to be cast (or applied) on given player
+void Player::RemoveSpellRelatedDebuffs()
+{
+    // Aleist3r: the thing I love the most, hardcoding
+    // but tbf it's better than making sql table for that in this case
+
+    if (HasAura(25771))         // Forbearance (Paladin stuff)
+        RemoveAura(25771);
+
+    if (HasAura(57723))         // Exhaustion (Heroism)
+        RemoveAura(57723);
+
+    if (HasAura(57724))         // Sated (Bloodlust)
+        RemoveAura(57724);
+
+    if (HasAura(1280002))       // Temporal Displacement (Time Warp)
+        RemoveAura(1280002);
+
+    // Aleist3r: yes, I know, for() loop, cba, it's only 4 debuffs so far
+    // if there's more in the future I may change it
+}
+
 void Player::_LoadSpellCooldowns(PreparedQueryResult result)
 {
     // some cooldowns can be already set at aura loading...

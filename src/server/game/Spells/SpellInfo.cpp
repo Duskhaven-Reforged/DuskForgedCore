@@ -437,8 +437,8 @@ int32 SpellEffectInfo::CalcValue(Unit const* caster, int32 const* bp, Unit const
         else if (basePoints && _spellInfo->HasAttribute(SPELL_ATTR0_SCALES_WITH_CREATURE_LEVEL))
         {
             // Aleist3r: this conditional is just fucking beautiful; I need this formula to work in certain cases outside of just damage or healing effect
-            if ((_spellInfo->HasAttribute(SPELL_ATTR1_CU_SCALE_DAMAGE_OR_HEALING_EFFECT) && _spellInfo->ComputeIsDamagingOrHealingEffect()) ||
-                (!_spellInfo->HasAttribute(SPELL_ATTR1_CU_SCALE_DAMAGE_OR_HEALING_EFFECT) && !_spellInfo->ComputeIsDamagingOrHealingEffect()))
+            if ((_spellInfo->CanScaleDamagingOrHealing() && _spellInfo->ComputeIsDamagingOrHealingEffect()) ||
+                (!_spellInfo->CanScaleDamagingOrHealing() && !_spellInfo->ComputeIsDamagingOrHealingEffect()))
             {
                 if (Player* player = ((Unit*)caster)->ToPlayer())
                 {
@@ -1301,6 +1301,11 @@ bool SpellInfo::IsPositiveEffect(uint8 effIndex) const
         case 2:
             return !(AttributesCu & SPELL_ATTR0_CU_NEGATIVE_EFF2) || (AttributesCu & SPELL_ATTR0_CU_POSITIVE_EFF2);
     }
+}
+
+bool SpellInfo::CanScaleDamagingOrHealing() const
+{
+    return (AttributesExCu & SPELL_ATTR1_CU_SCALE_DAMAGE_EFFECTS_ONLY) || (AttributesExCu & SPELL_ATTR1_CU_SCALE_HEALING_EFFECTS_ONLY);
 }
 
 bool SpellInfo::IsChanneled() const
