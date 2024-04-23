@@ -51,6 +51,7 @@ jobs:
           Compress-Archive -Path ./data/sql/custom -Destination ./env/dist/data-sql.zip
 
       - uses: "marvinpinto/action-automatic-releases@latest"
+        if: github.ref == 'refs/heads/master'
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
