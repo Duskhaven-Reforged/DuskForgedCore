@@ -931,7 +931,10 @@ void Aura::RefreshDuration(bool withMods)
 void Aura::RefreshTimers(bool periodicReset /*= false*/)
 {
     m_maxDuration = CalcMaxDuration();
-    RefreshDuration();
+    
+    if (GetSpellInfo()->AttributesCu & ~SPELL_ATTR1_CU_REAPPLY_NO_REFRESH_DURATION)
+        RefreshDuration();
+
     Unit* caster = GetCaster();
 
     if (!caster)
