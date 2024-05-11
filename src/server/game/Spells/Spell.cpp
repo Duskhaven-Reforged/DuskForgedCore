@@ -4733,8 +4733,8 @@ void Spell::SendSpellStart()
     if (castFlags & CAST_FLAG_POWER_LEFT_SELF)
         data << uint32(m_caster->GetPower((Powers)m_spellInfo->PowerType));
 
-    // if (castFlags & CAST_FLAG_PROJECTILE)
-    //     WriteAmmoToPacket(&data);
+    if (castFlags & CAST_FLAG_PROJECTILE)
+         WriteAmmoToPacket(&data);
 
     if (castFlags & CAST_FLAG_UNKNOWN_23)
     {
@@ -4862,8 +4862,8 @@ void Spell::SendSpellGo()
         data << uint32(m_delayTrajectory ? m_delayTrajectory : m_delayMoment);
     }
 
-    // if (castFlags & CAST_FLAG_PROJECTILE)
-    //     WriteAmmoToPacket(&data);
+    if (castFlags & CAST_FLAG_PROJECTILE)
+        WriteAmmoToPacket(&data);
 
     if (castFlags & CAST_FLAG_VISUAL_CHAIN)
     {
