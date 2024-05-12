@@ -13519,8 +13519,8 @@ void Unit::AddComboPoints(Unit* target, int8 count)
         m_comboPoints = change;
 
         m_ComboPointDegenTimer = 0;
-        SendComboPoints();
     }
+    SendComboPoints();
 }
 
 void Unit::ClearComboPoints(bool clearPoints)

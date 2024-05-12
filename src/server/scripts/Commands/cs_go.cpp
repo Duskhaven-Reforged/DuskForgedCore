@@ -1019,7 +1019,7 @@ public:
                         }
                     }
                 }
-                handler->PSendSysMessage("CHARBarberDruid%s:%s:%s:nil:%s:%s:%s:%s", type.c_str(), name.c_str(), display.c_str(), ReqItemID.c_str(), ReqItemCant.c_str(), ReqSpellID.c_str(), ifknow.c_str());
+                handler->PSendSysMessage("CHARBarberDruid%s:%s:%s:%s:%s:%s:%s:%s", type.c_str(), name.c_str(), display.c_str(), path.c_str(), ReqItemID.c_str(), ReqItemCant.c_str(), ReqSpellID.c_str(), ifknow.c_str());
             } while (result->NextRow());
         }
         handler->PSendSysMessage("FINIBarberDruid");
