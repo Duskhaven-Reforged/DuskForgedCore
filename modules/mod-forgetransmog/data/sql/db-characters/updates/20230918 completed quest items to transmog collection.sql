@@ -1,6 +1,6 @@
-USE world_database;
+USE acore_world;
 
-CREATE TEMPORARY TABLE IF NOT EXISTS characters_database.transmog__quest_reward_items (INDEX(ID)) AS (
+CREATE TEMPORARY TABLE IF NOT EXISTS acore_characters.transmog__quest_reward_items (INDEX(ID)) AS (
 SELECT * FROM (
 SELECT quest_template.id AS ID, RewardChoiceItemID1 AS RewardItemID FROM quest_template WHERE RewardChoiceItemID1 <> 0 AND RewardChoiceItemQuantity1 <> 0
 UNION
@@ -24,6 +24,6 @@ SELECT quest_template.id AS ID, RewardItem4 AS RewardItemID FROM quest_template 
 ) x
 );
 
-USE characters_database;
+USE acore_characters;
 
 REPLACE INTO forge_account_transmog (accountid, `type`, entry) SELECT c.account, 0, tqri.RewardItemID FROM transmog__quest_reward_items tqri INNER JOIN character_queststatus_rewarded cqr ON tqri.ID = cqr.quest INNER JOIN characters c ON c.guid = cqr.guid;
